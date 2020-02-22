@@ -6,7 +6,10 @@ Filename: run.py
 Author:   contact@simshadows.com
 """
 
+
 import sys
+
+from database_weapons import weapon_db
 
 
 # Core Constants
@@ -21,9 +24,6 @@ BASE_RAW_CRITICAL_MULTIPLIER = 1.25
 
 POWERCHARM_ATTACK_POWER = 6
 POWERTALON_ATTACK_POWER = 9
-
-ACID_SHREDDER_II_ATTACK_POWER = 1392
-ACID_SHREDDER_II_AFFINITY     = 0
 
 
 def calculate_efr(**kwargs):
@@ -40,12 +40,14 @@ def calculate_efr(**kwargs):
 
 
 def run():
+    w = weapon_db["Acid Shredder II"] # Query a specific weapon.
+
     kwargs = {}
-    kwargs["weapon_attack_power"]     = ACID_SHREDDER_II_ATTACK_POWER
+    kwargs["weapon_attack_power"]     = w.attack
     kwargs["additional_attack_power"] = POWERCHARM_ATTACK_POWER + POWERTALON_ATTACK_POWER
     kwargs["raw_sharpness_modifier"]  = BLUE_SHARPNESS_MODIFIER
     kwargs["raw_crit_multiplier"]     = BASE_RAW_CRITICAL_MULTIPLIER
-    kwargs["affinity_percentage"]     = ACID_SHREDDER_II_AFFINITY + 10 # given an affinity augment for testing
+    kwargs["affinity_percentage"]     = w.affinity + 10 # given an affinity augment for testing
 
     efr = calculate_efr(**kwargs)
     print("EFR = " + str(efr))
