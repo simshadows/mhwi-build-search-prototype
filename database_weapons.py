@@ -2,7 +2,7 @@
 # -*- coding: ascii -*-
 
 """
-Filename: run.py
+Filename: database_weapons.py
 Author:   contact@simshadows.com
 
 This file provides the MHWI build optimizer script's weapons database.
