@@ -9,7 +9,7 @@ Author:   contact@simshadows.com
 
 import sys
 
-from database_weapons import weapon_db
+from database_weapons import WeaponClass, weapon_db
 from database_misc import *
 
 
@@ -18,7 +18,10 @@ BASE_RAW_CRITICAL_MULTIPLIER = 1.25
 
 
 def calculate_efr(**kwargs):
-    true_raw               = (kwargs["weapon_attack_power"] / kwargs["weapon_bloat"]) + kwargs["additional_attack_power"]
+    weapon_type            = kwargs["weapon_type"]
+
+    bloat                  = weapon_type.value.bloat
+    true_raw               = (kwargs["weapon_attack_power"] / bloat) + kwargs["additional_attack_power"]
     raw_sharpness_modifier = kwargs["raw_sharpness_modifier"]
     raw_crit_multiplier    = kwargs["raw_crit_multiplier"]
     raw_crit_chance        = min(kwargs["affinity_percentage"], 100) / 100
@@ -39,11 +42,11 @@ def lookup(weapon_name):
 
     kwargs = {}
     kwargs["weapon_attack_power"]     = w.attack
-    kwargs["weapon_bloat"]            = w.wclass.value
+    kwargs["weapon_type"]             = w.type
     kwargs["additional_attack_power"] = POWERCHARM_ATTACK_POWER + POWERTALON_ATTACK_POWER
     kwargs["raw_sharpness_modifier"]  = BLUE_SHARPNESS_MODIFIER
     kwargs["raw_crit_multiplier"]     = BASE_RAW_CRITICAL_MULTIPLIER
-    kwargs["affinity_percentage"]     = w.affinity + 10 # given an affinity augment for testing
+    kwargs["affinity_percentage"]     = w.affinity
 
     efr = calculate_efr(**kwargs)
     print("EFR = " + str(efr))
