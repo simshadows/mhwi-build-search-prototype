@@ -13,23 +13,23 @@ from collections import namedtuple
 from enum import Enum
 
 
-WeaponClassInfo = namedtuple("WeaponClassInfo", ["bloat"])
+WeaponClassInfo = namedtuple("WeaponClassInfo", ["name", "bloat"])
 
 class WeaponClass(Enum):
-    GREATSWORD       = WeaponClassInfo(bloat=4.8)
-    LONGSWORD        = WeaponClassInfo(bloat=3.3)
-    SWORD_AND_SHIELD = WeaponClassInfo(bloat=1.4)
-    DUAL_BLADES      = WeaponClassInfo(bloat=1.4)
-    HAMMER           = WeaponClassInfo(bloat=5.2)
-    HUNTING_HORN     = WeaponClassInfo(bloat=4.2)
-    LANCE            = WeaponClassInfo(bloat=2.3)
-    GUNLANCE         = WeaponClassInfo(bloat=2.3)
-    SWITCHAXE        = WeaponClassInfo(bloat=3.5)
-    CHARGE_BLADE     = WeaponClassInfo(bloat=3.6)
-    INSECT_GLAIVE    = WeaponClassInfo(bloat=4.1)
-    BOW              = WeaponClassInfo(bloat=1.2)
-    HEAVY_BOWGUN     = WeaponClassInfo(bloat=1.5)
-    LIGHT_BOWGUN     = WeaponClassInfo(bloat=1.3)
+    GREATSWORD       = WeaponClassInfo(name="Greatsword",       bloat=4.8)
+    LONGSWORD        = WeaponClassInfo(name="Longsword",        bloat=3.3)
+    SWORD_AND_SHIELD = WeaponClassInfo(name="Sword and Shield", bloat=1.4)
+    DUAL_BLADES      = WeaponClassInfo(name="Dual Blades",      bloat=1.4)
+    HAMMER           = WeaponClassInfo(name="Hammer",           bloat=5.2)
+    HUNTING_HORN     = WeaponClassInfo(name="Hunting Horn",     bloat=4.2)
+    LANCE            = WeaponClassInfo(name="Lance",            bloat=2.3)
+    GUNLANCE         = WeaponClassInfo(name="Gunlance",         bloat=2.3)
+    SWITCHAXE        = WeaponClassInfo(name="Switchaxe",        bloat=3.5)
+    CHARGE_BLADE     = WeaponClassInfo(name="Charge Blade",     bloat=3.6)
+    INSECT_GLAIVE    = WeaponClassInfo(name="Insect Glaive",    bloat=4.1)
+    BOW              = WeaponClassInfo(name="Bow",              bloat=1.2)
+    HEAVY_BOWGUN     = WeaponClassInfo(name="Heavy Bowgun",     bloat=1.5)
+    LIGHT_BOWGUN     = WeaponClassInfo(name="Light Bowgun",     bloat=1.3)
 
 
 _common_fields = [
@@ -69,6 +69,12 @@ weapon_db = {
     # For now, we will only have a subset of greatswords.
     # I'll add other weapons later!
 
+    "Jagras Deathclaw II" : _Greatsword(
+        rarity   = 10,
+        attack   = 1248,
+        affinity = 0,
+    ),
+
     "Acid Shredder II" : _Greatsword(
         rarity   = 11,
         attack   = 1392,
@@ -79,6 +85,18 @@ weapon_db = {
         rarity   = 12,
         attack   = 1344,
         affinity = 0,
+    ),
+
+    "Great Demon Rod" : _Greatsword(
+        rarity   = 12,
+        attack   = 1488,
+        affinity = -15,
+    ),
+
+    "Royal Venus Blade" : _Greatsword(
+        rarity   = 12,
+        attack   = 1296,
+        affinity = 15,
     ),
 
     "Lunatic Rose" : _SwordAndShield(
