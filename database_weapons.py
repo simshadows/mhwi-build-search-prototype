@@ -13,6 +13,11 @@ from collections import namedtuple
 from enum import Enum
 
 
+# These work by first representing the full bar at maximum Handicraft in terms of number of
+# points in each colour, then you subtract 10 points per Handicraft level missing.
+MaximumSharpness = namedtuple("MaximumSharpness", ["red", "orange", "yellow", "green", "blue", "white", "purple"])
+
+
 WeaponClassInfo = namedtuple("WeaponClassInfo", ["name", "bloat"])
 
 class WeaponClass(Enum):
@@ -36,30 +41,38 @@ _common_fields = [
     "rarity",
     "attack",
     "affinity",
+    "is_raw",
 
     # You do not change this field. Keep it at the end. It gets a default value.
     "type",
 ]
+
+_blademaster_unique_fields = [
+    "maximum_sharpness",
+]
+
+_blademaster_fields = _blademaster_unique_fields + _common_fields
+_gunner_fields = _common_fields
 
 
 # Each unique weapon is represented by a named tuple.
 # The right-most field "type" carries the associated weapon class. DO NOT OVERWRITE THIS.
 # (idk yet how to protect namedtuple fields from being overwritten. should figure this out.)
 
-_Greatsword     = namedtuple("_Greatsword",     _common_fields, defaults=[WeaponClass.GREATSWORD])
-_Longsword      = namedtuple("_Longsword",      _common_fields, defaults=[WeaponClass.LONGSWORD])
-_SwordAndShield = namedtuple("_SwordAndShield", _common_fields, defaults=[WeaponClass.SWORD_AND_SHIELD])
-_DualBlades     = namedtuple("_DualBlades",     _common_fields, defaults=[WeaponClass.DUAL_BLADES])
-_Hammer         = namedtuple("_Hammer",         _common_fields, defaults=[WeaponClass.HAMMER])
-_HuntingHorn    = namedtuple("_HuntingHorn",    _common_fields, defaults=[WeaponClass.HUNTING_HORN])
-_Lance          = namedtuple("_Lance",          _common_fields, defaults=[WeaponClass.LANCE])
-_Gunlance       = namedtuple("_Gunlance",       _common_fields, defaults=[WeaponClass.GUNLANCE])
-_Switchaxe      = namedtuple("_Switchaxe",      _common_fields, defaults=[WeaponClass.SWITCHAXE])
-_ChargeBlade    = namedtuple("_ChargeBlade",    _common_fields, defaults=[WeaponClass.CHARGE_BLADE])
-_InsectGlaive   = namedtuple("_InsectGlaive",   _common_fields, defaults=[WeaponClass.INSECT_GLAIVE])
-_Bow            = namedtuple("_Bow",            _common_fields, defaults=[WeaponClass.BOW])
-_HeavyBowgun    = namedtuple("_HeavyBowgun",    _common_fields, defaults=[WeaponClass.HEAVY_BOWGUN])
-_LightBowgun    = namedtuple("_LightBowgun",    _common_fields, defaults=[WeaponClass.LIGHT_BOWGUN])
+_Greatsword     = namedtuple("_Greatsword",     _blademaster_fields, defaults=[WeaponClass.GREATSWORD])
+_Longsword      = namedtuple("_Longsword",      _blademaster_fields, defaults=[WeaponClass.LONGSWORD])
+_SwordAndShield = namedtuple("_SwordAndShield", _blademaster_fields, defaults=[WeaponClass.SWORD_AND_SHIELD])
+_DualBlades     = namedtuple("_DualBlades",     _blademaster_fields, defaults=[WeaponClass.DUAL_BLADES])
+_Hammer         = namedtuple("_Hammer",         _blademaster_fields, defaults=[WeaponClass.HAMMER])
+_HuntingHorn    = namedtuple("_HuntingHorn",    _blademaster_fields, defaults=[WeaponClass.HUNTING_HORN])
+_Lance          = namedtuple("_Lance",          _blademaster_fields, defaults=[WeaponClass.LANCE])
+_Gunlance       = namedtuple("_Gunlance",       _blademaster_fields, defaults=[WeaponClass.GUNLANCE])
+_Switchaxe      = namedtuple("_Switchaxe",      _blademaster_fields, defaults=[WeaponClass.SWITCHAXE])
+_ChargeBlade    = namedtuple("_ChargeBlade",    _blademaster_fields, defaults=[WeaponClass.CHARGE_BLADE])
+_InsectGlaive   = namedtuple("_InsectGlaive",   _blademaster_fields, defaults=[WeaponClass.INSECT_GLAIVE])
+_Bow            = namedtuple("_Bow",            _gunner_fields,      defaults=[WeaponClass.BOW])
+_HeavyBowgun    = namedtuple("_HeavyBowgun",    _gunner_fields,      defaults=[WeaponClass.HEAVY_BOWGUN])
+_LightBowgun    = namedtuple("_LightBowgun",    _gunner_fields,      defaults=[WeaponClass.LIGHT_BOWGUN])
 
 
 weapon_db = {
@@ -73,36 +86,54 @@ weapon_db = {
         rarity   = 10,
         attack   = 1248,
         affinity = 0,
+        is_raw   = True, # Temporary oversimplification.
+
+        maximum_sharpness      = MaximumSharpness(110, 80, 30, 30, 80, 70, 0),
     ),
 
     "Acid Shredder II" : _Greatsword(
         rarity   = 11,
         attack   = 1392,
         affinity = 0,
+        is_raw   = True, # Temporary oversimplification.
+
+        maximum_sharpness      = MaximumSharpness(60, 50, 110, 90, 60, 20, 10),
     ),
 
     "Immovable Dharma" : _Greatsword(
         rarity   = 12,
         attack   = 1344,
         affinity = 0,
+        is_raw   = True, # Temporary oversimplification.
+
+        maximum_sharpness      = MaximumSharpness(170, 30, 30, 60, 50, 30, 30),
     ),
 
     "Great Demon Rod" : _Greatsword(
         rarity   = 12,
         attack   = 1488,
         affinity = -15,
+        is_raw   = False, # Temporary oversimplification.
+
+        maximum_sharpness      = MaximumSharpness(100, 100, 40, 50, 60, 50, 0),
     ),
 
     "Royal Venus Blade" : _Greatsword(
         rarity   = 12,
         attack   = 1296,
         affinity = 15,
+        is_raw   = True, # Temporary oversimplification.
+
+        maximum_sharpness      = MaximumSharpness(200, 30, 30, 50, 50, 30, 50),
     ),
 
     "Lunatic Rose" : _SwordAndShield(
         rarity   = 12,
         attack   = 406,
         affinity = 10,
+        is_raw   = False, # Temporary oversimplification.
+
+        maximum_sharpness      = MaximumSharpness(60, 80, 30, 30, 80, 120, 0),
     ),
 
 }
@@ -141,6 +172,11 @@ def _weapon_db_integrity_check():
 
         elif (data.type != type_associations[type(data)]):
             raise ValueError(str(name) + ": Wrong value in the type field. (Did you accidentally overwrite it?)")
+
+        elif any(((x < 0) or (x > 800) or (x % 10 != 0)) for x in data.maximum_sharpness):
+            raise ValueError(str(name) + ": Strange sharpness numbers.")
+
+        # Not going to bother validating is_raw. It's a temporary flag anyway.
 
     return True
 

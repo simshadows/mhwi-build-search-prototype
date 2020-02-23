@@ -4,6 +4,10 @@
 """
 Filename: run.py
 Author:   contact@simshadows.com
+
+The entrypoint for my Monster Hunter World Iceborne build optimization tool!
+
+In this version, we assume each level under maximum Handicraft will subtract sharpness by 10 points.
 """
 
 
@@ -13,10 +17,32 @@ from database_weapons import WeaponClass, weapon_db
 from database_misc import *
 
 
-BLUE_SHARPNESS_MODIFIER = 1.2
-
 BASE_RAW_CRITICAL_MULTIPLIER = 1.25
 RAW_BLUNDER_MULTIPLIER       = 0.75
+
+
+# Corresponds to each level from red through to purple, in increasing-modifier order.
+RAW_SHARPNESS_MODIFIERS = (0.5, 0.75, 1.0, 1.05, 1.2, 1.32, 1.39)
+
+
+def calculate_highest_sharpness_modifier(weapon_maximum_sharpness, handicraft_level):
+    assert (handicraft_level >= 0) and (handicraft_level <= 5)
+    assert (len(weapon_maximum_sharpness) == 7) and (len(RAW_SHARPNESS_MODIFIERS) == 7)
+
+
+    # We traverse the weapon sharpness bar in reverse, then
+    # keep subtracting missing handicraft levels until we stop.
+    points_to_subtract = (5 - handicraft_level) * 10
+    for (level, points) in reversed(list(enumerate(weapon_maximum_sharpness))):
+        points_to_subtract -= weapon_maximum_sharpness[level]
+        if points_to_subtract < 0:
+            break
+
+    print(f"Points of sharpness until next level = {-points_to_subtract}")
+    print()
+    
+    maximum_sharpness_level = level
+    return RAW_SHARPNESS_MODIFIERS[maximum_sharpness_level]
 
 
 def calculate_efr(**kwargs):
@@ -69,7 +95,7 @@ def lookup(weapon_name):
     kwargs["weapon_attack_power"]     = w.attack
     kwargs["weapon_type"]             = w.type
     kwargs["additional_attack_power"] = POWERCHARM_ATTACK_POWER + POWERTALON_ATTACK_POWER
-    kwargs["raw_sharpness_modifier"]  = BLUE_SHARPNESS_MODIFIER
+    kwargs["raw_sharpness_modifier"]  = calculate_highest_sharpness_modifier(w.maximum_sharpness, 0)
     kwargs["raw_crit_multiplier"]     = BASE_RAW_CRITICAL_MULTIPLIER
     kwargs["affinity_percentage"]     = w.affinity
 
