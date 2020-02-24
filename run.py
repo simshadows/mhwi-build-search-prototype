@@ -13,8 +13,9 @@ In this version, we assume each level under maximum Handicraft will subtract sha
 
 import sys
 
+from skills           import Skill, SkillCounter
 from database_weapons import WeaponClass, weapon_db
-from database_misc import *
+from database_misc    import *
 
 
 BASE_RAW_CRITICAL_MULTIPLIER = 1.25
@@ -28,7 +29,6 @@ RAW_SHARPNESS_MODIFIERS = (0.5, 0.75, 1.0, 1.05, 1.2, 1.32, 1.39)
 def calculate_highest_sharpness_modifier(weapon_maximum_sharpness, handicraft_level):
     assert (handicraft_level >= 0) and (handicraft_level <= 5)
     assert (len(weapon_maximum_sharpness) == 7) and (len(RAW_SHARPNESS_MODIFIERS) == 7)
-
 
     # We traverse the weapon sharpness bar in reverse, then
     # keep subtracting missing handicraft levels until we stop.
@@ -50,7 +50,7 @@ def calculate_efr(**kwargs):
 
     bloat                  = weapon_type.value.bloat
     weapon_true_raw        = kwargs["weapon_attack_power"] / bloat
-    total_true_raw         = weapon_true_raw + kwargs["additional_attack_power"]
+    total_true_raw         = weapon_true_raw + kwargs["added_attack_power"]
     raw_sharpness_modifier = kwargs["raw_sharpness_modifier"]
     raw_crit_multiplier    = kwargs["raw_crit_multiplier"]
     raw_crit_chance        = min(kwargs["affinity_percentage"], 100) / 100
@@ -92,12 +92,12 @@ def lookup(weapon_name):
     w = weapon_db[weapon_name]
 
     kwargs = {}
-    kwargs["weapon_attack_power"]     = w.attack
-    kwargs["weapon_type"]             = w.type
-    kwargs["additional_attack_power"] = POWERCHARM_ATTACK_POWER + POWERTALON_ATTACK_POWER
-    kwargs["raw_sharpness_modifier"]  = calculate_highest_sharpness_modifier(w.maximum_sharpness, 0)
-    kwargs["raw_crit_multiplier"]     = BASE_RAW_CRITICAL_MULTIPLIER
-    kwargs["affinity_percentage"]     = w.affinity
+    kwargs["weapon_attack_power"]    = w.attack
+    kwargs["weapon_type"]            = w.type
+    kwargs["added_attack_power"]     = POWERCHARM_ATTACK_POWER + POWERTALON_ATTACK_POWER
+    kwargs["raw_sharpness_modifier"] = calculate_highest_sharpness_modifier(w.maximum_sharpness, 0)
+    kwargs["raw_crit_multiplier"]    = BASE_RAW_CRITICAL_MULTIPLIER
+    kwargs["affinity_percentage"]    = w.affinity
 
     efr = calculate_efr(**kwargs)
     print("EFR = " + str(efr))

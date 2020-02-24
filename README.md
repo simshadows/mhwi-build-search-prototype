@@ -20,6 +20,8 @@ This project is written for Python 3.8.
 
 7) Implement a GUI front-end. (Ideally something cross-platform.)
 
+8) Create a framework that can be used to help build other build optimization tools.
+
 ## License
 
 ```

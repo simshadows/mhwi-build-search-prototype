@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: ascii -*-
-
 """
 Filename: database_misc.py
 Author:   contact@simshadows.com

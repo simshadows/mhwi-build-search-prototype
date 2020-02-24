@@ -1,13 +1,9 @@
-#!/usr/bin/env python3
-# -*- coding: ascii -*-
-
 """
 Filename: database_weapons.py
 Author:   contact@simshadows.com
 
 This file provides the MHWI build optimizer script's weapons database.
 """
-
 
 from collections import namedtuple
 from enum import Enum
@@ -79,16 +75,13 @@ weapon_db = {
 
     # Weapons are indexed by their full name.
 
-    # For now, we will only have a subset of greatswords.
-    # I'll add other weapons later!
-
     "Jagras Deathclaw II" : _Greatsword(
         rarity   = 10,
         attack   = 1248,
         affinity = 0,
         is_raw   = True, # Temporary oversimplification.
 
-        maximum_sharpness      = MaximumSharpness(110, 80, 30, 30, 80, 70, 0),
+        maximum_sharpness = MaximumSharpness(110, 80, 30, 30, 80, 70, 0),
     ),
 
     "Acid Shredder II" : _Greatsword(
@@ -97,7 +90,7 @@ weapon_db = {
         affinity = 0,
         is_raw   = True, # Temporary oversimplification.
 
-        maximum_sharpness      = MaximumSharpness(60, 50, 110, 90, 60, 20, 10),
+        maximum_sharpness = MaximumSharpness(60, 50, 110, 90, 60, 20, 10),
     ),
 
     "Immovable Dharma" : _Greatsword(
@@ -106,7 +99,7 @@ weapon_db = {
         affinity = 0,
         is_raw   = True, # Temporary oversimplification.
 
-        maximum_sharpness      = MaximumSharpness(170, 30, 30, 60, 50, 30, 30),
+        maximum_sharpness = MaximumSharpness(170, 30, 30, 60, 50, 30, 30),
     ),
 
     "Great Demon Rod" : _Greatsword(
@@ -115,7 +108,7 @@ weapon_db = {
         affinity = -15,
         is_raw   = False, # Temporary oversimplification.
 
-        maximum_sharpness      = MaximumSharpness(100, 100, 40, 50, 60, 50, 0),
+        maximum_sharpness = MaximumSharpness(100, 100, 40, 50, 60, 50, 0),
     ),
 
     "Royal Venus Blade" : _Greatsword(
@@ -124,7 +117,7 @@ weapon_db = {
         affinity = 15,
         is_raw   = True, # Temporary oversimplification.
 
-        maximum_sharpness      = MaximumSharpness(200, 30, 30, 50, 50, 30, 50),
+        maximum_sharpness = MaximumSharpness(200, 30, 30, 50, 50, 30, 50),
     ),
 
     "Lunatic Rose" : _SwordAndShield(
@@ -133,7 +126,7 @@ weapon_db = {
         affinity = 10,
         is_raw   = False, # Temporary oversimplification.
 
-        maximum_sharpness      = MaximumSharpness(60, 80, 30, 30, 80, 120, 0),
+        maximum_sharpness = MaximumSharpness(60, 80, 30, 30, 80, 120, 0),
     ),
 
 }
