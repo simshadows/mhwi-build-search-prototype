@@ -20,16 +20,42 @@ SkillInfo = namedtuple(
         "extended_limit", # Extra levels over the maximum, obtainable with special skills like Agitator Secret.
                           # This ADDS onto the number set by the limit field. E.g. extended_limit=2 for Agitator Secret.
                           # IMPORTANT: We are assuming for now that there are only two limits.
+        
+        "states", # If an ability has multiple "meaningful" states, this field will be a tuple of strings.
+                  # Each string corresponds to a particular state of the ability.
+                  # Each string must concisely describe the condition and the state with as little reliance on context
+                  # cues as possible. (You must be able to look at the string on its own an understand it.)
+                  #
+                  # This field alone determines how many states a skill can have.
+                  # E.g. if self.states == ("ability inactive", "charging", "ability active"), then we can read the
+                  # length of the tuple to determine that there are three possible states.
+                  # 
+                  # Generally, stateful skills are all either binary, or have an escalation in strength.
+                  # (I'm unaware of any ability that operates differently.)
+                  # For this, states are actually represented in code by the pair:
+                  #     1) a Skill (see the Skill class below), and
+                  #     2) an integer.
+                  # The integer corresponds to an index into the states tuple.
+                  # Integer 0 will ALWYAS be the "off" state.
+                  # Increasing integers will correspond to the escalation. (For a binary state, 1 is "on".)
+                  #
+                  # If an ability is always active, then this field is set to None.
+
+        "zeroth_state_can_be_blank", # If True, then self.states[0] can be easily omitted without losing meaning.
+                                     # If False, then it is not omitted.
+                                     # If states is None, then this can be anything.
 
         "info",          # More information about the skill. I probably wrote this myself. If no info, put an empty string.
         "previous_name", # If the skill name was changed, put it here. If no previous name, put None.
     ],
     defaults=[
-        #1,   # levels          | Seems like a reasonable default. (Not currently used. Might use it to introduce set bonuses.)
-        0,    # extended_levels | Most skills don't have extensions.
-              #                 |
-        "",   # info            | I don't care to write about *ALL* skills yet.
-        None, # info            | Most skills don't have previous names.
+        0,    # extended_limit              Most skills don't have extensions.
+              #                            
+        None, # states                      Most skills aren't stateful.
+        True, # zeroth_state_can_be_blank   Most stateful skills are binary.
+              #                            
+        "",   # info                        I don't care to write about *ALL* skills yet.
+        None, # info                        Most skills don't have previous names.
     ],
 )
 
@@ -51,6 +77,8 @@ class Skill(Enum):
             SkillInfo(
                 name  = "Agitator",
                 limit = 5,
+
+                states = ("not enraged", "enraged"),
 
                 tooltip =
                     """
@@ -1352,6 +1380,9 @@ class Skill(Enum):
                 name  = "Weakness Exploit",
                 limit = 3,
 
+                states = ("non-weak point", "weak point", "wounded"),
+                zeroth_state_can_be_blank = False,
+
                 tooltip =
                     """
                     ((TODO))
@@ -1379,6 +1410,61 @@ class Skill(Enum):
                     ((TODO))
                     """,
             )
+
+
+# This code *was* originally written to determine ability activation conditions, but it doesn't seem necessary.
+# Delete this code at a later time.
+#ActivationConditionInfo = namedtuple(
+#    "ConditionInfo",
+#    [
+#        # FIELDS REQUIRED TO BE SET
+#
+#        "name",                # An arbitrary name for the particular condition.
+#        "concise_state_names", # Strings that can alone concisely describe the state with minimal context cues.
+#                               # The length of this string also determines the number of possible states.
+#                               #
+#                               # In code, the state of a single condition is represented by an integer.
+#                               # This integer can have only as many 
+#
+#        "info", # More information about the skill. I probably wrote this myself. All skills must have one.
+#
+#        # FIELDS WITH DEFAULTS
+#
+#        "zeroth_state_can_be_blank", # If True, then self.concise_state_names[0] can be easily omitted without losing meaning.
+#                                     # If False, then it is not omitted.
+#
+#    ],
+#    defaults=[
+#        True, # zeroth_state_can_be_blank | Most skills are binary, so you can often just omit stating them if inactive.
+#    ],
+#)
+#
+#@unique
+#class ActivationCondition(Enum):
+#
+#    MONSTER_ENRAGED = \
+#            ConditionInfo(
+#                name = "Enraged",
+#                state_names = ("not enraged", "enraged"),
+#
+#                info =
+#                    """
+#                    ((TODO))
+#                    """,
+#            )
+#
+#    MONSTER_PART_IS_WEAKPOINT = \
+#            ConditionInfo(
+#                name = "Is Weakpoint",
+#                concise_state_names = ("not a weakpoint", "weakpoint", "wounded"),
+#
+#                zeroth_state_can_be_blank = False,
+#
+#                info =
+#                    """
+#                    ((TODO))
+#                    """,
+#            )
 
 
 # This will take a dict like {Skill.AGITATOR: 10, ...} and clip it down to the maximum.

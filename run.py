@@ -39,6 +39,10 @@ WEAKNESS_EXPLOIT_WEAKPOINT_AFFINITY_PERCENTAGE     = (0, 10, 15, 30)
 WEAKNESS_EXPLOIT_WOUNDED_EXTRA_AFFINITY_PERCENTAGE = (0, 5,  15, 20)
 #                                            level =  0  1   2   3
 
+AGITATOR_ATTACK_POWER        = (0, 4, 8, 12, 16, 20, 24, 28)
+AGITATOR_AFFINITY_PERCENTAGE = (0, 5, 5, 7,  7,  10, 15, 20)
+#                      level =  0  1  2  3   4   5   6   7
+
 def print_debugging_statistics():
     print("=== Application Statistics ===")
     print()
@@ -97,32 +101,48 @@ SkillsContribution = namedtuple(
         "handicraft_level",
         "added_attack_power",
         "raw_critical_multiplier",
-        "added_raw_affinity_base_percentage",
-        "added_raw_affinity_weakpoint_percentage",
-        "added_raw_affinity_wounded_percentage",
+        "added_raw_affinity_percentage",
     ],
 )
-def calculate_skills_contribution(skills_dict, maximum_sharpness_values):
+def calculate_skills_contribution(skills_dict, skill_states_dict, maximum_sharpness_values):
     skills_dict = clipped_skills_defaultdict(skills_dict)
 
-    attack_boost_ap = ATTACK_BOOST_ATTACK_POWER[skills_dict[Skill.ATTACK_BOOST]]
-    attack_boost_aff = ATTACK_BOOST_AFFINITY_PERCENTAGE[skills_dict[Skill.ATTACK_BOOST]]
+    added_attack_power = 0
+    added_raw_affinity = 0
 
-    critical_eye_aff = CRITICAL_EYE_AFFINITY_PERCENTAGE[skills_dict[Skill.CRITICAL_EYE]]
+    # Attack Boost
+    added_attack_power += ATTACK_BOOST_ATTACK_POWER[skills_dict[Skill.ATTACK_BOOST]]
+    added_raw_affinity += ATTACK_BOOST_AFFINITY_PERCENTAGE[skills_dict[Skill.ATTACK_BOOST]]
 
-    wex_weakpoint_affinity = WEAKNESS_EXPLOIT_WEAKPOINT_AFFINITY_PERCENTAGE[skills_dict[Skill.WEAKNESS_EXPLOIT]]
-    wex_wounded_extra_affinity = WEAKNESS_EXPLOIT_WOUNDED_EXTRA_AFFINITY_PERCENTAGE[skills_dict[Skill.WEAKNESS_EXPLOIT]]
+    # Critical Eye
+    added_raw_affinity += CRITICAL_EYE_AFFINITY_PERCENTAGE[skills_dict[Skill.CRITICAL_EYE]]
 
-    added_attack_power = attack_boost_ap
-    added_raw_affinity = critical_eye_aff + attack_boost_aff
+    # Weakness Exploit
+    if skills_dict[Skill.WEAKNESS_EXPLOIT] > 0:
+        assert Skill.WEAKNESS_EXPLOIT in skill_states_dict
+
+        state = skill_states_dict[Skill.WEAKNESS_EXPLOIT]
+        assert (state <= 2) and (state >= 0)
+        if state >= 1:
+            added_raw_affinity += WEAKNESS_EXPLOIT_WEAKPOINT_AFFINITY_PERCENTAGE[skills_dict[Skill.WEAKNESS_EXPLOIT]]
+            if state == 2:
+                added_raw_affinity += WEAKNESS_EXPLOIT_WOUNDED_EXTRA_AFFINITY_PERCENTAGE[skills_dict[Skill.WEAKNESS_EXPLOIT]]
+
+    # Agitator
+    if skills_dict[Skill.AGITATOR] > 0:
+        assert Skill.AGITATOR in skill_states_dict
+
+        state = skill_states_dict[Skill.AGITATOR]
+        assert (state == 0) or (state == 1)
+        if state == 1:
+            added_attack_power += AGITATOR_ATTACK_POWER[skills_dict[Skill.AGITATOR]]
+            added_raw_affinity += AGITATOR_AFFINITY_PERCENTAGE[skills_dict[Skill.AGITATOR]]
 
     ret = SkillsContribution(
-            handicraft_level                        = skills_dict[Skill.HANDICRAFT],
-            added_attack_power                      = added_attack_power,
-            raw_critical_multiplier                 = CRITICAL_BOOST_RAW_CRIT_MULTIPLIERS[skills_dict[Skill.CRITICAL_BOOST]],
-            added_raw_affinity_base_percentage      = added_raw_affinity,
-            added_raw_affinity_weakpoint_percentage = added_raw_affinity + wex_weakpoint_affinity,
-            added_raw_affinity_wounded_percentage   = added_raw_affinity + wex_weakpoint_affinity + wex_wounded_extra_affinity,
+            handicraft_level              = skills_dict[Skill.HANDICRAFT],
+            added_attack_power            = added_attack_power,
+            raw_critical_multiplier       = CRITICAL_BOOST_RAW_CRIT_MULTIPLIERS[skills_dict[Skill.CRITICAL_BOOST]],
+            added_raw_affinity_percentage = added_raw_affinity,
         )
     return ret
 
@@ -175,47 +195,84 @@ def calculate_efr(**kwargs):
 PerformanceValues = namedtuple(
     "PerformanceValues",
     [
-        "efr_base",
-        "efr_weakpoint",
-        "efr_wounded",
+        "efr",
         "sharpness_values",
     ],
 )
-def lookup(weapon_name, skills_dict):
+# This function is recursive.
+# For each condition missing from skill_conditions_dict,
+# it will call itself again for each possible state of the skill.
+def lookup(weapon_name, skills_dict, skill_states_dict):
     assert isinstance(weapon_name, str)
     assert isinstance(skills_dict, dict)
+    assert isinstance(skill_states_dict, dict)
 
-    weapon = weapon_db[weapon_name]
+    ret = None
 
-    maximum_sharpness_values = weapon.maximum_sharpness
-    skills_contribution = calculate_skills_contribution(skills_dict, maximum_sharpness_values)
-
-    handicraft_level = skills_contribution.handicraft_level
-    sharpness_values, highest_sharpness_level = actual_sharpness_level_values(maximum_sharpness_values, handicraft_level)
-
-    item_attack_power = POWERCHARM_ATTACK_POWER + POWERTALON_ATTACK_POWER
-
-    kwargs = {}
-    kwargs["weapon_attack_power"]        = weapon.attack
-    kwargs["weapon_type"]                = weapon.type
-    kwargs["weapon_affinity_percentage"] = weapon.affinity
-    kwargs["added_attack_power"]         = skills_contribution.added_attack_power + item_attack_power
-    kwargs["added_affinity_percentage"]  = skills_contribution.added_raw_affinity_base_percentage
-    kwargs["raw_sharpness_modifier"]     = RAW_SHARPNESS_MODIFIERS[highest_sharpness_level]
-    kwargs["raw_crit_multiplier"]        = skills_contribution.raw_critical_multiplier
-
-    efr_base      = calculate_efr(**kwargs)
-    kwargs["added_affinity_percentage"]  = skills_contribution.added_raw_affinity_weakpoint_percentage
-    efr_weakpoint = calculate_efr(**kwargs)
-    kwargs["added_affinity_percentage"]  = skills_contribution.added_raw_affinity_wounded_percentage
-    efr_wounded   = calculate_efr(**kwargs)
-
-    ret = PerformanceValues(
-            efr_base           = efr_base,
-            efr_weakpoint      = efr_weakpoint,
-            efr_wounded        = efr_wounded,
-            sharpness_values   = sharpness_values,
+    skill_states_missing = any(
+            (lvl > 0) and (s.value.states is not None) and (s not in skill_states_dict)
+            for (s, lvl) in skills_dict.items()
         )
+
+    if skill_states_missing:
+        # We do recursion here.
+
+        if __debug__:
+            # Determine if skills_states_dict contains any skills not in skills_dict.
+            skills_keys = set(k for (k, v) in skills_dict.items())
+            skill_states_keys = set(k for (k, v) in skill_states_dict.items())
+            diff = skill_states_keys - skills_keys
+            if len(diff) > 0:
+                skills_str = " ".join(diff)
+                raise RuntimeError(f"skill_states_dict has sklls not in skills_dict. \
+                        (Skills unique to skill_states_dict: {skills_str}.")
+
+        # We first determine the missing skill name from skill_states_dict that is earliest in alphabetical order.
+
+        skill_to_iterate = None
+
+        for (skill, _) in skills_dict.items():
+            if (skill.value.states is not None) and (skill not in skill_states_dict):
+                if (skill_to_iterate is None) or (skill.value.name <= skill_to_iterate.value.name):
+                    assert (skill_to_iterate is None) or (skill.value.name != skill_to_iterate.value.name)
+                    skill_to_iterate = skill
+
+        assert skill_to_iterate is not None
+
+        ret = []
+        total_states = len(skill_to_iterate.value.states)
+        for level in range(total_states):
+            new_skill_states_dict = skill_states_dict.copy()
+            new_skill_states_dict[skill_to_iterate] = level
+            ret.append(lookup(weapon_name, skills_dict, new_skill_states_dict))
+
+    else:
+        # We terminate recursion here.
+
+        weapon = weapon_db[weapon_name]
+
+        maximum_sharpness_values = weapon.maximum_sharpness
+        skills_contribution = calculate_skills_contribution(skills_dict, skill_states_dict, maximum_sharpness_values)
+
+        handicraft_level = skills_contribution.handicraft_level
+        sharpness_values, highest_sharpness_level = actual_sharpness_level_values(maximum_sharpness_values, handicraft_level)
+
+        item_attack_power = POWERCHARM_ATTACK_POWER + POWERTALON_ATTACK_POWER
+
+        kwargs = {}
+        kwargs["weapon_attack_power"]        = weapon.attack
+        kwargs["weapon_type"]                = weapon.type
+        kwargs["weapon_affinity_percentage"] = weapon.affinity
+        kwargs["added_attack_power"]         = skills_contribution.added_attack_power + item_attack_power
+        kwargs["added_affinity_percentage"]  = skills_contribution.added_raw_affinity_percentage
+        kwargs["raw_sharpness_modifier"]     = RAW_SHARPNESS_MODIFIERS[highest_sharpness_level]
+        kwargs["raw_crit_multiplier"]        = skills_contribution.raw_critical_multiplier
+
+        ret = PerformanceValues(
+                efr               = calculate_efr(**kwargs),
+                sharpness_values  = sharpness_values,
+            )
+
     return ret
 
 
@@ -230,27 +287,86 @@ def lookup_command(weapon_name):
             Skill.CRITICAL_BOOST: 3,
             Skill.ATTACK_BOOST: 7,
             Skill.WEAKNESS_EXPLOIT: 3,
+            Skill.AGITATOR: 5,
+        }
+
+    skill_states_dict = {
+            #Skill.WEAKNESS_EXPLOIT: 2,
+            #Skill.AGITATOR: 1,
         }
 
     print("Skills:")
     print("\n".join(f"   {skill.value.name} {level}" for (skill, level) in clipped_skills_defaultdict(skills_dict).items()))
     print()
 
-    p = lookup(weapon_name, skills_dict)
+    results = lookup(weapon_name, skills_dict, skill_states_dict)
+    sharpness_values = None
+    efrs_strings = []
+
+    iterated_skills = [
+            skill for (skill, level) in skills_dict.items()
+            if (level > 0) and (skill.value.states is not None) and (skill not in skill_states_dict)
+        ]
+
+    if isinstance(iterated_skills, list) and (len(iterated_skills) > 0):
+        # We have an arbitrarily-deep list with nested lists of result tuples.
+
+        # It should be in alphabetical order, so we sort first.
+        iterated_skills.sort(key=lambda skill : skill.value.name)
+
+        states_strings = []
+        efrs = []
+        sharpness_values = None
+        def traverse_results_structure(states, subresults):
+            nonlocal sharpness_values
+            assert isinstance(states, list)
+
+            next_index = len(states)
+            if next_index >= len(iterated_skills):
+                # Terminate recursion here.
+                
+                states_strings.append("; ".join(s.value.states[states[i]] for (i, s) in enumerate(iterated_skills)))
+                efrs.append(subresults.efr)
+
+                assert (sharpness_values is None) or (sharpness_values == subresults.sharpness_values)
+                sharpness_values = subresults.sharpness_values
+
+            else:
+                # Do more recursion here!
+
+                skill_to_iterate = iterated_skills[next_index]
+                assert len(skill_to_iterate.value.states) > 1
+                for state_value, _ in enumerate(skill_to_iterate.value.states):
+                    traverse_results_structure(states + [state_value], subresults[state_value])
+            return
+
+        traverse_results_structure([], results)
+
+        # Make state_strings look nicer
+        states_strings = [s + ":" for s in states_strings]
+        max_str_len = max(len(s) for s in states_strings)
+        states_strings = [s.ljust(max_str_len, " ") for s in states_strings]
+
+        efrs_strings.append("EFR values:")
+        efrs_strings.extend(f"   {state_str} {efr}" for (state_str, efr) in zip(states_strings, efrs))
+
+    else:
+        # We have just a single result tuple.
+
+        sharpness_values = results.sharpness_values
+        efrs_strings.append(f"EFR: {results.efr}")
 
     print("Sharpness values:")
-    print(f"   Red:    {p.sharpness_values[0]} hits")
-    print(f"   Orange: {p.sharpness_values[1]} hits")
-    print(f"   Yellow: {p.sharpness_values[2]} hits")
-    print(f"   Green:  {p.sharpness_values[3]} hits")
-    print(f"   Blue:   {p.sharpness_values[4]} hits")
-    print(f"   White:  {p.sharpness_values[5]} hits")
-    print(f"   Purple: {p.sharpness_values[6]} hits")
+    print(f"   Red:    {sharpness_values[0]} hits")
+    print(f"   Orange: {sharpness_values[1]} hits")
+    print(f"   Yellow: {sharpness_values[2]} hits")
+    print(f"   Green:  {sharpness_values[3]} hits")
+    print(f"   Blue:   {sharpness_values[4]} hits")
+    print(f"   White:  {sharpness_values[5]} hits")
+    print(f"   Purple: {sharpness_values[6]} hits")
     print()
 
-    print("EFR (base)      = " + str(p.efr_base))
-    print("EFR (weakpoint) = " + str(p.efr_weakpoint))
-    print("EFR (wounded)   = " + str(p.efr_wounded))
+    print("\n".join(efrs_strings))
     return
 
 
@@ -259,35 +375,27 @@ def tests_passed():
     print("Running unit tests.\n")
 
     skills_dict = {} # Start with no skills
+    skill_states_dict = {} # Start with no states
     weapon = "Acid Shredder II"
 
     # This function will leave skills_dict with the skill at max_level.
-    def test_with_incrementing_skill(skill, max_level, expected_base_efrs, *args):
+    def test_with_incrementing_skill(skill, max_level, expected_efrs):
         assert max_level == skill.value.limit
-        assert len(expected_base_efrs) == (max_level + 1)
-        expected_weakpoint_efrs = expected_base_efrs
-        expected_wounded_efrs = expected_base_efrs
-        if len(args) > 0:
-            expected_weakpoint_efrs = args[0]
-            if len(args) > 1:
-                expected_wounded_efrs = args[1]
-            assert len(args) <= 2
+        assert len(expected_efrs) == (max_level + 1)
 
         for level in range(max_level + 1):
             skills_dict[skill] = level
-            vals = lookup(weapon, skills_dict)
-            if round(vals.efr_base) != round(expected_base_efrs[level]):
-                raise ValueError(f"Failed base EFR for skill level {level}.")
-            elif round(vals.efr_weakpoint) != round(expected_weakpoint_efrs[level]):
-                raise ValueError(f"Failed base EFR for skill level {level}.")
-            elif round(vals.efr_wounded) != round(expected_wounded_efrs[level]):
-                raise ValueError(f"Failed base EFR for skill level {level}.")
+            vals = lookup(weapon, skills_dict, skill_states_dict)
+            if round(vals.efr) != round(expected_efrs[level]):
+                raise ValueError(f"EFR value mismatch for skill level {level}. Got EFR = {vals.efr}.")
         return
 
     print("Incrementing Handicraft.")
     test_with_incrementing_skill(Skill.HANDICRAFT, 5, [366.00, 366.00, 366.00, 402.60, 402.60, 423.95])
+    # We now have full Handicraft.
     print("Incrementing Critical Boost with zero Affinity.")
     test_with_incrementing_skill(Skill.CRITICAL_BOOST, 3, [423.95, 423.95, 423.95, 423.95])
+    # We now have full Handicraft and Critical Boost.
 
     weapon = "Royal Venus Blade"
 
@@ -295,16 +403,50 @@ def tests_passed():
     test_with_incrementing_skill(Skill.CRITICAL_BOOST, 3, [411.01, 413.98, 416.95, 419.92])
     print("Incrementing Critical Eye.")
     test_with_incrementing_skill(Skill.CRITICAL_EYE, 7, [419.92, 427.84, 435.77, 443.69, 451.61, 459.53, 467.46, 483.30])
+    # We now have full Handicraft, Critical Boost, and Critical Eye.
     print("Incrementing Attack Boost.")
     test_with_incrementing_skill(Skill.ATTACK_BOOST, 7, [483.30, 488.39, 493.48, 498.57, 511.91, 517.08, 522.25, 527.42])
-    print("Incrementing Weakness Exploit.")
-    test_with_incrementing_skill(Skill.WEAKNESS_EXPLOIT, 3, [527.42, 527.42, 527.42, 527.42],
-            [527.42, 544.44, 552.94, 578.46], [527.42, 552.94, 578.46, 595.48])
+    # We now have full Handicraft, Critical Boost, Critical Eye, and Attack Boost.
 
-    #weapon = "Jagras Deathclaw II"
+    skill_states_dict = {
+            Skill.WEAKNESS_EXPLOIT: 2,
+        }
 
-    #print("Incrementing Critical Eye again.")
-    #test_with_incrementing_skill(Skill.CRITICAL_EYE, 7, [363.00, 370.26, 377.52, 384.78, 392.04, 399.30, 406.56, 421.08])
+    print("Incrementing Weakness Exploit on a wounded part.")
+    test_with_incrementing_skill(Skill.WEAKNESS_EXPLOIT, 3, [527.42, 552.94, 578.46, 595.48])
+    # Last EFR should exceed 100% Affinity.
+
+    skill_states_dict = {
+            Skill.WEAKNESS_EXPLOIT: 1,
+        }
+
+    print("Incrementing Weakness Exploit on a weak point.")
+    test_with_incrementing_skill(Skill.WEAKNESS_EXPLOIT, 3, [527.42, 544.44, 552.94, 578.46])
+
+    skill_states_dict = {
+            Skill.WEAKNESS_EXPLOIT: 0,
+        }
+
+    print("Incrementing Weakness Exploit on a non-weak point.")
+    test_with_incrementing_skill(Skill.WEAKNESS_EXPLOIT, 3, [527.42]*4)
+    # We now have full Handicraft, Critical Boost, Critical Eye, Attack Boost, and Weakness Exploit.
+
+    skill_states_dict = {
+            Skill.WEAKNESS_EXPLOIT: 1,
+            Skill.AGITATOR        : 0,
+        }
+
+    print("Incrementing Agitator when monster is not enraged.")
+    test_with_incrementing_skill(Skill.AGITATOR, 5, [578.46]*6)
+
+    skill_states_dict = {
+            Skill.WEAKNESS_EXPLOIT: 1,
+            Skill.AGITATOR        : 1,
+        }
+
+    print("Incrementing Agitator when monster is enraged.")
+    test_with_incrementing_skill(Skill.AGITATOR, 5, [578.46, 594.64, 602.31, 613.52, 621.24, 634.40])
+    # We now have full Handicraft, Critical Boost, Critical Eye, Attack Boost, Weakness Exploit, and Agitator.
 
     print("\nUnit tests are all passed.")
     print("\n==============================\n")
