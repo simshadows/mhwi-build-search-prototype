@@ -4,7 +4,7 @@ Author:   contact@simshadows.com
 """
 
 from collections import namedtuple
-from enum import Enum
+from enum import Enum, unique
 
 SkillInfo = namedtuple(
     "SkillInfo",
@@ -33,6 +33,7 @@ SkillInfo = namedtuple(
     ],
 )
 
+@unique
 class Skill(Enum):
 
     AFFINITY_SLIDING = \
@@ -123,6 +124,17 @@ class Skill(Enum):
                     """,
             )
 
+    BLAST_FUNCTIONALITY = \
+            SkillInfo(
+                name  = "Blast Functionality",
+                limit = 1,
+
+                tooltip =
+                    """
+                    ((TODO))
+                    """,
+            )
+
     BLAST_RESISTANCE = \
             SkillInfo(
                 name  = "Blast Resistance",
@@ -189,6 +201,17 @@ class Skill(Enum):
                     """,
             )
 
+    BOW_CHARGE_PLUS = \
+            SkillInfo(
+                name  = "Bow Charge Plus",
+                limit = 1,
+
+                tooltip =
+                    """
+                    ((TODO))
+                    """,
+            )
+
     CAPACITY_BOOST = \
             SkillInfo(
                 name  = "Capacity Boost",
@@ -214,6 +237,28 @@ class Skill(Enum):
     CLIFFHANGER = \
             SkillInfo(
                 name  = "Cliffhanger",
+                limit = 1,
+
+                tooltip =
+                    """
+                    ((TODO))
+                    """,
+            )
+
+    COALESCENCE = \
+            SkillInfo(
+                name  = "Coalescence",
+                limit = 3,
+
+                tooltip =
+                    """
+                    ((TODO))
+                    """,
+            )
+
+    COLDPROOF = \
+            SkillInfo(
+                name  = "Coldproof",
                 limit = 1,
 
                 tooltip =
@@ -255,10 +300,32 @@ class Skill(Enum):
                     """,
             )
 
+    CRITICAL_ELEMENT = \
+            SkillInfo(
+                name  = "Critical Element",
+                limit = 1,
+
+                tooltip =
+                    """
+                    ((TODO))
+                    """,
+            )
+
     CRITICAL_EYE = \
             SkillInfo(
                 name  = "Critical Eye",
                 limit = 7,
+
+                tooltip =
+                    """
+                    ((TODO))
+                    """,
+            )
+
+    CRITICAL_STATUS = \
+            SkillInfo(
+                name  = "Critical Status",
+                limit = 1,
 
                 tooltip =
                     """
@@ -376,17 +443,6 @@ class Skill(Enum):
                     """,
             )
 
-    EVADE_WINDOW = \
-            SkillInfo(
-                name  = "Evade Window",
-                limit = 5,
-
-                tooltip =
-                    """
-                    ((TODO))
-                    """,
-            )
-
     ENTOMOLOGIST = \
             SkillInfo(
                 name  = "Entomologist",
@@ -402,6 +458,17 @@ class Skill(Enum):
             SkillInfo(
                 name  = "Evade Extender",
                 limit = 3,
+
+                tooltip =
+                    """
+                    ((TODO))
+                    """,
+            )
+
+    EVADE_WINDOW = \
+            SkillInfo(
+                name  = "Evade Window",
+                limit = 5,
 
                 tooltip =
                     """
@@ -772,10 +839,32 @@ class Skill(Enum):
                     """,
             )
 
+    NON_ELEMENTAL_BOOST = \
+            SkillInfo(
+                name  = "Non-elemental Boost",
+                limit = 1,
+
+                tooltip =
+                    """
+                    ((TODO))
+                    """,
+            )
+
     NORMAL_SHOTS = \
             SkillInfo(
                 name  = "Normal Shots",
                 limit = 1,
+
+                tooltip =
+                    """
+                    ((TODO))
+                    """,
+            )
+
+    OFFENSIVE_GUARD = \
+            SkillInfo(
+                name  = "Offensive Guard",
+                limit = 3,
 
                 tooltip =
                     """
@@ -798,6 +887,17 @@ class Skill(Enum):
             SkillInfo(
                 name  = "Paralysis Attack",
                 limit = 3,
+
+                tooltip =
+                    """
+                    ((TODO))
+                    """,
+            )
+
+    PARALYSIS_FUNCTIONALITY = \
+            SkillInfo(
+                name  = "Paralysis Functionality",
+                limit = 1,
 
                 tooltip =
                     """
@@ -860,6 +960,17 @@ class Skill(Enum):
                     """,
             )
 
+    POISON_FUNCTIONALITY = \
+            SkillInfo(
+                name  = "Poison Functionality",
+                limit = 1,
+
+                tooltip =
+                    """
+                    ((TODO))
+                    """,
+            )
+
     POISON_RESISTANCE = \
             SkillInfo(
                 name  = "Poison Resistance",
@@ -885,6 +996,17 @@ class Skill(Enum):
     PRO_TRANSPORTER = \
             SkillInfo(
                 name  = "Pro Transporter",
+                limit = 1,
+
+                tooltip =
+                    """
+                    ((TODO))
+                    """,
+            )
+
+    PROVOKER = \
+            SkillInfo(
+                name  = "Provoker",
                 limit = 1,
 
                 tooltip =
@@ -948,6 +1070,17 @@ class Skill(Enum):
                     """,
             )
 
+    SAFE_LANDING = \
+            SkillInfo(
+                name  = "Safe Landing",
+                limit = 1,
+
+                tooltip =
+                    """
+                    ((TODO))
+                    """,
+            )
+
     SCENTHOUND = \
             SkillInfo(
                 name  = "Scenthound",
@@ -985,6 +1118,17 @@ class Skill(Enum):
             SkillInfo(
                 name  = "Sleep Attack",
                 limit = 3,
+
+                tooltip =
+                    """
+                    ((TODO))
+                    """,
+            )
+
+    SLEEP_FUNCTIONALITY = \
+            SkillInfo(
+                name  = "Sleep Functionality",
+                limit = 1,
 
                 tooltip =
                     """
@@ -1069,19 +1213,6 @@ class Skill(Enum):
                     """,
             )
 
-    SURVIVAL_EXPERT = \
-            SkillInfo(
-                name  = "Survival Expert",
-                limit = 3,
-
-                tooltip =
-                    """
-                    ((TODO))
-                    """,
-
-                previous_name = "Sporepuff Expert"
-            )
-
     SPREAD_POWER_SHOTS = \
             SkillInfo(
                 name  = "Spread/Power Shots",
@@ -1135,6 +1266,19 @@ class Skill(Enum):
                     """
                     ((TODO))
                     """,
+            )
+
+    SURVIVAL_EXPERT = \
+            SkillInfo(
+                name  = "Survival Expert",
+                limit = 3,
+
+                tooltip =
+                    """
+                    ((TODO))
+                    """,
+
+                previous_name = "Sporepuff Expert"
             )
 
     THUNDER_ATTACK = \
@@ -1236,149 +1380,6 @@ class Skill(Enum):
                     """,
             )
 
-    CRITICAL_ELEMENT = \
-            SkillInfo(
-                name  = "Critical Element",
-                limit = 1,
-
-                tooltip =
-                    """
-                    ((TODO))
-                    """,
-            )
-
-    OFFENSIVE_GUARD = \
-            SkillInfo(
-                name  = "Offensive Guard",
-                limit = 3,
-
-                tooltip =
-                    """
-                    ((TODO))
-                    """,
-            )
-
-    CRITICAL_STATUS = \
-            SkillInfo(
-                name  = "Critical Status",
-                limit = 1,
-
-                tooltip =
-                    """
-                    ((TODO))
-                    """,
-            )
-
-    NON_ELEMENTAL_BOOST = \
-            SkillInfo(
-                name  = "Non-elemental Boost",
-                limit = 1,
-
-                tooltip =
-                    """
-                    ((TODO))
-                    """,
-            )
-
-    COALESCENCE = \
-            SkillInfo(
-                name  = "Coalescence",
-                limit = 3,
-
-                tooltip =
-                    """
-                    ((TODO))
-                    """,
-            )
-
-    PROVOKER = \
-            SkillInfo(
-                name  = "Provoker",
-                limit = 1,
-
-                tooltip =
-                    """
-                    ((TODO))
-                    """,
-            )
-
-    BLAST_FUNCTIONALITY = \
-            SkillInfo(
-                name  = "Blast Functionality",
-                limit = 1,
-
-                tooltip =
-                    """
-                    ((TODO))
-                    """,
-            )
-
-    PARALYSIS_FUNCTIONALITY = \
-            SkillInfo(
-                name  = "Paralysis Functionality",
-                limit = 1,
-
-                tooltip =
-                    """
-                    ((TODO))
-                    """,
-            )
-
-    POISON_FUNCTIONALITY = \
-            SkillInfo(
-                name  = "Poison Functionality",
-                limit = 1,
-
-                tooltip =
-                    """
-                    ((TODO))
-                    """,
-            )
-
-    SLEEP_FUNCTIONALITY = \
-            SkillInfo(
-                name  = "Sleep Functionality",
-                limit = 1,
-
-                tooltip =
-                    """
-                    ((TODO))
-                    """,
-            )
-
-    SAFE_LANDING = \
-            SkillInfo(
-                name  = "Safe Landing",
-                limit = 1,
-
-                tooltip =
-                    """
-                    ((TODO))
-                    """,
-            )
-
-    BOW_CHARGE_PLUS = \
-            SkillInfo(
-                name  = "Bow Charge Plus",
-                limit = 1,
-
-                tooltip =
-                    """
-                    ((TODO))
-                    """,
-            )
-
-    COLDPROOF = \
-            SkillInfo(
-                name  = "Coldproof",
-                limit = 1,
-
-                tooltip =
-                    """
-                    ((TODO))
-                    """,
-            )
-
 
 class SkillCounter:
     """
@@ -1419,9 +1420,8 @@ def _skills_integrity_check():
         # Checking if we wrote out the tuples in alphabetical order.
         # (This doesn't actually affect program functionality, but it's more organized to do it this way.)
 
-        # We'll add this in the next commit!
-        #if (prev_tup is not None) and (prev_tup.name >= tup.name):
-        #    raise ValueError(str(skill) + ": Not in alphabetical order.")
+        if (prev_tup is not None) and (prev_tup.name >= tup.name):
+            raise ValueError(str(skill) + ": Not in alphabetical order.")
 
         prev_tup = tup
 

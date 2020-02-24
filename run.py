@@ -104,7 +104,18 @@ def lookup(weapon_name):
     return
 
 
+def print_debugging_statistics():
+    print("=== Application Statistics ===")
+    print()
+    print("Number of skills: " + str(len(list(Skill))))
+    print("Total number of weapons: " + str(len(weapon_db)))
+    return
+
+
 def run():
+    print_debugging_statistics()
+    print("\n==============================\n")
+
     # Determine whether to run in search or lookup mode.
     if len(sys.argv) > 1:
         weapon_name = sys.argv[1]
