@@ -43,6 +43,9 @@ AGITATOR_ATTACK_POWER        = (0, 4, 8, 12, 16, 20, 24, 28)
 AGITATOR_AFFINITY_PERCENTAGE = (0, 5, 5, 7,  7,  10, 15, 20)
 #                      level =  0  1  2  3   4   5   6   7
 
+PEAK_PERFORMANCE_ATTACK_POWER = (0, 5, 10, 20)
+#                       level =  0  1  2   3
+
 def print_debugging_statistics():
     print("=== Application Statistics ===")
     print()
@@ -137,6 +140,15 @@ def calculate_skills_contribution(skills_dict, skill_states_dict, maximum_sharpn
         if state == 1:
             added_attack_power += AGITATOR_ATTACK_POWER[skills_dict[Skill.AGITATOR]]
             added_raw_affinity += AGITATOR_AFFINITY_PERCENTAGE[skills_dict[Skill.AGITATOR]]
+
+    # Peak Performance
+    if skills_dict[Skill.PEAK_PERFORMANCE] > 0:
+        assert Skill.PEAK_PERFORMANCE in skill_states_dict
+
+        state = skill_states_dict[Skill.PEAK_PERFORMANCE]
+        assert (state == 0) or (state == 1)
+        if state == 1:
+            added_attack_power += PEAK_PERFORMANCE_ATTACK_POWER[skills_dict[Skill.PEAK_PERFORMANCE]]
 
     ret = SkillsContribution(
             handicraft_level              = skills_dict[Skill.HANDICRAFT],
@@ -288,11 +300,13 @@ def lookup_command(weapon_name):
             Skill.ATTACK_BOOST: 7,
             Skill.WEAKNESS_EXPLOIT: 3,
             Skill.AGITATOR: 5,
+            Skill.PEAK_PERFORMANCE: 3,
         }
 
     skill_states_dict = {
             #Skill.WEAKNESS_EXPLOIT: 2,
             #Skill.AGITATOR: 1,
+            Skill.PEAK_PERFORMANCE: 1,
         }
 
     print("Skills:")
@@ -447,6 +461,15 @@ def tests_passed():
     print("Incrementing Agitator when monster is enraged.")
     test_with_incrementing_skill(Skill.AGITATOR, 5, [578.46, 594.64, 602.31, 613.52, 621.24, 634.40])
     # We now have full Handicraft, Critical Boost, Critical Eye, Attack Boost, Weakness Exploit, and Agitator.
+    
+    skill_states_dict = {
+            Skill.WEAKNESS_EXPLOIT : 2,
+            Skill.AGITATOR         : 1,
+            Skill.PEAK_PERFORMANCE : 1,
+        }
+
+    print("Incrementing Peak Performance.")
+    test_with_incrementing_skill(Skill.PEAK_PERFORMANCE, 3, [634.40, 644.13, 653.86, 673.32])
 
     print("\nUnit tests are all passed.")
     print("\n==============================\n")

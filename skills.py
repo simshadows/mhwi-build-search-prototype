@@ -960,6 +960,8 @@ class Skill(Enum):
                 name  = "Peak Performance",
                 limit = 3,
 
+                states = ("not full health", "full health"),
+
                 tooltip =
                     """
                     ((TODO))
