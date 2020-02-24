@@ -103,15 +103,17 @@ SkillsContribution = namedtuple(
     [
         "handicraft_level",
         "added_attack_power",
+        "weapon_base_attack_power_multiplier",
         "raw_critical_multiplier",
         "added_raw_affinity_percentage",
     ],
 )
-def calculate_skills_contribution(skills_dict, skill_states_dict, maximum_sharpness_values):
+def calculate_skills_contribution(skills_dict, skill_states_dict, maximum_sharpness_values, weapon_is_raw):
     skills_dict = clipped_skills_defaultdict(skills_dict)
 
     added_attack_power = 0
     added_raw_affinity = 0
+    weapon_base_attack_power_multiplier = 1
 
     # Attack Boost
     added_attack_power += ATTACK_BOOST_ATTACK_POWER[skills_dict[Skill.ATTACK_BOOST]]
@@ -150,11 +152,16 @@ def calculate_skills_contribution(skills_dict, skill_states_dict, maximum_sharpn
         if state == 1:
             added_attack_power += PEAK_PERFORMANCE_ATTACK_POWER[skills_dict[Skill.PEAK_PERFORMANCE]]
 
+    # Non-elemental Boost
+    if (skills_dict[Skill.NON_ELEMENTAL_BOOST] == 1) and weapon_is_raw:
+        weapon_base_attack_power_multiplier = 1.05
+
     ret = SkillsContribution(
-            handicraft_level              = skills_dict[Skill.HANDICRAFT],
-            added_attack_power            = added_attack_power,
-            raw_critical_multiplier       = CRITICAL_BOOST_RAW_CRIT_MULTIPLIERS[skills_dict[Skill.CRITICAL_BOOST]],
-            added_raw_affinity_percentage = added_raw_affinity,
+            handicraft_level                    = skills_dict[Skill.HANDICRAFT],
+            added_attack_power                  = added_attack_power,
+            weapon_base_attack_power_multiplier = weapon_base_attack_power_multiplier,
+            raw_critical_multiplier             = CRITICAL_BOOST_RAW_CRIT_MULTIPLIERS[skills_dict[Skill.CRITICAL_BOOST]],
+            added_raw_affinity_percentage       = added_raw_affinity,
         )
     return ret
 
@@ -264,7 +271,12 @@ def lookup(weapon_name, skills_dict, skill_states_dict):
         weapon = weapon_db[weapon_name]
 
         maximum_sharpness_values = weapon.maximum_sharpness
-        skills_contribution = calculate_skills_contribution(skills_dict, skill_states_dict, maximum_sharpness_values)
+        skills_contribution = calculate_skills_contribution(
+                skills_dict,
+                skill_states_dict,
+                maximum_sharpness_values,
+                weapon.is_raw
+            )
 
         handicraft_level = skills_contribution.handicraft_level
         sharpness_values, highest_sharpness_level = actual_sharpness_level_values(maximum_sharpness_values, handicraft_level)
@@ -272,7 +284,7 @@ def lookup(weapon_name, skills_dict, skill_states_dict):
         item_attack_power = POWERCHARM_ATTACK_POWER + POWERTALON_ATTACK_POWER
 
         kwargs = {}
-        kwargs["weapon_attack_power"]        = weapon.attack
+        kwargs["weapon_attack_power"]        = weapon.attack * skills_contribution.weapon_base_attack_power_multiplier
         kwargs["weapon_type"]                = weapon.type
         kwargs["weapon_affinity_percentage"] = weapon.affinity
         kwargs["added_attack_power"]         = skills_contribution.added_attack_power + item_attack_power
@@ -294,13 +306,14 @@ def search_command():
 
 def lookup_command(weapon_name):
     skills_dict = {
-            Skill.HANDICRAFT: 5,
+            #Skill.HANDICRAFT: 5,
             Skill.CRITICAL_EYE: 7,
             Skill.CRITICAL_BOOST: 3,
             Skill.ATTACK_BOOST: 7,
             Skill.WEAKNESS_EXPLOIT: 3,
             Skill.AGITATOR: 5,
             Skill.PEAK_PERFORMANCE: 3,
+            Skill.NON_ELEMENTAL_BOOST: 1,
         }
 
     skill_states_dict = {
@@ -463,13 +476,45 @@ def tests_passed():
     # We now have full Handicraft, Critical Boost, Critical Eye, Attack Boost, Weakness Exploit, and Agitator.
     
     skill_states_dict = {
-            Skill.WEAKNESS_EXPLOIT : 2,
-            Skill.AGITATOR         : 1,
-            Skill.PEAK_PERFORMANCE : 1,
+            Skill.WEAKNESS_EXPLOIT: 2,
+            Skill.AGITATOR        : 1,
+            Skill.PEAK_PERFORMANCE: 1,
         }
 
     print("Incrementing Peak Performance.")
     test_with_incrementing_skill(Skill.PEAK_PERFORMANCE, 3, [634.40, 644.13, 653.86, 673.32])
+    print("Incrementing Non-elemental Boost with a raw weapon.")
+    test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [673.32, 699.59])
+    # At the time, HoneyHunterWorld's calculator gave me wrong numbers. I'm assuming I'm correct here.
+
+    weapon = "Immovable Dharma"
+
+    skills_dict = {
+            Skill.CRITICAL_EYE       : 4,
+            Skill.ATTACK_BOOST       : 3,
+            Skill.PEAK_PERFORMANCE   : 3,
+            Skill.AGITATOR           : 2,
+            Skill.WEAKNESS_EXPLOIT   : 1,
+        }
+    skill_states_dict = {
+            Skill.WEAKNESS_EXPLOIT: 1,
+            Skill.AGITATOR        : 1,
+            Skill.PEAK_PERFORMANCE: 1,
+        }
+    # Obtained with just:
+    #   Head:  Kaiser Crown Gamma
+    #   Chest: Rex Roar Mail Beta+
+    #   Hands: Ruinous Vambraces Beta+
+    #   Waist: (anything)
+    #   Legs:  Garuga Greaves Beta+
+
+    print("Incrementing Non-elemental Boost with a raw weapon again.")
+    test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [476.59, 496.68])
+
+    weapon = "Great Demon Rod"
+
+    print("Incrementing Non-elemental Boost with an elemental weapon.")
+    test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [456.12, 456.12])
 
     print("\nUnit tests are all passed.")
     print("\n==============================\n")
