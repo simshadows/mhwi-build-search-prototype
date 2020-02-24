@@ -1381,13 +1381,10 @@ class Skill(Enum):
             )
 
 
-class SkillCounter:
-    """
-    Not really sure what to call this. It's a class that keeps track of skills in a single
-    instance of a build, and produces the skill values.
-    """
-
-    pass
+# This will take a dict like {Skill.AGITATOR: 10, ...} and clip it down to the maximum.
+def clip_skills_dict(skills_dict):
+    assert all(level >= 0 for (_, level) in skills_dict.items()) # We shouldn't be seeing negative skill levels.
+    return {skill: min(level, skill.value.limit) for (skill, level) in skills_dict.items()}
 
 
 def _skills_integrity_check():

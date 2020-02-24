@@ -10,10 +10,11 @@ The entrypoint for my Monster Hunter World Iceborne build optimization tool!
 In this version, we assume each level under maximum Handicraft will subtract sharpness by 10 points.
 """
 
-
 import sys
 
-from skills           import Skill, SkillCounter
+from collections import namedtuple
+
+from skills           import Skill, clip_skills_dict
 from database_weapons import WeaponClass, weapon_db
 from database_misc    import *
 
@@ -24,6 +25,15 @@ RAW_BLUNDER_MULTIPLIER       = 0.75
 
 # Corresponds to each level from red through to purple, in increasing-modifier order.
 RAW_SHARPNESS_MODIFIERS = (0.5, 0.75, 1.0, 1.05, 1.2, 1.32, 1.39)
+
+
+def print_debugging_statistics():
+    print("=== Application Statistics ===")
+    print()
+    print("Number of skills: " + str(len(list(Skill))))
+    print("Total number of weapons: " + str(len(weapon_db)))
+    print("\n==============================\n")
+    return
 
 
 def calculate_highest_sharpness_modifier(weapon_maximum_sharpness, handicraft_level):
@@ -43,6 +53,23 @@ def calculate_highest_sharpness_modifier(weapon_maximum_sharpness, handicraft_le
     
     maximum_sharpness_level = level
     return RAW_SHARPNESS_MODIFIERS[maximum_sharpness_level]
+
+
+SkillsContribution = namedtuple(
+    "SkillsContribution",
+    [
+        "highest_sharpness_modifier",
+    ],
+)
+def calculate_skills_contribution(skills_dict, maximum_sharpness_values):
+    skills_dict = clip_skills_dict(skills_dict)
+
+    handicraft_level = skills_dict[Skill.HANDICRAFT]
+
+    ret = SkillsContribution(
+            highest_sharpness_modifier = calculate_highest_sharpness_modifier(maximum_sharpness_values, handicraft_level)
+        )
+    return ret
 
 
 def calculate_efr(**kwargs):
@@ -89,32 +116,33 @@ def search():
 
 
 def lookup(weapon_name):
-    w = weapon_db[weapon_name]
+    weapon = weapon_db[weapon_name]
+
+    skills_dict = {
+            Skill.HANDICRAFT: 5,
+        }
+
+    print("\n".join(f"{skill}: {level}" for (skill, level) in clip_skills_dict(skills_dict).items()))
+    print()
+
+    maximum_sharpness_values = weapon.maximum_sharpness
+    skills_contribution = calculate_skills_contribution(skills_dict, maximum_sharpness_values)
 
     kwargs = {}
-    kwargs["weapon_attack_power"]    = w.attack
-    kwargs["weapon_type"]            = w.type
+    kwargs["weapon_attack_power"]    = weapon.attack
+    kwargs["weapon_type"]            = weapon.type
     kwargs["added_attack_power"]     = POWERCHARM_ATTACK_POWER + POWERTALON_ATTACK_POWER
-    kwargs["raw_sharpness_modifier"] = calculate_highest_sharpness_modifier(w.maximum_sharpness, 0)
+    kwargs["raw_sharpness_modifier"] = skills_contribution.highest_sharpness_modifier
     kwargs["raw_crit_multiplier"]    = BASE_RAW_CRITICAL_MULTIPLIER
-    kwargs["affinity_percentage"]    = w.affinity
+    kwargs["affinity_percentage"]    = weapon.affinity
 
     efr = calculate_efr(**kwargs)
     print("EFR = " + str(efr))
     return
 
 
-def print_debugging_statistics():
-    print("=== Application Statistics ===")
-    print()
-    print("Number of skills: " + str(len(list(Skill))))
-    print("Total number of weapons: " + str(len(weapon_db)))
-    return
-
-
 def run():
     print_debugging_statistics()
-    print("\n==============================\n")
 
     # Determine whether to run in search or lookup mode.
     if len(sys.argv) > 1:
