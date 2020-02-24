@@ -3,7 +3,7 @@ Filename: skills.py
 Author:   contact@simshadows.com
 """
 
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from enum import Enum, unique
 
 SkillInfo = namedtuple(
@@ -1382,9 +1382,10 @@ class Skill(Enum):
 
 
 # This will take a dict like {Skill.AGITATOR: 10, ...} and clip it down to the maximum.
-def clip_skills_dict(skills_dict):
+# This also returns a defaultdict with default value of zero.
+def clipped_skills_defaultdict(skills_dict):
     assert all(level >= 0 for (_, level) in skills_dict.items()) # We shouldn't be seeing negative skill levels.
-    return {skill: min(level, skill.value.limit) for (skill, level) in skills_dict.items()}
+    return defaultdict(lambda : 0, {skill: min(level, skill.value.limit) for (skill, level) in skills_dict.items()})
 
 
 def _skills_integrity_check():
