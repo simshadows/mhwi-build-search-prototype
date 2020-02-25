@@ -21,7 +21,7 @@ WeaponAugmentsContribution = namedtuple(
     "WeaponAugmentsContribution",
     [
         "added_attack_power",
-        "added_raw_affinity_percentage",
+        "added_raw_affinity",
         "extra_decoration_slot_level",
     ],
 )
@@ -96,7 +96,7 @@ class NoWeaponAugments(WeaponAugmentTracker):
     def calculate_contribution(self):
         ret = WeaponAugmentsContribution (
                 added_attack_power = 0,
-                added_raw_affinity_percentage = 0,
+                added_raw_affinity = 0,
                 extra_decoration_slot_level = 0,
             )
         return ret
@@ -192,7 +192,7 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
         ret = WeaponAugmentsContribution (
                 added_attack_power = \
                         self.ib_attack_augment_cumulative[attack_level],
-                added_raw_affinity_percentage = \
+                added_raw_affinity = \
                         self.ib_affinity_augment_percentages_cumulative[affinity_level],
                 extra_decoration_slot_level = \
                         decoration_slot_level,
