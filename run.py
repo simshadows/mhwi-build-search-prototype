@@ -15,9 +15,15 @@ import sys
 #from math import floor
 from collections import namedtuple
 
-from skills           import Skill, clipped_skills_defaultdict
-from database_weapons import WeaponClass, weapon_db
-from database_misc    import *
+from skills           import (Skill,
+                              clipped_skills_defaultdict)
+from database_weapons import (WeaponClass,
+                              weapon_db,
+                              IBWeaponAugmentType,
+                              WeaponAugmentationScheme,
+                              WeaponUpgradeScheme)
+from database_misc    import (POWERCHARM_ATTACK_POWER,
+                              POWERTALON_ATTACK_POWER)
 
 
 # Corresponds to each level from red through to purple, in increasing-modifier order.
@@ -170,17 +176,18 @@ def calculate_efr(**kwargs):
     weapon_type = kwargs["weapon_type"]
     bloat       = weapon_type.value.bloat
 
-    weapon_true_raw            = kwargs["weapon_attack_power"] / bloat
+    x = kwargs["augment_added_attack_power"]
+
+    weapon_base_raw            = kwargs["weapon_attack_power"] / bloat
     weapon_affinity_percentage = kwargs["weapon_affinity_percentage"]
+    weapon_raw_multiplier      = kwargs["weapon_attack_power_multiplier"]
 
-    added_attack_power        = kwargs["added_attack_power"]
+    added_raw                 = kwargs["added_attack_power"]
     added_affinity_percentage = kwargs["added_affinity_percentage"]
-
-    true_raw        = weapon_true_raw + added_attack_power
-    raw_crit_chance = min(weapon_affinity_percentage + added_affinity_percentage, 100) / 100
 
     raw_sharpness_modifier = kwargs["raw_sharpness_modifier"]
     raw_crit_multiplier    = kwargs["raw_crit_multiplier"]
+    raw_crit_chance        = min(weapon_affinity_percentage + added_affinity_percentage, 100) / 100
 
     if raw_crit_chance < 0:
         # Negative Affinity
@@ -190,23 +197,10 @@ def calculate_efr(**kwargs):
         # Positive Affinity
         raw_crit_modifier = (raw_crit_multiplier * raw_crit_chance) + (1 - raw_crit_chance)
 
+    true_raw_unrounded = ((weapon_base_raw + x) * weapon_raw_multiplier) + added_raw 
+    true_raw           = round(true_raw_unrounded, 0)
+
     efr = true_raw * raw_sharpness_modifier * raw_crit_modifier
-
-    #print(f"Weapon Type = {weapon_type.value.name}")
-    #print(f"Bloat Value = {bloat}")
-    #print()
-
-    #print(f"Raw Crit Multiplier = {raw_crit_multiplier}")
-    #print( "Affinity            = " + str(raw_crit_chance * 100))
-    #print(f"Raw Crit Modifier   = {raw_crit_modifier}")
-    #print()
-
-    #print(f"Raw Sharpness Modifier = {raw_sharpness_modifier}")
-    #print()
-
-    #print(f"Weapon True Raw = {weapon_true_raw}")
-    #print(f"Total True Raw  = {true_raw}")
-    #print()
 
     return efr
 
@@ -221,10 +215,11 @@ PerformanceValues = namedtuple(
 # This function is recursive.
 # For each condition missing from skill_conditions_dict,
 # it will call itself again for each possible state of the skill.
-def lookup(weapon_name, skills_dict, skill_states_dict):
+def lookup(weapon_name, skills_dict, skill_states_dict, augments_list):
     assert isinstance(weapon_name, str)
     assert isinstance(skills_dict, dict)
     assert isinstance(skill_states_dict, dict)
+    assert isinstance(augments_list, list)
 
     ret = None
 
@@ -263,12 +258,20 @@ def lookup(weapon_name, skills_dict, skill_states_dict):
         for level in range(total_states):
             new_skill_states_dict = skill_states_dict.copy()
             new_skill_states_dict[skill_to_iterate] = level
-            ret.append(lookup(weapon_name, skills_dict, new_skill_states_dict))
+            ret.append(lookup(weapon_name, skills_dict, new_skill_states_dict, augments_list))
 
     else:
         # We terminate recursion here.
 
         weapon = weapon_db[weapon_name]
+        weapon_augments = weapon.augmentation_scheme.value(weapon.rarity)
+        # TODO: Constructor as the enum value looks really fucking weird.
+
+        if weapon.augmentation_scheme is WeaponAugmentationScheme.ICEBORNE:
+            for augment in augments_list:
+                assert isinstance(augment, tuple) and (len(augment) == 2)
+                assert isinstance(augment[0], IBWeaponAugmentType) and isinstance(augment[1], int)
+                weapon_augments.update_with_option(augment)
 
         maximum_sharpness_values = weapon.maximum_sharpness
         skills_contribution = calculate_skills_contribution(
@@ -277,6 +280,7 @@ def lookup(weapon_name, skills_dict, skill_states_dict):
                 maximum_sharpness_values,
                 weapon.is_raw
             )
+        augments_contribution = weapon_augments.calculate_contribution()
 
         handicraft_level = skills_contribution.handicraft_level
         sharpness_values, highest_sharpness_level = actual_sharpness_level_values(maximum_sharpness_values, handicraft_level)
@@ -284,13 +288,16 @@ def lookup(weapon_name, skills_dict, skill_states_dict):
         item_attack_power = POWERCHARM_ATTACK_POWER + POWERTALON_ATTACK_POWER
 
         kwargs = {}
-        kwargs["weapon_attack_power"]        = weapon.attack * skills_contribution.weapon_base_attack_power_multiplier
+        kwargs["weapon_attack_power"]        = weapon.attack
         kwargs["weapon_type"]                = weapon.type
-        kwargs["weapon_affinity_percentage"] = weapon.affinity
+        kwargs["weapon_affinity_percentage"] = weapon.affinity + augments_contribution.added_raw_affinity_percentage
         kwargs["added_attack_power"]         = skills_contribution.added_attack_power + item_attack_power
         kwargs["added_affinity_percentage"]  = skills_contribution.added_raw_affinity_percentage
         kwargs["raw_sharpness_modifier"]     = RAW_SHARPNESS_MODIFIERS[highest_sharpness_level]
         kwargs["raw_crit_multiplier"]        = skills_contribution.raw_critical_multiplier
+
+        kwargs["weapon_attack_power_multiplier"] = skills_contribution.weapon_base_attack_power_multiplier
+        kwargs["augment_added_attack_power"]     = augments_contribution.added_attack_power
 
         ret = PerformanceValues(
                 efr               = calculate_efr(**kwargs),
@@ -307,11 +314,11 @@ def search_command():
 def lookup_command(weapon_name):
     skills_dict = {
             #Skill.HANDICRAFT: 5,
-            Skill.CRITICAL_EYE: 7,
-            Skill.CRITICAL_BOOST: 3,
-            Skill.ATTACK_BOOST: 7,
-            Skill.WEAKNESS_EXPLOIT: 3,
-            Skill.AGITATOR: 5,
+            Skill.CRITICAL_EYE: 4,
+            Skill.CRITICAL_BOOST: 0,
+            Skill.ATTACK_BOOST: 3,
+            Skill.WEAKNESS_EXPLOIT: 1,
+            Skill.AGITATOR: 2,
             Skill.PEAK_PERFORMANCE: 3,
             Skill.NON_ELEMENTAL_BOOST: 1,
         }
@@ -322,11 +329,16 @@ def lookup_command(weapon_name):
             Skill.PEAK_PERFORMANCE: 1,
         }
 
+    augments_list = [
+            (IBWeaponAugmentType.ATTACK_INCREASE,   1),
+            #(IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+        ]
+
     print("Skills:")
     print("\n".join(f"   {skill.value.name} {level}" for (skill, level) in clipped_skills_defaultdict(skills_dict).items()))
     print()
 
-    results = lookup(weapon_name, skills_dict, skill_states_dict)
+    results = lookup(weapon_name, skills_dict, skill_states_dict, augments_list)
     sharpness_values = None
     efrs_strings = []
 
@@ -403,6 +415,7 @@ def tests_passed():
 
     skills_dict = {} # Start with no skills
     skill_states_dict = {} # Start with no states
+    augments_list = [] # Start with no augments
     weapon = "Acid Shredder II"
 
     # This function will leave skills_dict with the skill at max_level.
@@ -412,7 +425,7 @@ def tests_passed():
 
         for level in range(max_level + 1):
             skills_dict[skill] = level
-            vals = lookup(weapon, skills_dict, skill_states_dict)
+            vals = lookup(weapon, skills_dict, skill_states_dict, augments_list)
             if round(vals.efr) != round(expected_efrs[level]):
                 raise ValueError(f"EFR value mismatch for skill level {level}. Got EFR = {vals.efr}.")
         return
@@ -484,8 +497,7 @@ def tests_passed():
     print("Incrementing Peak Performance.")
     test_with_incrementing_skill(Skill.PEAK_PERFORMANCE, 3, [634.40, 644.13, 653.86, 673.32])
     print("Incrementing Non-elemental Boost with a raw weapon.")
-    test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [673.32, 699.59])
-    # At the time, HoneyHunterWorld's calculator gave me wrong numbers. I'm assuming I'm correct here.
+    test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [673.32, 700.56]) # Game does weird rounding.
 
     weapon = "Immovable Dharma"
 
@@ -515,6 +527,34 @@ def tests_passed():
 
     print("Incrementing Non-elemental Boost with an elemental weapon.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [456.12, 456.12])
+
+    weapon = "Royal Venus Blade"
+
+    print("Testing without augments.")
+    test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [478.17, 498.96])
+
+    augments_list = [
+            (IBWeaponAugmentType.ATTACK_INCREASE, 1),
+        ]
+
+    print("Testing with Attack augment.")
+    test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [485.60, 506.39])
+
+    augments_list = [
+            (IBWeaponAugmentType.ATTACK_INCREASE,   1),
+            (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+        ]
+
+    print("Testing with Attack and Affinity augment.")
+    test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [496.39, 517.64])
+
+    augments_list = [
+            (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+            (IBWeaponAugmentType.AFFINITY_INCREASE, 2),
+        ]
+
+    print("Testing with two Affinity augments.")
+    test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [494.11, 515.59])
 
     print("\nUnit tests are all passed.")
     print("\n==============================\n")

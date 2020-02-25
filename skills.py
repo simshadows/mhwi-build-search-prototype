@@ -1414,61 +1414,6 @@ class Skill(Enum):
             )
 
 
-# This code *was* originally written to determine ability activation conditions, but it doesn't seem necessary.
-# Delete this code at a later time.
-#ActivationConditionInfo = namedtuple(
-#    "ConditionInfo",
-#    [
-#        # FIELDS REQUIRED TO BE SET
-#
-#        "name",                # An arbitrary name for the particular condition.
-#        "concise_state_names", # Strings that can alone concisely describe the state with minimal context cues.
-#                               # The length of this string also determines the number of possible states.
-#                               #
-#                               # In code, the state of a single condition is represented by an integer.
-#                               # This integer can have only as many 
-#
-#        "info", # More information about the skill. I probably wrote this myself. All skills must have one.
-#
-#        # FIELDS WITH DEFAULTS
-#
-#        "zeroth_state_can_be_blank", # If True, then self.concise_state_names[0] can be easily omitted without losing meaning.
-#                                     # If False, then it is not omitted.
-#
-#    ],
-#    defaults=[
-#        True, # zeroth_state_can_be_blank | Most skills are binary, so you can often just omit stating them if inactive.
-#    ],
-#)
-#
-#@unique
-#class ActivationCondition(Enum):
-#
-#    MONSTER_ENRAGED = \
-#            ConditionInfo(
-#                name = "Enraged",
-#                state_names = ("not enraged", "enraged"),
-#
-#                info =
-#                    """
-#                    ((TODO))
-#                    """,
-#            )
-#
-#    MONSTER_PART_IS_WEAKPOINT = \
-#            ConditionInfo(
-#                name = "Is Weakpoint",
-#                concise_state_names = ("not a weakpoint", "weakpoint", "wounded"),
-#
-#                zeroth_state_can_be_blank = False,
-#
-#                info =
-#                    """
-#                    ((TODO))
-#                    """,
-#            )
-
-
 # This will take a dict like {Skill.AGITATOR: 10, ...} and clip it down to the maximum.
 # This also returns a defaultdict with default value of zero.
 def clipped_skills_defaultdict(skills_dict):
