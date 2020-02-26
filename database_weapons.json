@@ -1,0 +1,86 @@
+{
+    "JAGRAS_DEATHCLAW_II": {
+        "class" : "GREATSWORD",
+        "rarity": 10,
+
+        "name"    : "Jagras Deathclaw II",
+        "attack"  : 1248,
+        "affinity": 0,
+        "is_raw"  : true,
+
+        "maximum_sharpness": [110, 80, 30, 30, 80, 70, 0],
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "ICEBORNE_COMMON"
+    },
+    "ACID_SHREDDER_II": {
+        "class" : "GREATSWORD",
+        "rarity": 11,
+        
+        "name"    : "Acid Shredder II",
+        "attack"  : 1392,
+        "affinity": 0,
+        "is_raw"  : true,
+
+        "maximum_sharpness": [60, 50, 110, 90, 60, 20, 10],
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "ICEBORNE_COMMON"
+    },
+    "IMMOVABLE_DHARMA": {
+        "class" : "GREATSWORD",
+        "rarity": 12,
+        
+        "name"    : "Immovable Dharma",
+        "attack"  : 1344,
+        "affinity": 0,
+        "is_raw"  : true,
+
+        "maximum_sharpness": [170, 30, 30, 60, 50, 30, 30],
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
+    "GREAT_DEMON_ROD": {
+        "class" : "GREATSWORD",
+        "rarity": 12,
+        
+        "name"    : "Great Demon Rod",
+        "attack"  : 1488,
+        "affinity": -15,
+        "is_raw"  : false,
+
+        "maximum_sharpness": [100, 100, 40, 50, 60, 50, 0],
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
+    "ROYAL_VENUS_BLADE": {
+        "class" : "GREATSWORD",
+        "rarity": 12,
+        
+        "name"    : "Royal Venus Blade",
+        "attack"  : 1296,
+        "affinity": 15,
+        "is_raw"  : true,
+
+        "maximum_sharpness": [200, 30, 30, 50, 50, 30, 50],
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
+    "LUNATIC_ROSE": {
+        "class" : "GREATSWORD",
+        "rarity": 12,
+        
+        "name"    : "Lunatic Rose",
+        "attack"  : 406,
+        "affinity": 10,
+        "is_raw"  : false,
+
+        "maximum_sharpness": [60, 80, 30, 30, 80, 120, 0],
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    }
+}

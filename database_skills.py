@@ -108,7 +108,8 @@ def _obtain_skills_enum():
         elif len(skill_id) == 0:
             validation_error("Skill IDs must be strings of non-zero length.")
         elif skill_id in skills_intermediate:
-            validation_error(f"Duplicate skill ID.", skill=skill_id)
+            validation_error(f"Skill IDs must be unique.", skill=skill_id)
+        # TODO: Also put a condition that skill IDs must be capitalized with underscores.
 
         tup = SkillInfo(
                 name = skill_json_data["name"],
@@ -126,7 +127,9 @@ def _obtain_skills_enum():
 
         if (not isinstance(tup.name, str)) or (len(tup.name) == 0):
             validation_error("Skill names must be non-empty strings.", skill=skill_id)
-        elif (not isinstance(tup.limit, int)) or (tup.limit == 0):
+        elif tup.name in skill_names:
+            validation_error("Skill names must be unique.", skill=skill_id)
+        elif (not isinstance(tup.limit, int)) or (tup.limit <= 0):
             validation_error("Skill level limits must be ints above zero.", skill=skill_id)
         elif (tup.extended_limit is not None) and ((not isinstance(tup.extended_limit, int)) or (tup.extended_limit <= tup.limit)):
             validation_error("Skill extended level limits must be ints above 'limit', or null.", skill=skill_id)
@@ -145,6 +148,7 @@ def _obtain_skills_enum():
         elif (tup.previous_name is not None) and ((not isinstance(tup.previous_name, str)) or (len(tup.previous_name) == 0)):
             validation_error("Skill previous name must be either null, or a non-empty string.", skill=skill_id)
 
+        skill_names.add(tup.name)
         skills_intermediate[skill_id] = tup
 
     if len(skills_intermediate) == 0:
@@ -229,12 +233,3 @@ def calculate_skills_contribution(skills_dict, skill_states_dict, maximum_sharpn
             added_raw_affinity                  = added_raw_affinity,
         )
     return ret
-
-
-# We kinda assume that things have been checked when reading the JSON file.
-#def _skills_integrity_check():
-#    
-#    return
-#    
-#_skills_integrity_check()
-

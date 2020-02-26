@@ -11,6 +11,11 @@ from itertools import accumulate
 from enum import Enum, auto
 from copy import copy
 
+from utils import json_read
+
+
+WEAPONS_DATA_FILENAME = "database_weapons.json"
+
 
 # These work by first representing the full bar at maximum Handicraft in terms of number of
 # points in each colour, then you subtract 10 points per Handicraft level missing.
@@ -278,6 +283,8 @@ class WeaponClass(Enum):
 
 
 _common_fields = [
+    "name",
+    "id",
     "rarity",
     "attack",
     "affinity",
@@ -301,147 +308,132 @@ _common_defaults = [WeaponAugmentationScheme.NONE, WeaponUpgradeScheme.NONE]
 # The right-most field "type" carries the associated weapon class. DO NOT OVERWRITE THIS.
 # (idk yet how to protect namedtuple fields from being overwritten. should figure this out.)
 
-_Greatsword     = namedtuple("_Greatsword",     _bm_fields, defaults=_common_defaults+[WeaponClass.GREATSWORD])
-_Longsword      = namedtuple("_Longsword",      _bm_fields, defaults=_common_defaults+[WeaponClass.LONGSWORD])
-_SwordAndShield = namedtuple("_SwordAndShield", _bm_fields, defaults=_common_defaults+[WeaponClass.SWORD_AND_SHIELD])
-_DualBlades     = namedtuple("_DualBlades",     _bm_fields, defaults=_common_defaults+[WeaponClass.DUAL_BLADES])
-_Hammer         = namedtuple("_Hammer",         _bm_fields, defaults=_common_defaults+[WeaponClass.HAMMER])
-_HuntingHorn    = namedtuple("_HuntingHorn",    _bm_fields, defaults=_common_defaults+[WeaponClass.HUNTING_HORN])
-_Lance          = namedtuple("_Lance",          _bm_fields, defaults=_common_defaults+[WeaponClass.LANCE])
-_Gunlance       = namedtuple("_Gunlance",       _bm_fields, defaults=_common_defaults+[WeaponClass.GUNLANCE])
-_Switchaxe      = namedtuple("_Switchaxe",      _bm_fields, defaults=_common_defaults+[WeaponClass.SWITCHAXE])
-_ChargeBlade    = namedtuple("_ChargeBlade",    _bm_fields, defaults=_common_defaults+[WeaponClass.CHARGE_BLADE])
-_InsectGlaive   = namedtuple("_InsectGlaive",   _bm_fields, defaults=_common_defaults+[WeaponClass.INSECT_GLAIVE])
-_Bow            = namedtuple("_Bow",            _g_fields,  defaults=_common_defaults+[WeaponClass.BOW])
-_HeavyBowgun    = namedtuple("_HeavyBowgun",    _g_fields,  defaults=_common_defaults+[WeaponClass.HEAVY_BOWGUN])
-_LightBowgun    = namedtuple("_LightBowgun",    _g_fields,  defaults=_common_defaults+[WeaponClass.LIGHT_BOWGUN])
+GreatswordInfo     = namedtuple("GreatswordInfo",     _bm_fields)
+LongswordInfo      = namedtuple("LongswordInfo",      _bm_fields) 
+SwordAndShieldInfo = namedtuple("SwordAndShieldInfo", _bm_fields) 
+DualBladesInfo     = namedtuple("DualBladesInfo",     _bm_fields) 
+HammerInfo         = namedtuple("HammerInfo",         _bm_fields) 
+HuntingHornInfo    = namedtuple("HuntingHornInfo",    _bm_fields) 
+LanceInfo          = namedtuple("LanceInfo",          _bm_fields) 
+GunlanceInfo       = namedtuple("GunlanceInfo",       _bm_fields) 
+SwitchaxeInfo      = namedtuple("SwitchaxeInfo",      _bm_fields) 
+ChargeBladeInfo    = namedtuple("ChargeBladeInfo",    _bm_fields) 
+InsectGlaiveInfo   = namedtuple("InsectGlaiveInfo",   _bm_fields) 
+BowInfo            = namedtuple("BowInfo",            _g_fields )  
+HeavyBowgunInfo    = namedtuple("HeavyBowgunInfo",    _g_fields )  
+LightBowgunInfo    = namedtuple("LightBowgunInfo",    _g_fields )  
 
 
-weapon_db = {
+def _obtain_weapon_db():
+    json_data = json_read(WEAPONS_DATA_FILENAME)
 
-    # Weapons are indexed by their full name.
+    def validation_error(info, weapon=None):
+        if weapon is None:
+            raise ValueError(f"{WEAPONS_DATA_FILENAME}: {info}")
+        else:
+            raise ValueError(f"{WEAPONS_DATA_FILENAME} {weapon}: {info}")
 
-    "Jagras Deathclaw II" : _Greatsword(
-        rarity   = 10,
-        attack   = 1248,
-        affinity = 0,
-        is_raw   = True, # Temporary oversimplification.
+    weapons_intermediate = {}
+    weapon_names = set()
 
-        maximum_sharpness = MaximumSharpness(110, 80, 30, 30, 80, 70, 0),
+    for (weapon_id, dat) in json_data.items():
 
-        augmentation_scheme = WeaponAugmentationScheme.ICEBORNE,
-        upgrade_scheme      = WeaponUpgradeScheme.ICEBORNE_COMMON,
-    ),
+        if not isinstance(weapon_id, str):
+            validation_error("Weapon IDs must be strings. Instead, we have: " + str(weapon_id))
+        elif len(weapon_id) == 0:
+            validation_error("Weapon IDs must be strings of non-zero length.")
+        elif weapon_id in weapons_intermediate:
+            validation_error(f"Weapon IDs must be unique.", weapon=weapon_id)
+        # TODO: Also put a condition that weapon IDs must be capitalized with underscores.
 
-    "Acid Shredder II" : _Greatsword(
-        rarity   = 11,
-        attack   = 1392,
-        affinity = 0,
-        is_raw   = True, # Temporary oversimplification.
+        blademaster_classes = {
+            WeaponClass.GREATSWORD,
+            WeaponClass.LONGSWORD,
+            WeaponClass.SWORD_AND_SHIELD,
+            WeaponClass.DUAL_BLADES,
+            WeaponClass.HAMMER,
+            WeaponClass.HUNTING_HORN,
+            WeaponClass.LANCE,
+            WeaponClass.GUNLANCE,
+            WeaponClass.SWITCHAXE,
+            WeaponClass.CHARGE_BLADE,
+            WeaponClass.INSECT_GLAIVE,
+        }
 
-        maximum_sharpness = MaximumSharpness(60, 50, 110, 90, 60, 20, 10),
+        # We first deal with common fields.
 
-        augmentation_scheme = WeaponAugmentationScheme.ICEBORNE,
-        upgrade_scheme      = WeaponUpgradeScheme.ICEBORNE_COMMON,
-    ),
+        kwargs = {
+            "id"       : weapon_id,
+            "name"     : dat["name"],
+            "type"     : WeaponClass[str(dat["class"])],
+            "rarity"   : dat["rarity"],
+            "attack"   : dat["attack"],
+            "affinity" : dat["affinity"],
+            "is_raw"   : dat["is_raw"],
 
-    "Immovable Dharma" : _Greatsword(
-        rarity   = 12,
-        attack   = 1344,
-        affinity = 0,
-        is_raw   = True, # Temporary oversimplification.
+            "augmentation_scheme" : WeaponAugmentationScheme[str(dat.get("augmentation_scheme", "NONE"))],
+            "upgrade_scheme"      : WeaponUpgradeScheme[str(dat.get("upgrade_scheme", "NONE"))],
+        }
 
-        maximum_sharpness = MaximumSharpness(170, 30, 30, 60, 50, 30, 30),
+        if (not isinstance(kwargs["name"], str)) or (len(kwargs["name"]) == 0):
+            validation_error("Weapon names must be non-empty strings.", weapon=weapon_id)
+        elif kwargs["name"] in weapon_names:
+            validation_error("Weapon names must be unique.", weapon=weapon_id)
+        elif (not isinstance(kwargs["rarity"], int)) or (kwargs["rarity"] <= 0):
+            validation_error("Weapon rarity levels must be ints above zero.", weapon=weapon_id)
+        elif (not isinstance(kwargs["attack"], int)) or (kwargs["attack"] <= 0):
+            validation_error("Weapon attack power must be an int above zero.", weapon=weapon_id)
+        elif (not isinstance(kwargs["affinity"], int)) or (kwargs["affinity"] < -100) or (kwargs["affinity"] > 100):
+            validation_error("Weapon affinity must be an int between -100 and 100.", weapon=weapon_id)
+        elif not isinstance(kwargs["is_raw"], bool):
+            validation_error("is_raw must be a boolean.", weapon=weapon_id)
 
-        augmentation_scheme = WeaponAugmentationScheme.ICEBORNE,
-        upgrade_scheme      = WeaponUpgradeScheme.NONE,
-    ),
+        # Now we deal with unique fields.
 
-    "Great Demon Rod" : _Greatsword(
-        rarity   = 12,
-        attack   = 1488,
-        affinity = -15,
-        is_raw   = False, # Temporary oversimplification.
+        if kwargs["type"] in blademaster_classes:
+            kwargs["maximum_sharpness"] = MaximumSharpness(*dat["maximum_sharpness"])
 
-        maximum_sharpness = MaximumSharpness(100, 100, 40, 50, 60, 50, 0),
+            if any(x < 0 for x in kwargs["maximum_sharpness"]):
+                validation_error("Weapon sharpness values must be zero or above.", weapon=weapon_id)
 
-        augmentation_scheme = WeaponAugmentationScheme.ICEBORNE,
-        upgrade_scheme      = WeaponUpgradeScheme.NONE,
-    ),
+        tup = None
+        if kwargs["type"] is WeaponClass.GREATSWORD:
+            tup = GreatswordInfo(**kwargs)
+        elif kwargs["type"] is WeaponClass.LONGSWORD:
+            tup = LongswordInfo(**kwargs)
+        elif kwargs["type"] is WeaponClass.SWORD_AND_SHIELD:
+            tup = SwordAndShieldInfo(**kwargs)
+        elif kwargs["type"] is WeaponClass.DUAL_BLADES:
+            tup = DualBladesInfo(**kwargs)
+        elif kwargs["type"] is WeaponClass.HAMMER:
+            tup = HammerInfo(**kwargs)
+        elif kwargs["type"] is WeaponClass.HUNTING_HORN:
+            tup = HuntingHornInfo(**kwargs)
+        elif kwargs["type"] is WeaponClass.LANCE:
+            tup = LanceInfo(**kwargs)
+        elif kwargs["type"] is WeaponClass.GUNLANCE:
+            tup = GunlanceInfo(**kwargs)
+        elif kwargs["type"] is WeaponClass.SWITCHAXE:
+            tup = SwitchaxeInfo(**kwargs)
+        elif kwargs["type"] is WeaponClass.CHARGE_BLADE:
+            tup = ChargeBladeInfo(**kwargs)
+        elif kwargs["type"] is WeaponClass.INSECT_GLAIVE:
+            tup = InsectGlaiveInfo(**kwargs)
+        elif kwargs["type"] is WeaponClass.BOW:
+            tup = BowInfo(**kwargs)
+        elif kwargs["type"] is WeaponClass.HEAVY_BOWGUN:
+            tup = HeavyBowgunInfo(**kwargs)
+        elif kwargs["type"] is WeaponClass.LIGHT_BOWGUN:
+            tup = LightBowgunInfo(**kwargs)
+        else:
+            raise RuntimeError("Unexpected weapon type.")
 
-    "Royal Venus Blade" : _Greatsword(
-        rarity   = 12,
-        attack   = 1296,
-        affinity = 15,
-        is_raw   = True, # Temporary oversimplification.
+        weapon_names.add(tup.name)
+        #weapons_intermediate[weapon_id] = tup # TODO: Consider using the weapon ID instead.
+        weapons_intermediate[tup.name] = tup
 
-        maximum_sharpness = MaximumSharpness(200, 30, 30, 50, 50, 30, 50),
-
-        augmentation_scheme = WeaponAugmentationScheme.ICEBORNE,
-        upgrade_scheme      = WeaponUpgradeScheme.NONE,
-    ),
-
-    "Lunatic Rose" : _SwordAndShield(
-        rarity   = 12,
-        attack   = 406,
-        affinity = 10,
-        is_raw   = False, # Temporary oversimplification.
-
-        maximum_sharpness = MaximumSharpness(60, 80, 30, 30, 80, 120, 0),
-
-        augmentation_scheme = WeaponAugmentationScheme.ICEBORNE,
-        upgrade_scheme      = WeaponUpgradeScheme.NONE,
-    ),
-
-}
+    return weapons_intermediate
 
 
-def _weapon_db_integrity_check():
-    type_associations = {
-        _Greatsword     : WeaponClass.GREATSWORD,
-        _Longsword      : WeaponClass.LONGSWORD,
-        _SwordAndShield : WeaponClass.SWORD_AND_SHIELD,
-        _DualBlades     : WeaponClass.DUAL_BLADES,
-        _Hammer         : WeaponClass.HAMMER,
-        _HuntingHorn    : WeaponClass.HUNTING_HORN,
-        _Lance          : WeaponClass.LANCE,
-        _Gunlance       : WeaponClass.GUNLANCE,
-        _Switchaxe      : WeaponClass.SWITCHAXE,
-        _ChargeBlade    : WeaponClass.CHARGE_BLADE,
-        _InsectGlaive   : WeaponClass.INSECT_GLAIVE,
-        _Bow            : WeaponClass.BOW,
-        _HeavyBowgun    : WeaponClass.HEAVY_BOWGUN,
-        _LightBowgun    : WeaponClass.LIGHT_BOWGUN,
-    }
-
-    for (name, data) in weapon_db.items():
-
-        if (data.rarity > 12) or (data.rarity < 1):
-            raise ValueError(str(name) + ": Rarity value out of bounds.")
-
-        elif (data.attack > 10000):
-            raise ValueError(str(name) + ": Attack value is probably wrong. Please check!")
-        elif (data.attack < 0):
-            raise ValueError(str(name) + ": Attack value out of bounds.")
-
-        elif (data.affinity > 100) or (data.affinity < -100):
-            raise ValueError(str(name) + ": Affinity value out of bounds.")
-
-        elif (data.type != type_associations[type(data)]):
-            raise ValueError(str(name) + ": Wrong value in the type field. (Did you accidentally overwrite it?)")
-
-        elif any(((x < 0) or (x > 800) or (x % 10 != 0)) for x in data.maximum_sharpness):
-            raise ValueError(str(name) + ": Strange sharpness numbers.")
-
-        elif (not isinstance(data.augmentation_scheme, WeaponAugmentationScheme)):
-            raise ValueError(str(name) + ": Augmentation scheme is wrong type.")
-
-        elif (not isinstance(data.upgrade_scheme, WeaponUpgradeScheme)):
-            raise ValueError(str(name) + ": Upgrade scheme is wrong type.")
-
-        # Not going to bother validating is_raw. It's a temporary flag anyway.
-
-    return True
-
-_weapon_db_integrity_check()
+weapon_db = _obtain_weapon_db()
 
