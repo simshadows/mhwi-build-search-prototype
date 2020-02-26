@@ -1,0 +1,66 @@
+{
+    "naming_schemes": {
+        "COMMON_SCHEME_1": [
+            "Helm",
+            "Mail",
+            "Vambraces",
+            "Coil",
+            "Greaves"
+        ]
+    },
+    "armour": [
+        {
+            "set": "Teostra",
+            "discriminator": "MASTER_RANK",
+            "rarity": 12,
+            
+            "prefix": "Kaiser",
+            "naming_scheme": "COMMON_SCHEME_1",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[1],   {"LATENT_POWER":     2, "CRITICAL_EYE":       2}],
+                "CHEST": [[2,1], {"LATENT_POWER":     1, "SPECIAL_AMMO_BOOST": 2}],
+                "ARMS" : [[2],   {"WEAKNESS_EXPLOIT": 2, "HEAT_GUARD":         1}],
+                "WAIST": [[3],   {"BLAST_ATTACK":     2, "WEAKNESS_EXPLOIT":   1}],
+                "LEGS" : [[2],   {"LATENT_POWER":     2, "BLAST_ATTACK":       2}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4],     {"LATENT_POWER":     1, "CRITICAL_EYE": 2}],
+                "CHEST": [[4,1,1], {"LATENT_POWER":     1                   }],
+                "ARMS" : [[4,3],   {"WEAKNESS_EXPLOIT": 1, "HEAT_GUARD":   1}],
+                "WAIST": [[4,2,1], {"BLAST_ATTACK":     2                   }],
+                "LEGS" : [[4],     {"LATENT_POWER":     2, "BLAST_ATTACK": 1}]
+            }
+        },
+        {
+            "set": "Teostra",
+            "discriminator": "HIGH_RANK",
+            "rarity": 8,
+            
+            "prefix": "Kaiser",
+            "naming_scheme": "COMMON_SCHEME_1",
+
+            "HR_ALPHA": {
+                "HEAD" : [[],  {"LATENT_POWER":       2                       }],
+                "CHEST": [[],  {"SPECIAL_AMMO_BOOST": 2, "LATENT_POWER":     1}],
+                "ARMS" : [[1], {"WEAKNESS_EXPLOIT":   2                       }],
+                "WAIST": [[],  {"BLAST_ATTACK":       2, "WEAKNESS_EXPLOIT": 1}],
+                "LEGS" : [[],  {"LATENT_POWER":       2, "BLAST_ATTACK":     1}]
+            },
+            "HR_BETA": {
+                "HEAD" : [[2],   {"LATENT_POWER":       1}],
+                "CHEST": [[1,1], {"SPECIAL_AMMO_BOOST": 2}],
+                "ARMS" : [[3],   {"WEAKNESS_EXPLOIT":   1}],
+                "WAIST": [[2],   {"BLAST_ATTACK":       2}],
+                "LEGS" : [[1],   {"LATENT_POWER":       2}]
+            },
+            "HR_GAMMA": {
+                "HEAD" : [[2,2], {"CRITICAL_EYE": 2                       }],
+                "CHEST": [[2],   {"LATENT_POWER": 2, "WEAKNESS_EXPLOIT": 1}],
+                "ARMS" : [[3],   {"CRITICAL_EYE": 3                       }],
+                "WAIST": [[1,1], {"LATENT_POWER": 3                       }],
+                "LEGS" : [[3,1], {"CRITICAL_EYE": 2                       }]
+            }
+        }
+    ]
+}

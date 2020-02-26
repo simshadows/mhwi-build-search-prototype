@@ -23,6 +23,11 @@ from database_weapons import (WeaponClass,
                               IBWeaponAugmentType,
                               WeaponAugmentationScheme,
                               WeaponUpgradeScheme)
+from database_armour  import (ArmourDiscriminator,
+                              ArmourVariant,
+                              ArmourSlot,
+                              armour_db,
+                              calculate_armour_contribution)
 from database_misc    import (POWERCHARM_ATTACK_POWER,
                               POWERTALON_ATTACK_POWER)
 
@@ -117,18 +122,20 @@ def calculate_efr(**kwargs):
     return efr
 
 
-PerformanceValues = namedtuple(
-    "PerformanceValues",
+BuildValues = namedtuple(
+    "BuildValues",
     [
         "efr",
         "sharpness_values",
+
+        "skills",
     ],
 )
 # This function is recursive.
 # For each condition missing from skill_conditions_dict,
 # it will call itself again for each possible state of the skill.
-def lookup(weapon_name, skills_dict, skill_states_dict, augments_list):
-    assert isinstance(weapon_name, str)
+def lookup_from_skills(weapon, skills_dict, skill_states_dict, augments_list):
+    #assert isinstance(weapon, namedtuple) # idk how to implement this assertion. # TODO: This.
     assert isinstance(skills_dict, dict)
     assert isinstance(skill_states_dict, dict)
     assert isinstance(augments_list, list)
@@ -150,7 +157,7 @@ def lookup(weapon_name, skills_dict, skill_states_dict, augments_list):
             diff = skill_states_keys - skills_keys
             if len(diff) > 0:
                 skills_str = " ".join(diff)
-                raise RuntimeError(f"skill_states_dict has sklls not in skills_dict. \
+                raise RuntimeError(f"skill_states_dict has skills not in skills_dict. \
                         (Skills unique to skill_states_dict: {skills_str}.")
 
         # We first determine the missing skill name from skill_states_dict that is earliest in alphabetical order.
@@ -170,12 +177,11 @@ def lookup(weapon_name, skills_dict, skill_states_dict, augments_list):
         for level in range(total_states):
             new_skill_states_dict = skill_states_dict.copy()
             new_skill_states_dict[skill_to_iterate] = level
-            ret.append(lookup(weapon_name, skills_dict, new_skill_states_dict, augments_list))
+            ret.append(lookup_from_skills(weapon, skills_dict, new_skill_states_dict, augments_list))
 
     else:
         # We terminate recursion here.
 
-        weapon = weapon_db[weapon_name]
         weapon_augments = weapon.augmentation_scheme.value(weapon.rarity)
         # TODO: Constructor as the enum value looks really fucking weird.
 
@@ -211,12 +217,44 @@ def lookup(weapon_name, skills_dict, skill_states_dict, augments_list):
         kwargs["weapon_raw_multiplier"] = from_skills.weapon_base_attack_power_multiplier
         kwargs["augment_added_raw"]     = from_augments.added_attack_power
 
-        ret = PerformanceValues(
+        ret = BuildValues(
                 efr               = calculate_efr(**kwargs),
                 sharpness_values  = sharpness_values,
+
+                skills = skills_dict,
             )
 
     return ret
+
+
+# Input looks like this:
+#
+#       weapon_id = "ACID_SHREDDER_II"
+#
+#       armour_dict = {
+#           ArmourSlot.HEAD:  ("Teostra",      ArmourDiscriminator.HIGH_RANK,   ArmourVariant.HR_GAMMA),
+#           ArmourSlot.CHEST: ("Damascus",     ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+#           ArmourSlot.ARMS:  ("Teostra",      ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+#           ArmourSlot.WAIST: ("Teostra",      ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+#           ArmourSlot.LEGS:  ("Yian Garuga",  ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+#       }
+#
+#       skill_states_dict = {
+#           Skill.AGITATOR: 1,
+#           Skill.PEAK_PERFORMANCE: 1,
+#       }
+#
+#       augments_list = [
+#           (IBWeaponAugmentType.HEALTH_REGEN,      1),
+#           (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+#       ]
+#
+def lookup_from_gear(weapon_name, armour_dict, skill_states_dict, augments_list):
+    assert isinstance(weapon_name, str)
+    weapon = weapon_db[weapon_name]
+    armour_contribution = calculate_armour_contribution(armour_dict)
+    skills_dict = armour_contribution.skills
+    return lookup_from_skills(weapon, skills_dict, skill_states_dict, augments_list)
 
 
 def search_command():
@@ -224,21 +262,30 @@ def search_command():
 
 
 def lookup_command(weapon_name):
-    skills_dict = {
-            #Skill.HANDICRAFT: 5,
-            Skill.CRITICAL_EYE: 4,
-            Skill.CRITICAL_BOOST: 0,
-            Skill.ATTACK_BOOST: 3,
-            Skill.WEAKNESS_EXPLOIT: 1,
-            Skill.AGITATOR: 2,
-            Skill.PEAK_PERFORMANCE: 3,
-            Skill.NON_ELEMENTAL_BOOST: 1,
-        }
+
+    armour_dict = {
+        ArmourSlot.HEAD:  ("Teostra", ArmourDiscriminator.HIGH_RANK,   ArmourVariant.HR_GAMMA),
+        ArmourSlot.CHEST: ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_ALPHA_PLUS),
+        ArmourSlot.ARMS:  ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+        ArmourSlot.WAIST: ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+        ArmourSlot.LEGS:  ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_ALPHA_PLUS),
+    }
+
+    #skills_dict = {
+    #        #Skill.HANDICRAFT: 5,
+    #        Skill.CRITICAL_EYE: 4,
+    #        Skill.CRITICAL_BOOST: 0,
+    #        Skill.ATTACK_BOOST: 3,
+    #        Skill.WEAKNESS_EXPLOIT: 1,
+    #        Skill.AGITATOR: 2,
+    #        Skill.PEAK_PERFORMANCE: 3,
+    #        Skill.NON_ELEMENTAL_BOOST: 1,
+    #    }
 
     skill_states_dict = {
             #Skill.WEAKNESS_EXPLOIT: 2,
             #Skill.AGITATOR: 1,
-            Skill.PEAK_PERFORMANCE: 1,
+            #Skill.PEAK_PERFORMANCE: 1,
         }
 
     augments_list = [
@@ -246,16 +293,18 @@ def lookup_command(weapon_name):
             #(IBWeaponAugmentType.AFFINITY_INCREASE, 1),
         ]
 
-    print("Skills:")
-    print("\n".join(f"   {skill.value.name} {level}" for (skill, level) in clipped_skills_defaultdict(skills_dict).items()))
-    print()
+    #print("Skills:")
+    #print("\n".join(f"   {skill.value.name} {level}" for (skill, level) in clipped_skills_defaultdict(skills_dict).items()))
+    #print()
 
-    results = lookup(weapon_name, skills_dict, skill_states_dict, augments_list)
+    
+    results = lookup_from_gear(weapon_name, armour_dict, skill_states_dict, augments_list)
     sharpness_values = None
     efrs_strings = []
 
     iterated_skills = [
-            skill for (skill, level) in skills_dict.items()
+            # TODO: We're grabbing the first result. We shouldn't have to I think.
+            skill for (skill, level) in results[0].skills.items()
             if (level > 0) and (skill.value.states is not None) and (skill not in skill_states_dict)
         ]
 
@@ -328,7 +377,7 @@ def tests_passed():
     skills_dict = {} # Start with no skills
     skill_states_dict = {} # Start with no states
     augments_list = [] # Start with no augments
-    weapon = "Acid Shredder II"
+    weapon = weapon_db["Acid Shredder II"]
 
     # This function will leave skills_dict with the skill at max_level.
     def test_with_incrementing_skill(skill, max_level, expected_efrs):
@@ -337,7 +386,7 @@ def tests_passed():
 
         for level in range(max_level + 1):
             skills_dict[skill] = level
-            vals = lookup(weapon, skills_dict, skill_states_dict, augments_list)
+            vals = lookup_from_skills(weapon, skills_dict, skill_states_dict, augments_list)
             if round(vals.efr) != round(expected_efrs[level]):
                 raise ValueError(f"EFR value mismatch for skill level {level}. Got EFR = {vals.efr}.")
         return
@@ -349,7 +398,7 @@ def tests_passed():
     test_with_incrementing_skill(Skill.CRITICAL_BOOST, 3, [423.95, 423.95, 423.95, 423.95])
     # We now have full Handicraft and Critical Boost.
 
-    weapon = "Royal Venus Blade"
+    weapon = weapon_db["Royal Venus Blade"]
 
     print("Incrementing Critical Boost with non-zero Affinity.")
     test_with_incrementing_skill(Skill.CRITICAL_BOOST, 3, [411.01, 413.98, 416.95, 419.92])
@@ -411,7 +460,7 @@ def tests_passed():
     print("Incrementing Non-elemental Boost with a raw weapon.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [673.32, 700.56]) # Game does weird rounding.
 
-    weapon = "Immovable Dharma"
+    weapon = weapon_db["Immovable Dharma"]
 
     skills_dict = {
             Skill.CRITICAL_EYE       : 4,
@@ -435,12 +484,12 @@ def tests_passed():
     print("Incrementing Non-elemental Boost with a raw weapon again.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [476.59, 496.68])
 
-    weapon = "Great Demon Rod"
+    weapon = weapon_db["Great Demon Rod"]
 
     print("Incrementing Non-elemental Boost with an elemental weapon.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [456.12, 456.12])
 
-    weapon = "Royal Venus Blade"
+    weapon = weapon_db["Royal Venus Blade"]
 
     print("Testing without augments.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [478.17, 498.96])
@@ -467,6 +516,33 @@ def tests_passed():
 
     print("Testing with two Affinity augments.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [494.11, 515.59])
+
+    def check_efr(expected_efr):
+        results = lookup_from_gear(weapon_name, armour_dict, skill_states_dict, augments_list)
+        if round(results.efr) != round(expected_efr):
+                raise ValueError(f"EFR value mismatch. Expected {expected_efr}. Got {results.efr}.")
+
+    weapon_name = "Royal Venus Blade"
+
+    armour_dict = {
+            ArmourSlot.HEAD:  ("Teostra", ArmourDiscriminator.HIGH_RANK,   ArmourVariant.HR_GAMMA),
+            ArmourSlot.CHEST: ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_ALPHA_PLUS),
+            ArmourSlot.ARMS:  ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+            ArmourSlot.WAIST: ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+            ArmourSlot.LEGS:  ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_ALPHA_PLUS),
+        }
+
+    skill_states_dict = {
+            Skill.WEAKNESS_EXPLOIT: 2,
+        }
+
+    augments_list = [
+            (IBWeaponAugmentType.ATTACK_INCREASE,   1),
+            #(IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+        ]
+
+    print("Testing with a bunch of varying Teostra pieces from different ranks.")
+    check_efr(421.08)
 
     print("\nUnit tests are all passed.")
     print("\n==============================\n")
