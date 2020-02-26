@@ -1,0 +1,745 @@
+{
+    "skills": {
+        "AFFINITY_SLIDING": {
+                "name": "Affinity Sliding",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "AGITATOR": {
+                "name": "Agitator",
+                "limit": 5,
+
+                "states": ["not enraged", "enraged"],
+
+                "tooltip": "((TODO))"
+        },
+        "AIRBORNE": {
+                "name": "Airborne",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "AQUATIC_POLAR_MOBILITY": {
+                "name": "Aquatic/Polar Mobility",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "ARTILLERY": {
+                "name": "Artillery",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "ATTACK_BOOST": {
+                "name": "Attack Boost",
+                "limit": 7,
+
+                "tooltip": "((TODO))"
+        },
+        "BBQ_MASTER": {
+                "name": "BBQ Master",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "BLAST_ATTACK": {
+                "name": "Blast Attack",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "BLAST_FUNCTIONALITY": {
+                "name": "Blast Functionality",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "BLAST_RESISTANCE": {
+                "name": "Blast Resistance",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "BLEEDING_RESISTANCE": {
+                "name": "Bleeding Resistance",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "BLIGHT_RESISTANCE": {
+                "name": "Blight Resistance",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "BLINDSIDER": {
+                "name": "Blindsider",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "BOMBARDIER": {
+                "name": "Bombardier",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "BOTANIST": {
+                "name": "Botanist",
+                "limit": 4,
+
+                "tooltip": "((TODO))"
+        },
+        "BOW_CHARGE_PLUS": {
+                "name": "Bow Charge Plus",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "CAPACITY_BOOST": {
+                "name": "Capacity Boost",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "CARVING_PRO": {
+                "name": "Carving Pro",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "CLIFFHANGER": {
+                "name": "Cliffhanger",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "COALESCENCE": {
+                "name": "Coalescence",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "COLDPROOF": {
+                "name": "Coldproof",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "CONSTITUTION": {
+                "name": "Constitution",
+                "limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "CRITICAL_BOOST": {
+                "name": "Critical Boost",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "CRITICAL_DRAW": {
+                "name": "Critical Draw",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "CRITICAL_ELEMENT": {
+                "name": "Critical Element",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "CRITICAL_EYE": {
+                "name": "Critical Eye",
+                "limit": 7,
+
+                "tooltip": "((TODO))"
+        },
+        "CRITICAL_STATUS": {
+                "name": "Critical Status",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "DEFENSE_BOOST": {
+                "name": "Defense Boost",
+                "limit": 7,
+
+                "tooltip": "((TODO))"
+        },
+        "DETECTOR": {
+                "name": "Detector",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "DIVINE_BLESSING": {
+                "name": "Divine Blessing",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "DRAGON_ATTACK": {
+                "name": "Dragon Attack",
+                "limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "DRAGON_RESISTANCE": {
+                "name": "Dragon Resistance",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "DUNGMASTER": {
+                "name": "Dungmaster",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "EARPLUGS": {
+                "name": "Earplugs",
+                "limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "EFFLUVIA_RESISTANCE": {
+                "name": "Effluvia Resistance",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "EFFLUVIAL_EXPERT": {
+                "name": "Effluvial Expert",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "ELDERSEAL_BOOST": {
+                "name": "Elderseal Boost",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "ENTOMOLOGIST": {
+                "name": "Entomologist",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "EVADE_EXTENDER": {
+                "name": "Evade Extender",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "EVADE_WINDOW": {
+                "name": "Evade Window",
+                "limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "FIRE_ATTACK": {
+                "name": "Fire Attack",
+                "limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "FIRE_RESISTANCE": {
+                "name": "Fire Resistance",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "FLINCH_FREE": {
+                "name": "Flinch Free",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "FOCUS": {
+                "name": "Focus",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "FORAGERS_LUCK": {
+                "name": "Forager's Luck",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "FORTIFY": {
+                "name": "Fortify",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "FREE_ELEM_AMMO_UP": {
+                "name": "Free Elem/Ammo Up",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "FREE_MEAL": {
+                "name": "Free Meal",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "GEOLOGIST": {
+                "name": "Geologist",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "GUARD": {
+                "name": "Guard",
+                "limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "HANDICRAFT": {
+                "name": "Handicraft",
+                "limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "HEALTH_BOOST": {
+                "name": "Health Boost",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "HEAT_GUARD": {
+                "name": "Heat Guard",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "HEAVY_ARTILLERY": {
+                "name": "Heavy Artillery",
+                "limit": 2,
+
+                "tooltip": "((TODO))"
+        },
+        "HEROICS": {
+                "name": "Heroics",
+                "limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "HONEY_HUNTER": {
+                "name": "Honey Hunter",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "HORN_MAESTRO": {
+                "name": "Horn Maestro",
+                "limit": 2,
+
+                "tooltip": "((TODO))"
+        },
+        "HUNGER_RESISTANCE": {
+                "name": "Hunger Resistance",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "ICE_ATTACK": {
+                "name": "Ice Attack",
+                "limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "ICE_RESISTANCE": {
+                "name": "Ice Resistance",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "INTIMIDATOR": {
+                "name": "Intimidator",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "IRON_SKIN": {
+                "name": "Iron Skin",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "ITEM_PROLONGER": {
+                "name": "Item Prolonger",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "JUMP_MASTER": {
+                "name": "Jump Master",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "LATENT_POWER": {
+                "name": "Latent Power",
+                "limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "LEAP_OF_FAITH": {
+                "name": "Leap of Faith",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "MARATHON_RUNNER": {
+                "name": "Marathon Runner",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "MASTER_FISHER": {
+                "name": "Master Fisher",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "MASTER_GATHERER": {
+                "name": "Master Gatherer",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "MASTER_MOUNTER": {
+                "name": "Master Mounter",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "MAXIMUM_MIGHT": {
+                "name": "Maximum Might",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "MUCK_RESISTANCE": {
+                "name": "Muck Resistance",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "MUSHROOMANCER": {
+                "name": "Mushroomancer",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "NON_ELEMENTAL_BOOST": {
+                "name": "Non-elemental Boost",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "NORMAL_SHOTS": {
+                "name": "Normal Shots",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "OFFENSIVE_GUARD": {
+                "name": "Offensive Guard",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "PALICO_RALLY": {
+                "name": "Palico Rally",
+                "limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "PARALYSIS_ATTACK": {
+                "name": "Paralysis Attack",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "PARALYSIS_FUNCTIONALITY": {
+                "name": "Paralysis Functionality",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "PARALYSIS_RESISTANCE": {
+                "name": "Paralysis Resistance",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "PARTBREAKER": {
+                "name": "Partbreaker",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "PEAK_PERFORMANCE": {
+                "name": "Peak Performance",
+                "limit": 3,
+
+                "states": ["not full health", "full health"],
+
+                "tooltip": "((TODO))"
+        },
+        "PIERCING_SHOTS": {
+                "name": "Piercing Shots",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "POISON_ATTACK": {
+                "name": "Poison Attack",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "POISON_FUNCTIONALITY": {
+                "name": "Poison Functionality",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "POISON_RESISTANCE": {
+                "name": "Poison Resistance",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "POWER_PROLONGER": {
+                "name": "Power Prolonger",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "PRO_TRANSPORTER": {
+                "name": "Pro Transporter",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "PROVOKER": {
+                "name": "Provoker",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "QUICK_SHEATH": {
+                "name": "Quick Sheath",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "RECOVERY_SPEED": {
+                "name": "Recovery Speed",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "RECOVERY_UP": {
+                "name": "Recovery Up",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "RESENTMENT": {
+                "name": "Resentment",
+                "limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "RESUSCITATE": {
+                "name": "Resuscitate",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "SAFE_LANDING": {
+                "name": "Safe Landing",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "SCENTHOUND": {
+                "name": "Scenthound",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "SCHOLAR": {
+                "name": "Scholar",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "SCOUTFLY_RANGE_UP": {
+                "name": "Scoutfly Range Up",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "SLEEP_ATTACK": {
+                "name": "Sleep Attack",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "SLEEP_FUNCTIONALITY": {
+                "name": "Sleep Functionality",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "SLEEP_RESISTANCE": {
+                "name": "Sleep Resistance",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "SLINGER_CAPACITY": {
+                "name": "Slinger Capacity",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "SLUGGER": {
+                "name": "Slugger",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "SPECIAL_AMMO_BOOST": {
+                "name": "Special Ammo Boost",
+                "limit": 2,
+
+                "tooltip": "((TODO))"
+        },
+        "SPEED_CRAWLER": {
+                "name": "Speed Crawler",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "SPEED_EATING": {
+                "name": "Speed Eating",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "SPEED_SHARPENING": {
+                "name": "Speed Sharpening",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "SPREAD_POWER_SHOTS": {
+                "name": "Spread/Power Shots",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "STAMINA_SURGE": {
+                "name": "Stamina Surge",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "STAMINA_THIEF": {
+                "name": "Stamina Thief",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "STEALTH": {
+                "name": "Stealth",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "STUN_RESISTANCE": {
+                "name": "Stun Resistance",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "SURVIVAL_EXPERT": {
+                "name": "Survival Expert",
+                "limit": 3,
+
+                "tooltip": "((TODO))",
+
+                "previous_name": "Sporepuff Expert"
+        },
+        "THUNDER_ATTACK": {
+                "name": "Thunder Attack",
+                "limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "THUNDER_RESISTANCE": {
+                "name": "Thunder Resistance",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "TOOL_SPECIALIST": {
+                "name": "Tool Specialist",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "TREMOR_RESISTANCE": {
+                "name": "Tremor Resistance",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "WATER_ATTACK": {
+                "name": "Water Attack",
+                "limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "WATER_RESISTANCE": {
+                "name": "Water Resistance",
+                "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "WEAKNESS_EXPLOIT": {
+                "name": "Weakness Exploit",
+                "limit": 3,
+
+                "states": ["non-weak point", "weak point", "wounded"],
+                "zeroth_state_can_be_blank": false,
+
+                "tooltip": "((TODO))"
+        },
+        "WIDE_RANGE": {
+                "name": "Wide-Range",
+                "limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "WINDPROOF": {
+                "name": "Windproof",
+                "limit": 5,
+
+                "tooltip": "((TODO))"
+        }
+    }
+}
