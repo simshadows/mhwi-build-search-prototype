@@ -435,7 +435,7 @@ def _obtain_weapon_db():
 
         weapon_names.add(tup.name)
         #weapons_intermediate[weapon_id] = tup # TODO: Consider using the weapon ID instead.
-        weapons_intermediate[tup.name] = tup
+        weapons_intermediate[weapon_id] = tup
 
     return weapons_intermediate
 

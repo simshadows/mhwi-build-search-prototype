@@ -507,7 +507,7 @@ def tests_passed():
     skills_dict = {} # Start with no skills
     skill_states_dict = {} # Start with no states
     augments_list = [] # Start with no augments
-    weapon = weapon_db["Acid Shredder II"]
+    weapon = weapon_db["ACID_SHREDDER_II"]
     decorations_list = [] # Start with no decorations
     charm_id = None
 
@@ -530,7 +530,7 @@ def tests_passed():
     test_with_incrementing_skill(Skill.CRITICAL_BOOST, 3, [423.95, 423.95, 423.95, 423.95])
     # We now have full Handicraft and Critical Boost.
 
-    weapon = weapon_db["Royal Venus Blade"]
+    weapon = weapon_db["ROYAL_VENUS_BLADE"]
 
     print("Incrementing Critical Boost with non-zero Affinity.")
     test_with_incrementing_skill(Skill.CRITICAL_BOOST, 3, [411.01, 413.98, 416.95, 419.92])
@@ -592,7 +592,7 @@ def tests_passed():
     print("Incrementing Non-elemental Boost with a raw weapon.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [673.32, 700.56]) # Game does weird rounding.
 
-    weapon = weapon_db["Immovable Dharma"]
+    weapon = weapon_db["IMMOVABLE_DHARMA"]
 
     skills_dict = {
             Skill.CRITICAL_EYE       : 4,
@@ -616,12 +616,12 @@ def tests_passed():
     print("Incrementing Non-elemental Boost with a raw weapon again.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [476.59, 496.68])
 
-    weapon = weapon_db["Great Demon Rod"]
+    weapon = weapon_db["GREAT_DEMON_ROD"]
 
     print("Incrementing Non-elemental Boost with an elemental weapon.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [456.12, 456.12])
 
-    weapon = weapon_db["Royal Venus Blade"]
+    weapon = weapon_db["ROYAL_VENUS_BLADE"]
 
     print("Testing without augments.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [478.17, 498.96])
@@ -662,7 +662,7 @@ def tests_passed():
         if returned_level != expected_level:
             raise ValueError(f"Skill level mismatch for {expected_skill}. Expected {expected_level}. Got {returned_level}.")
 
-    weapon_name = "Royal Venus Blade"
+    weapon_name = "ROYAL_VENUS_BLADE"
 
     armour_dict = {
             ArmourSlot.HEAD:  ("Teostra", ArmourDiscriminator.HIGH_RANK,   ArmourVariant.HR_GAMMA),
