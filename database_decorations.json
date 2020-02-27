@@ -1,0 +1,632 @@
+{
+    "simple_decorations": {
+        "BLASTCOAT": {
+            "name" : "Blastcoat",
+            "slot" : 3,
+            "skill": "BLAST_FUNCTIONALITY"
+        },
+        "BRACE": {
+            "name" : "Brace",
+            "slot" : 3,
+            "skill": "FLINCH_FREE"
+        },
+        "DRAGONSEAL": {
+            "name" : "Dragonseal",
+            "slot" : 3,
+            "skill": "ELDERSEAL_BOOST"
+        },
+        "EARPLUG": {
+            "name" : "Earplug",
+            "slot" : 3,
+            "skill": "EARPLUGS"
+        },
+        "FORCESHOT": {
+            "name" : "Forceshot",
+            "slot" : 3,
+            "skill": "NORMAL_SHOTS"
+        },
+        "HANDICRAFT": {
+            "name" : "Handicraft",
+            "slot" : 3,
+            "skill": "HANDICRAFT"
+        },
+        "PARACOAT": {
+            "name" : "Paracoat",
+            "slot" : 3,
+            "skill": "PARALYSIS_FUNCTIONALITY"
+        },
+        "PIERCE": {
+            "name" : "Pierce",
+            "slot" : 3,
+            "skill": "PIERCING_SHOTS"
+        },
+        "POISONCOAT": {
+            "name" : "Poisoncoat",
+            "slot" : 3,
+            "skill": "POISON_FUNCTIONALITY"
+        },
+        "RELEASE": {
+            "name" : "Release",
+            "slot" : 3,
+            "skill": "FREE_ELEM_AMMO_UP"
+        },
+        "SLEEPCOAT": {
+            "name" : "Sleepcoat",
+            "slot" : 3,
+            "skill": "SLEEP_FUNCTIONALITY"
+        },
+        "SPREAD": {
+            "name" : "Spread",
+            "slot" : 3,
+            "skill": "SPREAD_POWER_SHOTS"
+        },
+        "PHOENIX": {
+            "name" : "Phoenix",
+            "slot" : 3,
+            "skill": "COALESCENCE"
+        },
+        "CHALLENGER": {
+            "name" : "Challenger",
+            "slot" : 2,
+            "skill": "AGITATOR"
+        },
+        "CHARGER": {
+            "name" : "Charger",
+            "slot" : 2,
+            "skill": "FOCUS"
+        },
+        "CRITICAL": {
+            "name" : "Critical",
+            "slot" : 2,
+            "skill": "CRITICAL_BOOST"
+        },
+        "DESTROYER": {
+            "name" : "Destroyer",
+            "slot" : 2,
+            "skill": "PARTBREAKER"
+        },
+        "DRAW": {
+            "name" : "Draw",
+            "slot" : 2,
+            "skill": "CRITICAL_DRAW"
+        },
+        "ELEMENTLESS": {
+            "name" : "Elementless",
+            "slot" : 2,
+            "skill": "NON_ELEMENTAL_BOOST"
+        },
+        "ENHANCER": {
+            "name" : "Enhancer",
+            "slot" : 2,
+            "skill": "POWER_PROLONGER"
+        },
+        "EVASION": {
+            "name" : "Evasion",
+            "slot" : 2,
+            "skill": "EVADE_WINDOW"
+        },
+        "FLAWLESS": {
+            "name" : "Flawless",
+            "slot" : 2,
+            "skill": "PEAK_PERFORMANCE"
+        },
+        "FLIGHT": {
+            "name" : "Flight",
+            "slot" : 2,
+            "skill": "AIRBORNE"
+        },
+        "FOOTING": {
+            "name" : "Footing",
+            "slot" : 2,
+            "skill": "TREMOR_RESISTANCE"
+        },
+        "FUROR": {
+            "name" : "Furor",
+            "slot" : 2,
+            "skill": "RESENTMENT"
+        },
+        "JUMPING": {
+            "name" : "Jumping",
+            "slot" : 2,
+            "skill": "EVADE_EXTENDER"
+        },
+        "KO": {
+            "name" : "KO",
+            "slot" : 2,
+            "skill": "SLUGGER"
+        },
+        "MAGAZINE": {
+            "name" : "Magazine",
+            "slot" : 2,
+            "skill": "CAPACITY_BOOST"
+        },
+        "MIGHTY": {
+            "name" : "Mighty",
+            "slot" : 2,
+            "skill": "MAXIMUM_MIGHT"
+        },
+        "MIGHTY_BOW": {
+            "name" : "Mighty Bow",
+            "slot" : 2,
+            "skill": "BOW_CHARGE_PLUS"
+        },
+        "MINDS_EYE": {
+            "name" : "Mind's Eye",
+            "slot" : 2,
+            "skill": "MINDS_EYE_BALLISTICS"
+        },
+        "PHYSIQUE": {
+            "name" : "Physique",
+            "slot" : 2,
+            "skill": "CONSTITUTION"
+        },
+        "POTENTIAL": {
+            "name" : "Potential",
+            "slot" : 2,
+            "skill": "HEROICS"
+        },
+        "REFRESH": {
+            "name" : "Refresh",
+            "slot" : 2,
+            "skill": "STAMINA_SURGE"
+        },
+        "SHARP": {
+            "name" : "Sharp",
+            "slot" : 2,
+            "skill": "PROTECTIVE_POLISH"
+        },
+        "SHIELD": {
+            "name" : "Shield",
+            "slot" : 2,
+            "skill": "GUARD_UP"
+        },
+        "SLIDER": {
+            "name" : "Slider",
+            "slot" : 2,
+            "skill": "AFFINITY_SLIDING"
+        },
+        "SPRINTER": {
+            "name" : "Sprinter",
+            "slot" : 2,
+            "skill": "MARATHON_RUNNER"
+        },
+        "TENDERIZER": {
+            "name" : "Tenderizer",
+            "slot" : 2,
+            "skill": "WEAKNESS_EXPLOIT"
+        },
+        "THROTTLE": {
+            "name" : "Throttle",
+            "slot" : 2,
+            "skill": "LATENT_POWER"
+        },
+        "WIND_RESIST": {
+            "name" : "Wind Resist",
+            "slot" : 2,
+            "skill": "WINDPROOF"
+        },
+        "COOLING": {
+            "name" : "Cooling",
+            "slot" : 2,
+            "skill": "HEAT_GUARD"
+        },
+        "GUARDIAN": {
+            "name" : "Guardian",
+            "slot" : 2,
+            "skill": "OFFENSIVE_GUARD"
+        },
+        "WARMING": {
+            "name" : "Warming",
+            "slot" : 2,
+            "skill": "COLDPROOF"
+        },
+        "ANTIBLAST": {
+            "name" : "Antiblast",
+            "slot" : 1,
+            "skill": "BLAST_RESISTANCE"
+        },
+        "ANTIDOTE": {
+            "name" : "Antidote",
+            "slot" : 1,
+            "skill": "POISON_RESISTANCE"
+        },
+        "ANTIPARA": {
+            "name" : "Antipara",
+            "slot" : 1,
+            "skill": "PARALYSIS_RESISTANCE"
+        },
+        "ARTILLERY": {
+            "name" : "Artillery",
+            "slot" : 1,
+            "skill": "ARTILLERY"
+        },
+        "ATTACK": {
+            "name" : "Attack",
+            "slot" : 1,
+            "skill": "ATTACK_BOOST"
+        },
+        "BLAST": {
+            "name" : "Blast",
+            "slot" : 1,
+            "skill": "BLAST_ATTACK"
+        },
+        "BLAZE": {
+            "name" : "Blaze",
+            "slot" : 1,
+            "skill": "FIRE_ATTACK"
+        },
+        "BOLT": {
+            "name" : "Bolt",
+            "slot" : 1,
+            "skill": "THUNDER_ATTACK"
+        },
+        "BOMBER": {
+            "name" : "Bomber",
+            "slot" : 1,
+            "skill": "BOMBARDIER"
+        },
+        "BOTANY": {
+            "name" : "Botany",
+            "slot" : 1,
+            "skill": "BOTANIST"
+        },
+        "CRISIS": {
+            "name" : "Crisis",
+            "slot" : 1,
+            "skill": "RESUSCITATE"
+        },
+        "DEF_LOCK": {
+            "name" : "Def Lock",
+            "slot" : 1,
+            "skill": "IRON_SKIN"
+        },
+        "DEFENSE": {
+            "name" : "Defense",
+            "slot" : 1,
+            "skill": "DEFENSE_BOOST"
+        },
+        "DRAGON": {
+            "name" : "Dragon",
+            "slot" : 1,
+            "skill": "DRAGON_ATTACK"
+        },
+        "DRAGON_RES": {
+            "name" : "Dragon Res",
+            "slot" : 1,
+            "skill": "DRAGON_RESISTANCE"
+        },
+        "DRAIN": {
+            "name" : "Drain",
+            "slot" : 1,
+            "skill": "STAMINA_THIEF"
+        },
+        "ENDURING": {
+            "name" : "Enduring",
+            "slot" : 1,
+            "skill": "ITEM_PROLONGER"
+        },
+        "EXPERT": {
+            "name" : "Expert",
+            "slot" : 1,
+            "skill": "CRITICAL_EYE"
+        },
+        "FIRE_RES": {
+            "name" : "Fire Res",
+            "slot" : 1,
+            "skill": "FIRE_RESISTANCE"
+        },
+        "FORTITUDE": {
+            "name" : "Fortitude",
+            "slot" : 1,
+            "skill": "FORTIFY"
+        },
+        "FRIENDSHIP": {
+            "name" : "Friendship",
+            "slot" : 1,
+            "skill": "WIDE_RANGE"
+        },
+        "FROST": {
+            "name" : "Frost",
+            "slot" : 1,
+            "skill": "ICE_ATTACK"
+        },
+        "FUNGIFORM": {
+            "name" : "Fungiform",
+            "slot" : 1,
+            "skill": "MUSHROOMANCER"
+        },
+        "GEOLOGY": {
+            "name" : "Geology",
+            "slot" : 1,
+            "skill": "GEOLOGIST"
+        },
+        "GOBBLER": {
+            "name" : "Gobbler",
+            "slot" : 1,
+            "skill": "SPEED_EATING"
+        },
+        "GRINDER": {
+            "name" : "Grinder",
+            "slot" : 1,
+            "skill": "SPEED_SHARPENING"
+        },
+        "HEAVY_ARTILLERY": {
+            "name" : "Heavy Artillery",
+            "slot" : 1,
+            "skill": "HEAVY_ARTILLERY"
+        },
+        "HUNGERLESS": {
+            "name" : "Hungerless",
+            "slot" : 1,
+            "skill": "HUNGER_RESISTANCE"
+        },
+        "ICE_RES": {
+            "name" : "Ice Res",
+            "slot" : 1,
+            "skill": "ICE_RESISTANCE"
+        },
+        "INTIMIDATOR": {
+            "name" : "Intimidator",
+            "slot" : 1,
+            "skill": "INTIMIDATOR"
+        },
+        "IRONWALL": {
+            "name" : "Ironwall",
+            "slot" : 1,
+            "skill": "GUARD"
+        },
+        "MAINTENANCE": {
+            "name" : "Maintenance",
+            "slot" : 1,
+            "skill": "TOOL_SPECIALIST"
+        },
+        "MEDICINE": {
+            "name" : "Medicine",
+            "slot" : 1,
+            "skill": "RECOVERY_UP"
+        },
+        "MEOWSTER": {
+            "name" : "Meowster",
+            "slot" : 1,
+            "skill": "PALICO_RALLY"
+        },
+        "MIASMA": {
+            "name" : "Miasma",
+            "slot" : 1,
+            "skill": "EFFLUVIA_RESISTANCE"
+        },
+        "MIREWALKER": {
+            "name" : "Mirewalker",
+            "slot" : 1,
+            "skill": "AQUATIC_POLAR_MOBILITY"
+        },
+        "PARALYZER": {
+            "name" : "Paralyzer",
+            "slot" : 1,
+            "skill": "PARALYSIS_ATTACK"
+        },
+        "PEP": {
+            "name" : "Pep",
+            "slot" : 1,
+            "skill": "SLEEP_RESISTANCE"
+        },
+        "PROTECTION": {
+            "name" : "Protection",
+            "slot" : 1,
+            "skill": "DIVINE_BLESSING"
+        },
+        "RECOVERY": {
+            "name" : "Recovery",
+            "slot" : 1,
+            "skill": "RECOVERY_SPEED"
+        },
+        "RESISTOR": {
+            "name" : "Resistor",
+            "slot" : 1,
+            "skill": "BLIGHT_RESISTANCE"
+        },
+        "SATIATED": {
+            "name" : "Satiated",
+            "slot" : 1,
+            "skill": "FREE_MEAL"
+        },
+        "SCENT": {
+            "name" : "Scent",
+            "slot" : 1,
+            "skill": "SCENTHOUND"
+        },
+        "SHEATH": {
+            "name" : "Sheath",
+            "slot" : 1,
+            "skill": "QUICK_SHEATH"
+        },
+        "SLEEP": {
+            "name" : "Sleep",
+            "slot" : 1,
+            "skill": "SLEEP_ATTACK"
+        },
+        "SONOROUS": {
+            "name" : "Sonorous",
+            "slot" : 1,
+            "skill": "HORN_MAESTRO"
+        },
+        "SPECIMEN": {
+            "name" : "Specimen",
+            "slot" : 1,
+            "skill": "ENTOMOLOGIST"
+        },
+        "STEADFAST": {
+            "name" : "Steadfast",
+            "slot" : 1,
+            "skill": "STUN_RESISTANCE"
+        },
+        "STONETHROWER": {
+            "name" : "Stonethrower",
+            "slot" : 1,
+            "skill": "SLINGER_CAPACITY"
+        },
+        "STREAM": {
+            "name" : "Stream",
+            "slot" : 1,
+            "skill": "WATER_ATTACK"
+        },
+        "SURVIVAL": {
+            "name" : "Survival",
+            "slot" : 1,
+            "skill": "SURVIVAL_EXPERT"
+        },
+        "SUTURE": {
+            "name" : "Suture",
+            "slot" : 1,
+            "skill": "BLEEDING_RESISTANCE"
+        },
+        "THUNDER_RES": {
+            "name" : "Thunder Res",
+            "slot" : 1,
+            "skill": "THUNDER_RESISTANCE"
+        },
+        "TIP_TOE": {
+            "name" : "Tip Toe",
+            "slot" : 1,
+            "skill": "STEALTH"
+        },
+        "TRUESHOT": {
+            "name" : "Trueshot",
+            "slot" : 1,
+            "skill": "SPECIAL_AMMO_BOOST"
+        },
+        "VENOM": {
+            "name" : "Venom",
+            "slot" : 1,
+            "skill": "POISON_ATTACK"
+        },
+        "VITALITY": {
+            "name" : "Vitality",
+            "slot" : 1,
+            "skill": "HEALTH_BOOST"
+        },
+        "WATER_RES": {
+            "name" : "Water Res",
+            "slot" : 1,
+            "skill": "WATER_RESISTANCE"
+        }
+    },
+    "4slot_compound_decorations_batch_definitions": {
+        "DECORATION_COMBINATIONS_1": {
+            "left_side": [
+                "BOMBER",
+                "CRISIS",
+                "DRAIN",
+                "FLIGHT",
+                "FUNGIFORM",
+                "FORTITUDE",
+                "FRIENDSHIP",
+                "GOBBLER",
+                "GRINDER",
+                "GUARDIAN",
+                "IRONWALL",
+                "JUMPING",
+                "REFRESH",
+                "RESISTOR",
+                "SATIATED",
+                "SHEATH",
+                "SLIDER",
+                "SPRINTER",
+                "STONETHROWER"
+            ],
+            "right_side": [
+                "ATTACK",
+                "EVASION",
+                "EXPERT",
+                "HANDICRAFT",
+                "PHYSIQUE",
+                "RELEASE"
+            ]
+        },
+        "DECORATION_COMBINATIONS_2": {
+            "left_side": [
+                "BRACE",
+                "CHALLENGER",
+                "CHARGER",
+                "CRITICAL",
+                "DESTROYER",
+                "DRAW",
+                "EARPLUG",
+                "ENHANCER",
+                "FLAWLESS",
+                "FOOTING",
+                "FUROR",
+                "HANDICRAFT",
+                "KO",
+                "MIGHTY",
+                "PHOENIX",
+                "POTENTIAL",
+                "RELEASE",
+                "TENDERIZER",
+                "THROTTLE",
+                "WIND_RESIST"
+            ],
+            "right_side": [
+                "EVASION",
+                "MAINTENANCE",
+                "MEDICINE",
+                "PHYSIQUE",
+                "PROTECTION",
+                "VITALITY"
+            ]
+        }
+    },
+    "4slot_single_skill_decorations": {
+        "FIRE_RES"       : [2,3],
+        "WATER_RES"      : [2,3],
+        "ICE_RES"        : [2,3],
+        "THUNDER_RES"    : [2,3],
+        "DRAGON_RES"     : [2,3],
+        "BLAZE"          : [2],
+        "STREAM"         : [2],
+        "FROST"          : [2],
+        "BOLT"           : [2],
+        "DRAGON"         : [2],
+        "VENOM"          : [2],
+        "PARALYZER"      : [2],
+        "SLEEP"          : [2],
+        "BLAST"          : [2],
+        "ANTIDOTE"       : [2],
+        "ANTIPARA"       : [2],
+        "PEP"            : [2],
+        "STEADFAST"      : [2],
+        "ANTIBLAST"      : [2],
+        "SUTURE"         : [2],
+        "DEF_LOCK"       : [2],
+        "MIASMA"         : [2],
+        "HUNGERLESS"     : [2],
+        "RECOVERY"       : [2],
+        "TIP_TOE"        : [2,3],
+        "INTIMIDATOR"    : [2,3],
+        "MEOWSTER"       : [2,3],
+        "TRUESHOT"       : [2],
+        "HEAVY_ARTILLERY": [2],
+        "BOTANY"         : [2,3],
+        "GEOLOGY"        : [2,3],
+        "SURVIVAL"       : [2,3],
+        "MIREWALKER"     : [2],
+        "SPECIMEN"       : [2],
+        "SONOROUS"       : [2],
+        "ENDURING"       : [2,3],
+        "DEFENSE"        : [2,3],
+        "ARTILLERY"      : [2],
+        "EARPLUG"        : [2],
+        "WIND_RESIST"    : [2],
+        "ATTACK"         : [2],
+        "EXPERT"         : [2],
+        "HANDICRAFT"     : [2],
+        "THROTTLE"       : [2],
+        "CHALLENGER"     : [2],
+        "POTENTIAL"      : [2],
+        "FUROR"          : [2],
+        "PHYSIQUE"       : [2],
+        "EVASION"        : [2],
+        "IRONWALL"       : [2],
+        "FRIENDSHIP"     : [2]
+    }
+}

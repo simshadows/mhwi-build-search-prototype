@@ -11,26 +11,29 @@ In this version, we assume each level under maximum Handicraft will subtract sha
 """
 
 import sys
+from copy import copy
 
 #from math import floor
-from collections import namedtuple
+from collections import namedtuple, defaultdict, Counter
 
-from database_skills  import (Skill,
-                              clipped_skills_defaultdict,
-                              calculate_set_bonus_skills,
-                              calculate_skills_contribution)
-from database_weapons import (WeaponClass,
-                              weapon_db,
-                              IBWeaponAugmentType,
-                              WeaponAugmentationScheme,
-                              WeaponUpgradeScheme)
-from database_armour  import (ArmourDiscriminator,
-                              ArmourVariant,
-                              ArmourSlot,
-                              armour_db,
-                              calculate_armour_contribution)
-from database_misc    import (POWERCHARM_ATTACK_POWER,
-                              POWERTALON_ATTACK_POWER)
+from database_skills      import (Skill,
+                                 clipped_skills_defaultdict,
+                                 calculate_set_bonus_skills,
+                                 calculate_skills_contribution)
+from database_weapons     import (WeaponClass,
+                                 weapon_db,
+                                 IBWeaponAugmentType,
+                                 WeaponAugmentationScheme,
+                                 WeaponUpgradeScheme)
+from database_armour      import (ArmourDiscriminator,
+                                 ArmourVariant,
+                                 ArmourSlot,
+                                 armour_db,
+                                 calculate_armour_contribution)
+from database_decorations import (Decoration,
+                                 calculate_decorations_skills_contribution)
+from database_misc        import (POWERCHARM_ATTACK_POWER,
+                                  POWERTALON_ATTACK_POWER)
 
 
 # Corresponds to each level from red through to purple, in increasing-modifier order.
@@ -39,10 +42,18 @@ RAW_SHARPNESS_MODIFIERS = (0.5,   0.75,     1.0,      1.05,    1.2,    1.32,    
 
 
 def print_debugging_statistics():
+    armour_set_total = 0
+    for (_, armour_set) in armour_db.items():
+        armour_set_total += sum(len(v) for (k, v) in armour_set.variants.items())
+
     print("=== Application Statistics ===")
     print()
     print("Number of skills: " + str(len(list(Skill))))
+    print()
+    print("Total number of armour pieces: " + str(armour_set_total))
     print("Total number of weapons: " + str(len(weapon_db)))
+    print()
+    print("Number of decorations: " + str(len(list(Decoration))))
     print("\n==============================\n")
     return
 
@@ -123,8 +134,8 @@ def calculate_efr(**kwargs):
     return efr
 
 
-BuildValues = namedtuple(
-    "BuildValues",
+LookupFromSkillsValues = namedtuple(
+    "LookupFromSkillsValues",
     [
         "efr",
         "sharpness_values",
@@ -220,7 +231,7 @@ def lookup_from_skills(weapon, skills_dict, skill_states_dict, augments_list):
         kwargs["weapon_raw_multiplier"] = from_skills.weapon_base_attack_power_multiplier
         kwargs["augment_added_raw"]     = from_augments.added_attack_power
 
-        ret = BuildValues(
+        ret = LookupFromSkillsValues(
                 efr               = calculate_efr(**kwargs),
                 sharpness_values  = sharpness_values,
 
@@ -230,6 +241,18 @@ def lookup_from_skills(weapon, skills_dict, skill_states_dict, augments_list):
     return ret
 
 
+
+BuildValues = namedtuple(
+    "BuildValues",
+    [
+        "efr",
+        "sharpness_values",
+
+        "skills",
+
+        "usable_slots",
+    ],
+)
 # Input looks like this:
 #
 #       weapon_id = "ACID_SHREDDER_II"
@@ -252,20 +275,78 @@ def lookup_from_skills(weapon, skills_dict, skill_states_dict, augments_list):
 #           (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
 #       ]
 #
-def lookup_from_gear(weapon_name, armour_dict, skill_states_dict, augments_list):
+def lookup_from_gear(weapon_name, armour_dict, decorations_list, skill_states_dict, augments_list):
     assert isinstance(weapon_name, str)
     weapon = weapon_db[weapon_name]
     armour_contribution = calculate_armour_contribution(armour_dict)
+    decorations_counter = Counter(decorations_list)
 
-    skills_dict = armour_contribution.skills # IMPORTANT: This is without set bonuses.
+    slots_available_counter = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
 
+    # For debugging, we can first determine if the decorations fit in the selected gear.
+    # (We should be able to rely on inputs here.
+    # Both slots_*_counter are in the format {slot_size: count}
+    if __debug__:
+        tmp_slots_available_counter = copy(Counter(list(weapon.slots) + list(armour_contribution.decoration_slots)))
+        assert len(tmp_slots_available_counter) <= 4 # We only have slot sizes 1 to 4.
+
+        slots_used_counter = Counter()
+        for (deco, total) in decorations_counter.items():
+            slots_used_counter.update([deco.value.slot_size] * total)
+
+        for (deco_size, n) in slots_used_counter.items():
+            for usable_size in range(deco_size, 5):
+                if usable_size in tmp_slots_available_counter:
+                    if n <= tmp_slots_available_counter[usable_size]:
+                        tmp_slots_available_counter[usable_size] -= n # we consume all the slots we can.
+                        n = 0
+                        break
+                    else:
+                        n -= tmp_slots_available_counter[usable_size]
+                        tmp_slots_available_counter[usable_size] = 0
+            if n > 0:
+                raise ValueError(f"At least {n} more slots of at least size {deco_size} required.")
+
+    # Now, we calculate the skills dictionary.
+
+    # Armour regular skills
+    skills_dict = armour_contribution.skills
+
+    # Decoration skills
+    deco_skills_dict = calculate_decorations_skills_contribution(decorations_counter)
+    for (skill, level) in deco_skills_dict.items():
+        skills_dict[skill] += level
+
+    # Armour set bonuses
     skills_from_set_bonuses = calculate_set_bonus_skills(armour_contribution.set_bonuses)
     if len(set(skills_dict) & set(skills_from_set_bonuses)) != 0:
         raise RuntimeError("We shouldn't be getting any mixing between regular skills and set bonuses here.")
 
-    skills_dict.update(skills_from_set_bonuses) # IMPORTANT: Now, we update the skill dictionary to include set bonuses.
+    skills_dict.update(skills_from_set_bonuses)
 
-    return lookup_from_skills(weapon, skills_dict, skill_states_dict, augments_list)
+    intermediate_results = lookup_from_skills(weapon, skills_dict, skill_states_dict, augments_list)
+
+    if isinstance(intermediate_results, list):
+        final_results = []
+        for i in intermediate_results:
+            final_results.append(BuildValues(
+                    efr              = i.efr,
+                    sharpness_values = i.sharpness_values,
+                    
+                    skills           = i.skills,
+                    
+                    usable_slots     = slots_available_counter,
+                ))
+    else:
+        final_results = BuildValues(
+                efr              = intermediate_results.efr,
+                sharpness_values = intermediate_results.sharpness_values,
+                
+                skills           = intermediate_results.skills,
+                
+                usable_slots     = slots_available_counter,
+            )
+    return final_results
 
 
 def search_command():
@@ -275,11 +356,11 @@ def search_command():
 def lookup_command(weapon_name):
 
     armour_dict = {
-        ArmourSlot.HEAD:  ("Teostra", ArmourDiscriminator.HIGH_RANK,   ArmourVariant.HR_GAMMA),
-        ArmourSlot.CHEST: ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_ALPHA_PLUS),
+        ArmourSlot.HEAD:  ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+        ArmourSlot.CHEST: ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
         ArmourSlot.ARMS:  ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
         ArmourSlot.WAIST: ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
-        ArmourSlot.LEGS:  ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_ALPHA_PLUS),
+        ArmourSlot.LEGS:  ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
     }
 
     #skills_dict = {
@@ -293,6 +374,17 @@ def lookup_command(weapon_name):
     #        Skill.NON_ELEMENTAL_BOOST: 1,
     #    }
 
+    decorations_list = [
+            Decoration.EXPERT,
+            Decoration.TENDERIZER,
+            Decoration.EARPLUG,
+            Decoration.COMPOUND_TENDERIZER_VITALITY,
+            Decoration.COMPOUND_TENDERIZER_VITALITY,
+            Decoration.COMPOUND_TENDERIZER_VITALITY,
+            Decoration.COMPOUND_TENDERIZER_VITALITY,
+            Decoration.COMPOUND_TENDERIZER_VITALITY,
+        ]
+
     skill_states_dict = {
             #Skill.WEAKNESS_EXPLOIT: 2,
             #Skill.AGITATOR: 1,
@@ -304,12 +396,13 @@ def lookup_command(weapon_name):
             #(IBWeaponAugmentType.AFFINITY_INCREASE, 1),
         ]
     
-    results = lookup_from_gear(weapon_name, armour_dict, skill_states_dict, augments_list)
+    results = lookup_from_gear(weapon_name, armour_dict, decorations_list, skill_states_dict, augments_list)
     sharpness_values = None
     efrs_strings = []
 
     # We're assuming all results returned operate on the same set of skills.
     representative_skills_dict = results[0].skills
+    representative_usable_slots_dict = results[0].usable_slots
     assert all(len(representative_skills_dict) == len(result.skills) for result in results)# Equal number of keys
     # TODO: Make a better assertion that is more strict on this.
 
@@ -366,6 +459,21 @@ def lookup_command(weapon_name):
         sharpness_values = results.sharpness_values
         efrs_strings.append(f"EFR: {results.efr}")
 
+    minimum_slot_sizes_required = defaultdict(lambda : 0)
+    for deco in decorations_list:
+        minimum_slot_sizes_required[deco.value.slot_size] += 1
+
+    print("Decoration slots:")
+    print(f"   [Size 1] Slots Available = {representative_usable_slots_dict[1]}, " \
+                            f"Decos of this size = {minimum_slot_sizes_required[1]}")
+    print(f"   [Size 2] Slots Available = {representative_usable_slots_dict[2]}, " \
+                            f"Decos of this size = {minimum_slot_sizes_required[2]}")
+    print(f"   [Size 3] Slots Available = {representative_usable_slots_dict[3]}, " \
+                            f"Decos of this size = {minimum_slot_sizes_required[3]}")
+    print(f"   [Size 4] Slots Available = {representative_usable_slots_dict[4]}, " \
+                            f"Decos of this size = {minimum_slot_sizes_required[4]}")
+    print()
+
     print("Skills:")
     print("\n".join(f"   {skill.value.name} {level}" for (skill, level) in representative_skills_dict.items()))
     print()
@@ -392,6 +500,7 @@ def tests_passed():
     skill_states_dict = {} # Start with no states
     augments_list = [] # Start with no augments
     weapon = weapon_db["Acid Shredder II"]
+    decorations_list = [] # Start with no decorations
 
     # This function will leave skills_dict with the skill at max_level.
     def test_with_incrementing_skill(skill, max_level, expected_efrs):
@@ -532,12 +641,12 @@ def tests_passed():
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [494.11, 515.59])
 
     def check_efr(expected_efr):
-        results = lookup_from_gear(weapon_name, armour_dict, skill_states_dict, augments_list)
+        results = lookup_from_gear(weapon_name, armour_dict, decorations_list, skill_states_dict, augments_list)
         if round(results.efr) != round(expected_efr):
             raise ValueError(f"EFR value mismatch. Expected {expected_efr}. Got {results.efr}.")
 
     def check_skill(expected_skill, expected_level):
-        results = lookup_from_gear(weapon_name, armour_dict, skill_states_dict, augments_list)
+        results = lookup_from_gear(weapon_name, armour_dict, decorations_list, skill_states_dict, augments_list)
         if Skill[expected_skill] not in results.skills:
             raise ValueError(f"Skill {expected_skill} not present.")
         returned_level = results.skills[Skill[expected_skill]]
@@ -592,6 +701,65 @@ def tests_passed():
     check_skill("WEAKNESS_EXPLOIT", 1)
     check_skill("HEAT_GUARD", 1)
     check_skill("FLINCH_FREE", 1)
+
+    decorations_list = ([Decoration.EXPERT] * 6) + ([Decoration.ATTACK] * 4) + [Decoration.TENDERIZER]
+
+    print("Testing with full size-1 decorations.")
+    check_efr(478.37)
+    check_skill("CRITICAL_ELEMENT", 1) # Set Bonus
+    check_skill("FROSTCRAFT", 1) # Set Bonus
+    check_skill("DIVINE_BLESSING", 2)
+    check_skill("QUICK_SHEATH", 2)
+    check_skill("CRITICAL_DRAW", 2)
+    check_skill("COALESCENCE", 1)
+    check_skill("WEAKNESS_EXPLOIT", 2)
+    check_skill("HEAT_GUARD", 1)
+    check_skill("FLINCH_FREE", 1)
+    check_skill("CRITICAL_EYE", 6)
+    check_skill("ATTACK_BOOST", 4)
+
+    decorations_list.append(Decoration.ATTACK)
+
+    if __debug__:
+        print("Testing with just one more size-1 jewel to see if it catches the error.")
+        try:
+            check_efr(0)
+        except:
+            pass
+        else:
+            raise RuntimeError("Test failed. Expected an exception here.")
+
+    decorations_list = ([Decoration.CHALLENGER_X2] * 2) + ([Decoration.COMPOUND_TENDERIZER_VITALITY] * 2)
+
+    skill_states_dict = {
+            Skill.WEAKNESS_EXPLOIT: 2,
+            Skill.AGITATOR:         1,
+        }
+
+    print("Testing with four size-4 decorations.")
+    check_efr(476.63)
+    check_skill("CRITICAL_ELEMENT", 1) # Set Bonus
+    check_skill("FROSTCRAFT", 1) # Set Bonus
+    check_skill("DIVINE_BLESSING", 2)
+    check_skill("QUICK_SHEATH", 2)
+    check_skill("CRITICAL_DRAW", 2)
+    check_skill("COALESCENCE", 1)
+    check_skill("WEAKNESS_EXPLOIT", 3)
+    check_skill("HEAT_GUARD", 1)
+    check_skill("FLINCH_FREE", 1)
+    check_skill("AGITATOR", 4)
+    check_skill("HEALTH_BOOST", 2)
+
+    decorations_list.append(Decoration.DEFENSE_X3)
+
+    if __debug__:
+        print("Testing with just one more size-4 jewel to see if it catches the error.")
+        try:
+            check_efr(0)
+        except:
+            pass
+        else:
+            raise RuntimeError("Test failed. Expected an exception here.")
 
     print("\nUnit tests are all passed.")
     print("\n==============================\n")

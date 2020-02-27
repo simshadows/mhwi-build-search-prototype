@@ -312,6 +312,12 @@
 
                 "tooltip": "((TODO))"
         },
+        "GUARD_UP": {
+                "name": "Guard Up",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
         "HANDICRAFT": {
                 "name": "Handicraft",
                 "limit": 5,
@@ -446,6 +452,12 @@
 
                 "tooltip": "((TODO))"
         },
+        "MINDS_EYE_BALLISTICS": {
+                "name": "Mind's Eye/Ballistics",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
         "MUCK_RESISTANCE": {
                 "name": "Muck Resistance",
                 "limit": 1,
@@ -489,7 +501,7 @@
                 "tooltip": "((TODO))"
         },
         "PARALYSIS_FUNCTIONALITY": {
-                "name": "Paralysis Functionality",
+                "name": "Para Functionality",
                 "limit": 1,
 
                 "tooltip": "((TODO))"
@@ -546,6 +558,12 @@
         },
         "PRO_TRANSPORTER": {
                 "name": "Pro Transporter",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "PROTECTIVE_POLISH": {
+                "name": "Protective Polish",
                 "limit": 1,
 
                 "tooltip": "((TODO))"

@@ -125,7 +125,7 @@ def _obtain_armour_db():
             "prefix"       : armour_set["prefix"],
             "naming_scheme": naming_schemes_intermediate[armour_set["naming_scheme"]],
 
-            "set_bonus"    : SetBonus[armour_set["set_bonus"]] if ("set_bonus" in armour_set) else None,
+            "set_bonus"    : SetBonus[armour_set["set_bonus"]] if (armour_set["set_bonus"] is not None) else None,
 
             "variants"     : None, # Will fill this again later.
         }

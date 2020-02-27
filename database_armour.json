@@ -6,6 +6,13 @@
             "Vambraces",
             "Coil",
             "Greaves"
+        ],
+        "COMMON_SCHEME_2": [
+            "Helm",
+            "Mail",
+            "Vambraces",
+            "Tassets",
+            "Greaves"
         ]
     },
     "armour": [
@@ -39,6 +46,31 @@
                 "ARMS" : [[3],   {"CRITICAL_EYE": 3                       }],
                 "WAIST": [[1,1], {"LATENT_POWER": 3                       }],
                 "LEGS" : [[3,1], {"CRITICAL_EYE": 2                       }]
+            }
+        },
+        {
+            "set": "Damascus",
+            "discriminator": "MASTER_RANK",
+            "rarity": 11,
+            
+            "prefix": "Damascus",
+            "naming_scheme": "COMMON_SCHEME_1",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[3],   {"DEFENSE_BOOST": 3, "SPEED_SHARPENING": 2}],
+                "CHEST": [[3,1], {"FOCUS":         2, "DEFENSE_BOOST":    2}],
+                "ARMS" : [[2,1], {"HANDICRAFT":    2, "SPEED_SHARPENING": 1}],
+                "WAIST": [[3,2], {"FOCUS":         1, "GUARD":            1}],
+                "LEGS" : [[2,1], {"DEFENSE_BOOST": 2, "GUARD":            2}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1,1], {"DEFENSE_BOOST": 3            }],
+                "CHEST": [[4,2,1], {"FOCUS":         2            }],
+                "ARMS" : [[4,1],   {"HANDICRAFT":    2            }],
+                "WAIST": [[4,3,1], {"FOCUS":         1            }],
+                "LEGS" : [[4,2],   {"DEFENSE_BOOST": 2, "GUARD": 1}]
             }
         },
         {
@@ -89,6 +121,31 @@
                 "ARMS" : [[4,3],   {"WEAKNESS_EXPLOIT": 1, "HEAT_GUARD":   1}],
                 "WAIST": [[4,2,1], {"BLAST_ATTACK":     2                   }],
                 "LEGS" : [[4],     {"LATENT_POWER":     2, "BLAST_ATTACK": 1}]
+            }
+        },
+        {
+            "set": "Yian Garuga",
+            "discriminator": "MASTER_RANK",
+            "rarity": 11,
+            
+            "prefix": "Garuga",
+            "naming_scheme": "COMMON_SCHEME_2",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[3],   {"CRITICAL_EYE": 2, "RESENTMENT":     1}],
+                "CHEST": [[1],   {"CRITICAL_EYE": 2, "EARPLUGS":       2}],
+                "ARMS" : [[1],   {"EARPLUGS":     3                     }],
+                "WAIST": [[1,1], {"RESENTMENT":   2, "POISON_ATTACK":  2}],
+                "LEGS" : [[3,3], {"CRITICAL_EYE": 2, "PIERCING_SHOTS": 1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,2],   {"CRITICAL_EYE": 1                     }],
+                "CHEST": [[4],     {"CRITICAL_EYE": 2, "EARPLUGS":       1}],
+                "ARMS" : [[4],     {"EARPLUGS":     2                     }],
+                "WAIST": [[4,3],   {"RESENTMENT":   2                     }],
+                "LEGS" : [[4,2,2], {"CRITICAL_EYE": 2                     }]
             }
         }
     ]

@@ -288,6 +288,7 @@ _common_fields = [
     "rarity",
     "attack",
     "affinity",
+    "slots",
     "is_raw",
 
     # You do not change this field. Keep it at the end. It gets a default value.
@@ -369,6 +370,7 @@ def _obtain_weapon_db():
             "rarity"   : dat["rarity"],
             "attack"   : dat["attack"],
             "affinity" : dat["affinity"],
+            "slots"    : tuple(dat["slots"]),
             "is_raw"   : dat["is_raw"],
 
             "augmentation_scheme" : WeaponAugmentationScheme[str(dat.get("augmentation_scheme", "NONE"))],
@@ -385,6 +387,9 @@ def _obtain_weapon_db():
             validation_error("Weapon attack power must be an int above zero.", weapon=weapon_id)
         elif (not isinstance(kwargs["affinity"], int)) or (kwargs["affinity"] < -100) or (kwargs["affinity"] > 100):
             validation_error("Weapon affinity must be an int between -100 and 100.", weapon=weapon_id)
+        elif (len(kwargs["slots"]) > 2) or any((not isinstance(x, int)) or (x < 1) or (x > 4) for x in kwargs["slots"]):
+            validation_error("There must only be at most 2 weapon decoration slots, each slot " \
+                                "represented by an int from 1 to 4.", weapon=weapon_id)
         elif not isinstance(kwargs["is_raw"], bool):
             validation_error("is_raw must be a boolean.", weapon=weapon_id)
 
