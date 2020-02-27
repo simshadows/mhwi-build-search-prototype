@@ -17,7 +17,9 @@ from copy import copy
 from collections import namedtuple, defaultdict, Counter
 
 from unit_testing     import run_tests
-from query_and_search import lookup_from_skills, lookup_from_gear
+from query_and_search import (lookup_from_skills,
+                             lookup_from_gear,
+                             find_highest_efr_build)
 
 from database_skills      import Skill
 from database_weapons     import weapon_db, IBWeaponAugmentType
@@ -48,7 +50,9 @@ def print_debugging_statistics():
 
 
 def search_command():
-    raise NotImplementedError("search feature not yet implemented")
+    print("Carrying out a pre-defined search.")
+    results = find_highest_efr_build()
+    return
 
 
 def lookup_command(weapon_name):
@@ -201,10 +205,13 @@ def run():
 
     # Determine whether to run in search or lookup mode.
     if len(sys.argv) > 1:
-        weapon_name = sys.argv[1]
-        lookup_command(weapon_name)
+        if sys.argv[1].lower() == "search":
+            search_command()
+        else:
+            weapon_name = sys.argv[1]
+            lookup_command(weapon_name)
     else:
-        search()
+        raise ValueError("Needs more arguments. (Just check the code. I can't be assed writing documentation at this time.)")
     return 0
 
 

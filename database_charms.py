@@ -75,13 +75,15 @@ def _obtain_charms_db():
 
         for skill in tup.skills:
             if skill in index_by_skill_intermediate:
-                index_by_skill_intermediate[skill].append(tup.name)
+                index_by_skill_intermediate[skill].append(charm_id)
             else:
-                index_by_skill_intermediate[skill] = [tup.name]
+                index_by_skill_intermediate[skill] = [charm_id]
 
     return charms_intermediate, index_by_skill_intermediate
 
 charms_db, charms_indexed_by_skill = _obtain_charms_db()
+
+print("\n".join(str(k) for (k, v) in charms_indexed_by_skill.items()))
 
 
 # You give it a CharmInfo object, it gives you back info about the max level of the charm.

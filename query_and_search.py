@@ -14,7 +14,8 @@ from copy import copy
 #from math import floor
 from collections import namedtuple, defaultdict, Counter
 
-from database_skills      import (Skill,
+from database_skills      import (RAW_BLUNDER_MULTIPLIER,
+                                 Skill,
                                  clipped_skills_defaultdict,
                                  calculate_set_bonus_skills,
                                  calculate_skills_contribution)
@@ -259,12 +260,12 @@ BuildValues = namedtuple(
 #           (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
 #       ]
 #
-def lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, augments_list):
-    assert isinstance(weapon_name, str)
-    weapon = weapon_db[weapon_name]
+def lookup_from_gear(weapon_id, armour_dict, charm_id, decorations_list_or_dict, skill_states_dict, augments_list):
+    assert isinstance(weapon_id, str)
+    weapon = weapon_db[weapon_id]
     armour_contribution = calculate_armour_contribution(armour_dict)
     charm = charms_db[charm_id] if (charm_id is not None) else None
-    decorations_counter = Counter(decorations_list)
+    decorations_counter = Counter(decorations_list_or_dict)
 
     slots_available_counter = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
 
@@ -332,4 +333,139 @@ def lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill
             return new_obj
             
     return transform_results_recursively(intermediate_results)
+
+
+def find_highest_efr_build():
+
+    ##############################
+    # STAGE 1: Basic Definitions #
+    ##############################
+
+    desired_weapon = WeaponClass.GREATSWORD
+
+    efr_skills = [
+        #Skill.AGITATOR,
+        #Skill.ATTACK_BOOST,
+        Skill.CRITICAL_BOOST,
+        #Skill.CRITICAL_EYE,
+        #Skill.NON_ELEMENTAL_BOOST,
+        #Skill.HANDICRAFT,
+        #Skill.PEAK_PERFORMANCE,
+        #Skill.WEAKNESS_EXPLOIT
+    ]
+
+    full_skill_states = {
+        Skill.AGITATOR: 1,
+        Skill.PEAK_PERFORMANCE: 1,
+        Skill.WEAKNESS_EXPLOIT: 2,
+    }
+
+    ############################
+    # STAGE 2: Component Lists #
+    ############################
+
+    weapon_ids = [weapon_id for (weapon_id, weapon_info) in weapon_db.items() if weapon_info.type is desired_weapon]
+
+    armour_pieces = defaultdict(list)
+    for ((set_name, discrim), set_info) in armour_db.items():
+        for (variant, variant_pieces) in set_info.variants.items():
+            # We assume that within variant_pieces, if we don't have the full set of 5 slots,
+            # the missing slots are just missing
+            for (gear_slot, piece) in variant_pieces.items():
+                armour_pieces[gear_slot].append((set_name, discrim, variant))
+    #print("\n".join(str(k.name) for (k, v) in armour_pieces.items()))
+
+    charm_ids = set()
+    for skill in efr_skills:
+        if skill in charms_indexed_by_skill:
+            for charm_id in charms_indexed_by_skill[skill]:
+                charm_ids.add(charm_id)
+    if len(charm_ids) == 0:
+        charm_ids = [None]
+    else:
+        charm_ids = list(charm_ids)
+    #print(charm_ids)
+
+    decorations = set()
+    for deco in Decoration:
+        for skill in efr_skills:
+            if skill in deco.value.skills_dict:
+                decorations.add(deco)
+    decorations = list(decorations) # More efficient for later stages
+
+    ####################
+    # STAGE 3: Search! #
+    ####################
+
+    #def recursively_iterate_decos(decos_dict, index_into_decos_list):
+    #    if index_into_decos_list == len(decorations):
+    #        try:
+    #            results = lookup_from_gear(weapon_id, current_armour, charm_id, modified_decos_dict, \
+    #                            full_skill_states, [])
+    #        except:
+    #            return
+    #    else:
+    #        for n in range(10):
+    #            modified_decos_dict = copy(decos_dict)
+    #            decorations[index_into_decos_list]
+    #            modified_decos_dict[decorations[index_into_decos_list]] = n
+    #            recursively_iterate_decos(modified_decos_dict, index_into_decos_list + 1)
+
+    #segments = len(weapon_ids) * len(armour_pieces[ArmourSlot.HEAD]) * len(armour_pieces[ArmourSlot.CHEST]) * \
+    #            len(armour_pieces[ArmourSlot.ARMS])
+    #segment_percentage = 1 / segments
+    #current_segment_count = 0
+
+    #for weapon_id in weapon_ids:
+    #    for head in armour_pieces[ArmourSlot.HEAD]:
+    #        for chest in armour_pieces[ArmourSlot.CHEST]:
+    #            for arms in armour_pieces[ArmourSlot.ARMS]:
+    #                for waist in armour_pieces[ArmourSlot.WAIST]:
+    #                    for legs in armour_pieces[ArmourSlot.LEGS]:
+    #                        for charm_id in charm_ids:
+    #                            #current_segment_count += 1
+    #                            print(f"Progress: another segment")
+    #                            #print(f"Progress: {current_segment_count*segment_percentage*100}%")
+    #                            current_armour = {
+    #                                ArmourSlot.HEAD:  head,
+    #                                ArmourSlot.CHEST: chest,
+    #                                ArmourSlot.ARMS:  arms,
+    #                                ArmourSlot.WAIST: waist,
+    #                                ArmourSlot.LEGS:  legs,
+    #                            }
+    #                            recursively_iterate_decos({}, 0)
+
+    def print_current_build():
+        print(best_efr)
+        print("   " + weapon_id)
+        for (k, v) in curr_armour.items():
+            print("   " + k.name + " : " + v[0] + " " + v[1].name + " " + v[2].name)
+
+    best_efr = 0
+
+    for weapon_id in weapon_ids:
+        for head in armour_pieces[ArmourSlot.HEAD]:
+            for chest in armour_pieces[ArmourSlot.CHEST]:
+                for arms in armour_pieces[ArmourSlot.ARMS]:
+                    for waist in armour_pieces[ArmourSlot.WAIST]:
+                        for legs in armour_pieces[ArmourSlot.LEGS]:
+                            for charm_id in charm_ids:
+                                curr_decos = {}
+                                #curr_skill_states = {}
+                                curr_augments = []
+                                curr_armour = {
+                                    ArmourSlot.HEAD:  head,
+                                    ArmourSlot.CHEST: chest,
+                                    ArmourSlot.ARMS:  arms,
+                                    ArmourSlot.WAIST: waist,
+                                    ArmourSlot.LEGS:  legs,
+                                }
+                                results = lookup_from_gear(weapon_id, curr_armour, charm_id, \
+                                                curr_decos, full_skill_states, curr_augments)
+
+                                if results.efr > best_efr:
+                                    best_efr = results.efr
+                                    print_current_build()
+
+    return
 
