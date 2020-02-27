@@ -336,27 +336,21 @@ def lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill
 
     intermediate_results = lookup_from_skills(weapon, skills_dict, skill_states_dict, augments_list)
 
-    if isinstance(intermediate_results, list):
-        final_results = []
-        for i in intermediate_results:
-            final_results.append(BuildValues(
-                    efr              = i.efr,
-                    sharpness_values = i.sharpness_values,
+    def transform_results_recursively(obj):
+        if isinstance(obj, list):
+            return [transform_results_recursively(x) for x in obj]
+        else:
+            new_obj = BuildValues(
+                    efr              = obj.efr,
+                    sharpness_values = obj.sharpness_values,
                     
-                    skills           = i.skills,
+                    skills           = obj.skills,
                     
                     usable_slots     = slots_available_counter,
-                ))
-    else:
-        final_results = BuildValues(
-                efr              = intermediate_results.efr,
-                sharpness_values = intermediate_results.sharpness_values,
-                
-                skills           = intermediate_results.skills,
-                
-                usable_slots     = slots_available_counter,
-            )
-    return final_results
+                )
+            return new_obj
+            
+    return transform_results_recursively(intermediate_results)
 
 
 def search_command():
@@ -391,7 +385,7 @@ def lookup_command(weapon_name):
             Decoration.EXPERT,
             Decoration.TENDERIZER,
             Decoration.EARPLUG,
-            Decoration.COMPOUND_TENDERIZER_VITALITY,
+            Decoration.COMPOUND_FLAWLESS_VITALITY,
             Decoration.COMPOUND_TENDERIZER_VITALITY,
             Decoration.COMPOUND_TENDERIZER_VITALITY,
             Decoration.COMPOUND_TENDERIZER_VITALITY,
@@ -400,7 +394,7 @@ def lookup_command(weapon_name):
 
     skill_states_dict = {
             #Skill.WEAKNESS_EXPLOIT: 2,
-            Skill.AGITATOR: 1,
+            #Skill.AGITATOR: 1,
             #Skill.PEAK_PERFORMANCE: 1,
         }
 
@@ -413,11 +407,13 @@ def lookup_command(weapon_name):
     sharpness_values = None
     efrs_strings = []
 
-    # We're assuming all results returned operate on the same set of skills.
-    representative_skills_dict = results[0].skills
-    representative_usable_slots_dict = results[0].usable_slots
-    assert all(len(representative_skills_dict) == len(result.skills) for result in results)# Equal number of keys
-    # TODO: Make a better assertion that is more strict on this.
+    ref = results
+    while isinstance(ref, list):
+        ref = ref[0]
+
+    representative_skills_dict = ref.skills
+    representative_usable_slots_dict = ref.usable_slots
+    # TODO: Make an assertion that all builds in the tree are all similar.
 
     iterated_skills = [
             skill for (skill, level) in representative_skills_dict.items()
@@ -446,7 +442,6 @@ def lookup_command(weapon_name):
 
                 assert (sharpness_values is None) or (sharpness_values == subresults.sharpness_values)
                 sharpness_values = subresults.sharpness_values
-
             else:
                 # Do more recursion here!
 
@@ -774,6 +769,17 @@ def tests_passed():
             pass
         else:
             raise RuntimeError("Test failed. Expected an exception here.")
+
+    decorations_list = ([Decoration.CHALLENGER_X2] * 2) + ([Decoration.COMPOUND_TENDERIZER_VITALITY] * 2)
+
+    skill_states_dict = {
+            Skill.AGITATOR:         1,
+        }
+
+    print("Testing to see if one indeterminate stateful skill get iterated.")
+    results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, augments_list)
+    if len(results) != 3:
+        raise ValueError("Results should've returned a list of 3 items (since Weakness Exploit is the only stateful skill).")
 
     print("\nUnit tests are all passed.")
     print("\n==============================\n")
