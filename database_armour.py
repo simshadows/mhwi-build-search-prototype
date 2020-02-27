@@ -8,7 +8,7 @@ This file provides the MHWI build optimizer script's armour database.
 from collections import namedtuple, defaultdict
 from enum import Enum, auto
 
-from database_skills import Skill
+from database_skills import Skill, SetBonus
 from enums import Tier
 from utils import json_read
 
@@ -59,6 +59,8 @@ ArmourSetInfo = namedtuple(
 
             "prefix",        # string
             "naming_scheme", # ArmourNamingScheme
+
+            "set_bonus",     # SetBonus
 
             "variants",      # {ArmourVariant: {ArmourSlot: ArmourPieceInfo}}
         ]
@@ -123,6 +125,8 @@ def _obtain_armour_db():
             "prefix"       : armour_set["prefix"],
             "naming_scheme": naming_schemes_intermediate[armour_set["naming_scheme"]],
 
+            "set_bonus"    : SetBonus[armour_set["set_bonus"]] if ("set_bonus" in armour_set) else None,
+
             "variants"     : None, # Will fill this again later.
         }
 
@@ -130,7 +134,8 @@ def _obtain_armour_db():
 
         # Quickly check if there are any unexpected keys.
         relevant_variant_names = {variant.name for variant in ArmourVariant if (variant.value.tier is tier)}
-        all_possible_set_keys = {"set", "discriminator", "rarity", "prefix", "naming_scheme"} | relevant_variant_names
+        all_possible_set_keys = {"set", "discriminator", "rarity", "prefix", "naming_scheme", \
+                                        "set_bonus"} | relevant_variant_names
         unexpected_keys = set(armour_set) - all_possible_set_keys
         if len(unexpected_keys) > 0:
             validation_error("Got unexpected keys: " + str(unexpected_keys))
@@ -200,6 +205,7 @@ ArmourContribution = namedtuple(
     "ArmourContribution",
     [
         "skills",
+        "set_bonuses",
         "decoration_slots",
     ],
 )
@@ -208,12 +214,14 @@ def calculate_armour_contribution(armour_dict):
     assert len({x for x in ArmourSlot} - set(armour_dict)) == 0
 
     skills = defaultdict(lambda : 0)
+    set_bonuses = defaultdict(lambda : 0)
     decoration_slots = []
 
     for slot in ArmourSlot:
         set_name, discriminator, variant = armour_dict[slot]
 
-        piece = armour_db[(set_name, discriminator)].variants[variant][slot]
+        armour_set = armour_db[(set_name, discriminator)]
+        piece = armour_set.variants[variant][slot]
 
         assert isinstance(piece.decoration_slots, tuple)
         assert all(isinstance(x, int) for x in piece.decoration_slots)
@@ -222,8 +230,15 @@ def calculate_armour_contribution(armour_dict):
         for (skill, level_from_gear) in piece.skills.items():
             skills[skill] += level_from_gear
 
+        if armour_set.set_bonus is not None:
+            assert isinstance(armour_set.set_bonus, SetBonus)
+            set_bonuses[armour_set.set_bonus] += 1
+
+    #print([f"{k} : {v}" for (k,v) in set_bonuses.items()])
+
     ret = ArmourContribution(
         skills = skills,
+        set_bonuses = set_bonuses,
         decoration_slots = decoration_slots,
     )
     return ret

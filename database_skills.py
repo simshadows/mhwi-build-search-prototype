@@ -88,9 +88,21 @@ SkillInfo = namedtuple(
     ],
 )
 
+SetBonusInfo = namedtuple(
+    "SetBonusInfo",
+    [
+        "name",   # string
+        "stages", # {number_of_pieces: Skill}
+    ],
+)
+
 
 def _obtain_skills_enum():
     json_data = json_read(SKILLS_DATA_FILENAME)
+
+    ###################
+    # STAGE 1: Skills #
+    ###################
 
     def validation_error(info, skill=None):
         if skill is None:
@@ -154,10 +166,56 @@ def _obtain_skills_enum():
     if len(skills_intermediate) == 0:
         validation_error("Found no skills.")
 
-    return Enum("Skill", skills_intermediate)
+    skills_intermediate_enum = Enum("Skill", skills_intermediate)
+
+    ########################
+    # STAGE 2: SET BONUSES #
+    ########################
+
+    def validation_error(info, bonus=None):
+        if bonus is None:
+            raise ValueError(f"{SKILLS_DATA_FILENAME}: {info}")
+        else:
+            raise ValueError(f"{SKILLS_DATA_FILENAME} {bonus}: {info}")
+
+    set_bonuses_intermediate = {}
+    set_bonus_names = set()
+
+    for (bonus_id, bonus_json_data) in json_data["set_bonuses"].items():
+
+        if not isinstance(bonus_id, str):
+            validation_error("Set bonus IDs must be strings. Instead, we have: " + str(bonus_id))
+        elif len(bonus_id) == 0:
+            validation_error("Set bonus IDs must be strings of non-zero length.")
+        elif bonus_id in set_bonuses_intermediate:
+            validation_error(f"Set bonus IDs must be unique.", bonus=bonus_id)
+        elif bonus_id in skills_intermediate:
+            validation_error(f"Set bonus ID is also a skill ID. Is that intentional?", bonus=bonus_id)
+        # TODO: Also put a condition that set bonus IDs must be capitalized with underscores.
+
+        tup = SetBonusInfo(
+                name = bonus_json_data["name"],
+                stages = {x["parts"]: skills_intermediate_enum[x["skill"]] for x in bonus_json_data["stages"]}
+            )
+
+        if (not isinstance(tup.name, str)) or (len(tup.name) == 0):
+            validation_error("Set bonus names must be strings of non-zero length.")
+        elif tup.name in set_bonus_names:
+            validation_error("Set bonus names should be unique.", skill=skill_id)
+        elif len(tup.stages) == 0:
+            validation_error("Set bonuses must have at least one stage.")
+        elif any((not isinstance(parts, int)) or (parts < 1) or (parts > 5) for (parts, skill) in tup.stages.items()):
+            validation_error("Set bonuses must have at least one stage.")
+
+        set_bonus_names.add(tup.name)
+        set_bonuses_intermediate[bonus_id] = tup
+
+    set_bonuses_intermediate_enum = Enum("SetBonus", set_bonuses_intermediate)
+
+    return (skills_intermediate_enum, set_bonuses_intermediate_enum)
 
 
-Skill = _obtain_skills_enum()
+Skill, SetBonus = _obtain_skills_enum()
 
 
 # This will take a dict like {Skill.AGITATOR: 10, ...} and clip it down to the maximum.
@@ -165,6 +223,18 @@ Skill = _obtain_skills_enum()
 def clipped_skills_defaultdict(skills_dict):
     assert all(level >= 0 for (_, level) in skills_dict.items()) # We shouldn't be seeing negative skill levels.
     return defaultdict(lambda : 0, {skill: min(level, skill.value.limit) for (skill, level) in skills_dict.items()})
+
+
+# This will take a dictionary of {SetBonus: number_of_pieces} and returns the skills it provides as a dictionary
+# of {Skill: level}.
+# This assumes that set bonus skills are all binary.
+def calculate_set_bonus_skills(set_bonus_pieces_dict):
+    ret = {}
+    for (set_bonus, num_pieces) in set_bonus_pieces_dict.items():
+        for (stage, skill) in set_bonus.value.stages.items():
+            if num_pieces >= stage:
+                ret[skill] = 1
+    return ret
 
 
 SkillsContribution = namedtuple(
@@ -233,3 +303,4 @@ def calculate_skills_contribution(skills_dict, skill_states_dict, maximum_sharpn
             added_raw_affinity                  = added_raw_affinity,
         )
     return ret
+

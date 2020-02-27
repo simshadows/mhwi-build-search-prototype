@@ -17,6 +17,7 @@ from collections import namedtuple
 
 from database_skills  import (Skill,
                               clipped_skills_defaultdict,
+                              calculate_set_bonus_skills,
                               calculate_skills_contribution)
 from database_weapons import (WeaponClass,
                               weapon_db,
@@ -140,6 +141,8 @@ def lookup_from_skills(weapon, skills_dict, skill_states_dict, augments_list):
     assert isinstance(skill_states_dict, dict)
     assert isinstance(augments_list, list)
 
+    skills_dict = clipped_skills_defaultdict(skills_dict)
+
     ret = None
 
     skill_states_missing = any(
@@ -253,7 +256,15 @@ def lookup_from_gear(weapon_name, armour_dict, skill_states_dict, augments_list)
     assert isinstance(weapon_name, str)
     weapon = weapon_db[weapon_name]
     armour_contribution = calculate_armour_contribution(armour_dict)
-    skills_dict = armour_contribution.skills
+
+    skills_dict = armour_contribution.skills # IMPORTANT: This is without set bonuses.
+
+    skills_from_set_bonuses = calculate_set_bonus_skills(armour_contribution.set_bonuses)
+    if len(set(skills_dict) & set(skills_from_set_bonuses)) != 0:
+        raise RuntimeError("We shouldn't be getting any mixing between regular skills and set bonuses here.")
+
+    skills_dict.update(skills_from_set_bonuses) # IMPORTANT: Now, we update the skill dictionary to include set bonuses.
+
     return lookup_from_skills(weapon, skills_dict, skill_states_dict, augments_list)
 
 
@@ -292,19 +303,18 @@ def lookup_command(weapon_name):
             (IBWeaponAugmentType.ATTACK_INCREASE,   1),
             #(IBWeaponAugmentType.AFFINITY_INCREASE, 1),
         ]
-
-    #print("Skills:")
-    #print("\n".join(f"   {skill.value.name} {level}" for (skill, level) in clipped_skills_defaultdict(skills_dict).items()))
-    #print()
-
     
     results = lookup_from_gear(weapon_name, armour_dict, skill_states_dict, augments_list)
     sharpness_values = None
     efrs_strings = []
 
+    # We're assuming all results returned operate on the same set of skills.
+    representative_skills_dict = results[0].skills
+    assert all(len(representative_skills_dict) == len(result.skills) for result in results)# Equal number of keys
+    # TODO: Make a better assertion that is more strict on this.
+
     iterated_skills = [
-            # TODO: We're grabbing the first result. We shouldn't have to I think.
-            skill for (skill, level) in results[0].skills.items()
+            skill for (skill, level) in representative_skills_dict.items()
             if (level > 0) and (skill.value.states is not None) and (skill not in skill_states_dict)
         ]
 
@@ -355,6 +365,10 @@ def lookup_command(weapon_name):
 
         sharpness_values = results.sharpness_values
         efrs_strings.append(f"EFR: {results.efr}")
+
+    print("Skills:")
+    print("\n".join(f"   {skill.value.name} {level}" for (skill, level) in representative_skills_dict.items()))
+    print()
 
     print("Sharpness values:")
     print(f"   Red:    {sharpness_values[0]} hits")
@@ -520,7 +534,15 @@ def tests_passed():
     def check_efr(expected_efr):
         results = lookup_from_gear(weapon_name, armour_dict, skill_states_dict, augments_list)
         if round(results.efr) != round(expected_efr):
-                raise ValueError(f"EFR value mismatch. Expected {expected_efr}. Got {results.efr}.")
+            raise ValueError(f"EFR value mismatch. Expected {expected_efr}. Got {results.efr}.")
+
+    def check_skill(expected_skill, expected_level):
+        results = lookup_from_gear(weapon_name, armour_dict, skill_states_dict, augments_list)
+        if Skill[expected_skill] not in results.skills:
+            raise ValueError(f"Skill {expected_skill} not present.")
+        returned_level = results.skills[Skill[expected_skill]]
+        if returned_level != expected_level:
+            raise ValueError(f"Skill level mismatch for {expected_skill}. Expected {expected_level}. Got {returned_level}.")
 
     weapon_name = "Royal Venus Blade"
 
@@ -543,6 +565,33 @@ def tests_passed():
 
     print("Testing with a bunch of varying Teostra pieces from different ranks.")
     check_efr(421.08)
+    check_skill("MASTERS_TOUCH", 1) # Set Bonus
+    check_skill("BLAST_ATTACK", 4)
+    check_skill("LATENT_POWER", 3)
+    check_skill("CRITICAL_EYE", 2)
+    check_skill("SPECIAL_AMMO_BOOST", 2)
+    check_skill("WEAKNESS_EXPLOIT", 1)
+    check_skill("HEAT_GUARD", 1)
+
+    armour_dict = {
+            ArmourSlot.HEAD:  ("Velkhana", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_ALPHA_PLUS),
+            ArmourSlot.CHEST: ("Velkhana", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+            ArmourSlot.ARMS:  ("Teostra",  ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+            ArmourSlot.WAIST: ("Velkhana", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+            ArmourSlot.LEGS:  ("Velkhana", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+        }
+
+    print("Testing with four Velkhana pieces.")
+    check_efr(411.51)
+    check_skill("CRITICAL_ELEMENT", 1) # Set Bonus
+    check_skill("FROSTCRAFT", 1) # Set Bonus
+    check_skill("DIVINE_BLESSING", 2)
+    check_skill("QUICK_SHEATH", 2)
+    check_skill("CRITICAL_DRAW", 2)
+    check_skill("COALESCENCE", 1)
+    check_skill("WEAKNESS_EXPLOIT", 1)
+    check_skill("HEAT_GUARD", 1)
+    check_skill("FLINCH_FREE", 1)
 
     print("\nUnit tests are all passed.")
     print("\n==============================\n")

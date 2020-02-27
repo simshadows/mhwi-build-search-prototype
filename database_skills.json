@@ -46,7 +46,7 @@
         },
         "BLAST_ATTACK": {
                 "name": "Blast Attack",
-                "limit": 3,
+                "limit": 4,
 
                 "tooltip": "((TODO))"
         },
@@ -150,6 +150,8 @@
                 "name": "Critical Element",
                 "limit": 1,
 
+                "only_from_set_bonuses": 1,
+
                 "tooltip": "((TODO))"
         },
         "CRITICAL_EYE": {
@@ -184,7 +186,7 @@
         },
         "DRAGON_ATTACK": {
                 "name": "Dragon Attack",
-                "limit": 5,
+                "limit": 6,
 
                 "tooltip": "((TODO))"
         },
@@ -244,7 +246,7 @@
         },
         "FIRE_ATTACK": {
                 "name": "Fire Attack",
-                "limit": 5,
+                "limit": 6,
 
                 "tooltip": "((TODO))"
         },
@@ -287,6 +289,14 @@
         "FREE_MEAL": {
                 "name": "Free Meal",
                 "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "FROSTCRAFT": {
+                "name": "Frostcraft",
+                "limit": 1,
+
+                "only_from_set_bonuses": 1,
 
                 "tooltip": "((TODO))"
         },
@@ -352,7 +362,7 @@
         },
         "ICE_ATTACK": {
                 "name": "Ice Attack",
-                "limit": 5,
+                "limit": 6,
 
                 "tooltip": "((TODO))"
         },
@@ -422,6 +432,14 @@
 
                 "tooltip": "((TODO))"
         },
+        "MASTERS_TOUCH": {
+                "name": "Master's Touch",
+                "limit": 1,
+
+                "only_from_set_bonuses": 1,
+
+                "tooltip": "((TODO))"
+        },
         "MAXIMUM_MIGHT": {
                 "name": "Maximum Might",
                 "limit": 3,
@@ -466,7 +484,7 @@
         },
         "PARALYSIS_ATTACK": {
                 "name": "Paralysis Attack",
-                "limit": 3,
+                "limit": 4,
 
                 "tooltip": "((TODO))"
         },
@@ -504,7 +522,7 @@
         },
         "POISON_ATTACK": {
                 "name": "Poison Attack",
-                "limit": 3,
+                "limit": 4,
 
                 "tooltip": "((TODO))"
         },
@@ -594,7 +612,7 @@
         },
         "SLEEP_ATTACK": {
                 "name": "Sleep Attack",
-                "limit": 3,
+                "limit": 4,
 
                 "tooltip": "((TODO))"
         },
@@ -686,7 +704,7 @@
         },
         "THUNDER_ATTACK": {
                 "name": "Thunder Attack",
-                "limit": 5,
+                "limit": 6,
 
                 "tooltip": "((TODO))"
         },
@@ -710,7 +728,7 @@
         },
         "WATER_ATTACK": {
                 "name": "Water Attack",
-                "limit": 5,
+                "limit": 6,
 
                 "tooltip": "((TODO))"
         },
@@ -740,6 +758,30 @@
                 "limit": 5,
 
                 "tooltip": "((TODO))"
+        }
+    },
+    "set_bonuses": {
+        "TEOSTRA_TECHNIQUE": {
+            "name": "Teostra Technique",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "MASTERS_TOUCH"
+                }
+            ]
+        },
+        "VELKHANA_DIVINITY": {
+            "name": "Velkhana Divinity",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "CRITICAL_ELEMENT"
+                },
+                {
+                    "parts": 4,
+                    "skill": "FROSTCRAFT"
+                }
+            ]
         }
     }
 }
