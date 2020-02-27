@@ -1,5 +1,11 @@
 {
     "skills": {
+        "ADRENALINE": {
+                "name": "Adrenaline",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
         "AFFINITY_SLIDING": {
                 "name": "Affinity Sliding",
                 "limit": 1,
@@ -76,6 +82,12 @@
         },
         "BLINDSIDER": {
                 "name": "Blindsider",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "BLUDGEONER": {
+                "name": "Bludgeoner",
                 "limit": 1,
 
                 "tooltip": "((TODO))"
@@ -314,6 +326,12 @@
         },
         "GUARD_UP": {
                 "name": "Guard Up",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "GUTS": {
+                "name": "Guts",
                 "limit": 1,
 
                 "tooltip": "((TODO))"
@@ -577,6 +595,12 @@
         "QUICK_SHEATH": {
                 "name": "Quick Sheath",
                 "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "RAZOR_SHARP_SPARE_SHOT": {
+                "name": "Razor Sharp/Spare Shot",
+                "limit": 1,
 
                 "tooltip": "((TODO))"
         },

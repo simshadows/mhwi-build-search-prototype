@@ -1,0 +1,544 @@
+{
+    "charms": {
+        "ADAMANTINE_CHARM": {
+            "name" : "Adamantine Charm",
+            "max_level" : 1,
+            "skills": ["NON_ELEMENTAL_BOOST", "BLUDGEONER"]
+        },
+        "ARTILLERY_CHARM": {
+            "name" : "Artillery Charm",
+            "max_level" : 3,
+            "skills": ["ARTILLERY"]
+        },
+        "ATTACK_CHARM": {
+            "name" : "Attack Charm",
+            "max_level" : 4,
+            "skills": ["ATTACK_BOOST"]
+        },
+        "AWAKENING_CHARM": {
+            "name" : "Awakening Charm",
+            "max_level" : 3,
+            "skills": ["FREE_ELEM_AMMO_UP"]
+        },
+        "BLAST_CHARM": {
+            "name" : "Blast Charm",
+            "max_level" : 3,
+            "skills": ["BLAST_RESISTANCE"]
+        },
+        "BLAST_COATING_CHARM": {
+            "name" : "Blast Coating Charm",
+            "max_level" : 1,
+            "skills": ["BLAST_FUNCTIONALITY"]
+        },
+        "BLAZE_CHARM": {
+            "name" : "Blaze Charm",
+            "max_level" : 5,
+            "skills": ["FIRE_ATTACK"]
+        },
+        "BLEED_CHARM": {
+            "name" : "Bleed Charm",
+            "max_level" : 3,
+            "skills": ["BLEEDING_RESISTANCE"]
+        },
+        "BLESSING_CHARM": {
+            "name" : "Blessing Charm",
+            "max_level" : 3,
+            "skills": ["DIVINE_BLESSING"]
+        },
+        "BLIGHT_CHARM": {
+            "name" : "Blight Charm",
+            "max_level" : 3,
+            "skills": ["BLIGHT_RESISTANCE"]
+        },
+        "BOMBARDIER_CHARM": {
+            "name" : "Bombardier Charm",
+            "max_level" : 3,
+            "skills": ["BOMBARDIER"]
+        },
+        "BOTANY_CHARM": {
+            "name" : "Botany Charm",
+            "max_level" : 4,
+            "skills": ["BOTANIST"]
+        },
+        "BREAKER_CHARM": {
+            "name" : "Partbreaker Charm",
+            "max_level" : 3,
+            "skills": ["PARTBREAKER"]
+        },
+        "BULWARK_CHARM": {
+            "name" : "Bulwark Charm",
+            "max_level" : 1,
+            "skills": ["GUARD_UP", "RESUSCITATE"]
+        },
+        "CAPACITY_CHARM": {
+            "name" : "Capacity Charm",
+            "max_level" : 1,
+            "skills": ["CAPACITY_BOOST"]
+        },
+        "CHALLENGER_CHARM": {
+            "name" : "Challenger Charm",
+            "max_level" : 4,
+            "skills": ["AGITATOR"]
+        },
+        "CLEARMIND_CHARM": {
+            "name" : "Clearmind Charm",
+            "max_level" : 1,
+            "skills": ["HEAT_GUARD", "EFFLUVIAL_EXPERT"]
+        },
+        "CRITICAL_CHARM": {
+            "name" : "Critical Charm",
+            "max_level" : 2,
+            "skills": ["CRITICAL_BOOST"]
+        },
+        "DEFENSE_CHARM": {
+            "name" : "Defense Charm",
+            "max_level" : 5,
+            "skills": ["DEFENSE_BOOST"]
+        },
+        "DEMOLITION_CHARM": {
+            "name" : "Demolition Charm",
+            "max_level" : 4,
+            "skills": ["BLAST_ATTACK"]
+        },
+        "DISPERSAL_CHARM": {
+            "name" : "Dispersal Charm",
+            "max_level" : 2,
+            "skills": ["SPREAD_POWER_SHOTS"]
+        },
+        "DRAGON_CHARM": {
+            "name" : "Dragon Charm",
+            "max_level" : 3,
+            "skills": ["DRAGON_RESISTANCE"]
+        },
+        "DRAW_CHARM": {
+            "name" : "Draw Charm",
+            "max_level" : 2,
+            "skills": ["CRITICAL_DRAW"]
+        },
+        "EARPLUGS_CHARM": {
+            "name" : "Earplugs Charm",
+            "max_level" : 4,
+            "skills": ["EARPLUGS"]
+        },
+        "ENERVATE_CHARM": {
+            "name" : "Enervate Charm",
+            "max_level" : 3,
+            "skills": ["STAMINA_THIEF"]
+        },
+        "EVASION_CHARM": {
+            "name" : "Evasion Charm",
+            "max_level" : 4,
+            "skills": ["EVADE_WINDOW"]
+        },
+        "EXPLOITER_CHARM": {
+            "name" : "Exploiter Charm",
+            "max_level" : 2,
+            "skills": ["WEAKNESS_EXPLOIT"]
+        },
+        "EXTENSION_CHARM": {
+            "name" : "Extension Charm",
+            "max_level" : 3,
+            "skills": ["ITEM_PROLONGER"]
+        },
+        "FAIR_WIND_CHARM": {
+            "name" : "Fair Wind Charm",
+            "max_level" : 1,
+            "skills": ["ATTACK_BOOST", "DIVINE_BLESSING"]
+        },
+        "FIRE_CHARM": {
+            "name" : "Fire Charm",
+            "max_level" : 3,
+            "skills": ["FIRE_RESISTANCE"]
+        },
+        "FITNESS_CHARM": {
+            "name" : "Fitness Charm",
+            "max_level" : 4,
+            "skills": ["CONSTITUTION"]
+        },
+        "FLOOD_CHARM": {
+            "name" : "Flood Charm",
+            "max_level" : 5,
+            "skills": ["WATER_ATTACK"]
+        },
+        "FOCUS_CHARM": {
+            "name" : "Focus Charm",
+            "max_level" : 3,
+            "skills": ["FOCUS"]
+        },
+        "FORTIFICATION_CHARM": {
+            "name" : "Fortification Charm",
+            "max_level" : 1,
+            "skills": ["FORTIFY"]
+        },
+        "FRIENDSHIP_CHARM": {
+            "name" : "Friendship Charm",
+            "max_level" : 5,
+            "skills": ["WIDE_RANGE"]
+        },
+        "FROST_CHARM": {
+            "name" : "Frost Charm",
+            "max_level" : 5,
+            "skills": ["ICE_ATTACK"]
+        },
+        "FURY_CHARM": {
+            "name" : "Fury Charm",
+            "max_level" : 4,
+            "skills": ["RESENTMENT"]
+        },
+        "GALE_CHARM": {
+            "name" : "Gale Charm",
+            "max_level" : 1,
+            "skills": ["AFFINITY_SLIDING", "AIRBORNE"]
+        },
+        "GATHERERS_CHARM": {
+            "name" : "Gatherer's Charm",
+            "max_level" : 1,
+            "skills": ["MASTER_GATHERER", "CARVING_PRO"]
+        },
+        "GEOLOGY_CHARM": {
+            "name" : "Geology Charm",
+            "max_level" : 3,
+            "skills": ["GEOLOGIST"]
+        },
+        "GEOMANCY_CHARM": {
+            "name" : "Geomancy Charm",
+            "max_level" : 1,
+            "skills": ["FORAGERS_LUCK", "DETECTOR"]
+        },
+        "GLUTTONS_CHARM": {
+            "name" : "Glutton's Charm",
+            "max_level" : 3,
+            "skills": ["SPEED_EATING"]
+        },
+        "GRIT_CHARM": {
+            "name" : "Grit Charm",
+            "max_level" : 4,
+            "skills": ["HEROICS"]
+        },
+        "GUARD_CHARM": {
+            "name" : "Guard Charm",
+            "max_level" : 3,
+            "skills": ["IRON_SKIN"]
+        },
+        "GUARDIAN_CHARM": {
+            "name" : "Guardian Charm",
+            "max_level" : 3,
+            "skills": ["OFFENSIVE_GUARD"]
+        },
+        "GUTSY_CHARM": {
+            "name" : "Gutsy Charm",
+            "max_level" : 1,
+            "skills": ["GUTS"]
+        },
+        "HANDICRAFT_CHARM": {
+            "name" : "Handicraft Charm",
+            "max_level" : 4,
+            "skills": ["HANDICRAFT"]
+        },
+        "HEALTH_CHARM": {
+            "name" : "Health Charm",
+            "max_level" : 3,
+            "skills": ["HEALTH_BOOST"]
+        },
+        "HEAVY_ARTILLERY_CHARM": {
+            "name" : "Heavy Artillery Charm",
+            "max_level" : 2,
+            "skills": ["HEAVY_ARTILLERY"]
+        },
+        "HUNGERLESS_CHARM": {
+            "name" : "Hungerless Charm",
+            "max_level" : 3,
+            "skills": ["HUNGER_RESISTANCE"]
+        },
+        "HUNTERS_LIFE_CHARM": {
+            "name" : "Hunter's Life Charm",
+            "max_level" : 1,
+            "skills": ["BBQ_MASTER", "MASTER_FISHER"]
+        },
+        "ICE_CHARM": {
+            "name" : "Ice Charm",
+            "max_level" : 3,
+            "skills": ["ICE_RESISTANCE"]
+        },
+        "IMMOBILIZE_CHARM": {
+            "name" : "Immobilize Charm",
+            "max_level" : 4,
+            "skills": ["PARALYSIS_ATTACK"]
+        },
+        "IMPACT_CHARM": {
+            "name" : "Impact Charm",
+            "max_level" : 3,
+            "skills": ["FLINCH_FREE"]
+        },
+        "INSECT_CHARM": {
+            "name" : "Insect Charm",
+            "max_level" : 3,
+            "skills": ["ENTOMOLOGIST"]
+        },
+        "INTIMIDATOR_CHARM": {
+            "name" : "Intimidator Charm",
+            "max_level" : 3,
+            "skills": ["INTIMIDATOR"]
+        },
+        "INVIGORATE_CHARM": {
+            "name" : "Invigorate Charm",
+            "max_level" : 3,
+            "skills": ["POWER_PROLONGER"]
+        },
+        "IRONSIDE_CHARM": {
+            "name" : "Ironside Charm",
+            "max_level" : 5,
+            "skills": ["GUARD"]
+        },
+        "KO_CHARM": {
+            "name" : "KO Charm",
+            "max_level" : 3,
+            "skills": ["SLUGGER"]
+        },
+        "LEAPING_CHARM": {
+            "name" : "Leaping Charm",
+            "max_level" : 3,
+            "skills": ["EVADE_EXTENDER"]
+        },
+        "LIGHT_EATERS_CHARM": {
+            "name" : "Light Eater's Charm",
+            "max_level" : 1,
+            "skills": ["FREE_MEAL"]
+        },
+        "MAINTENANCE_CHARM": {
+            "name" : "Maintenance Charm",
+            "max_level" : 3,
+            "skills": ["TOOL_SPECIALIST"]
+        },
+        "MARATHON_CHARM": {
+            "name" : "Marathon Charm",
+            "max_level" : 3,
+            "skills": ["MARATHON_RUNNER"]
+        },
+        "MASTERS_CHARM": {
+            "name" : "Master's Charm",
+            "max_level" : 4,
+            "skills": ["CRITICAL_EYE"]
+        },
+        "MIASMA_CHARM": {
+            "name" : "Miasma Charm",
+            "max_level" : 3,
+            "skills": ["EFFLUVIA_RESISTANCE"]
+        },
+        "MIGHTY_CHARM": {
+            "name" : "Mighty Charm",
+            "max_level" : 2,
+            "skills": ["MAXIMUM_MIGHT"]
+        },
+        "MIREWALKER_CHARM": {
+            "name" : "Mirewalker Charm",
+            "max_level" : 3,
+            "skills": ["AQUATIC_POLAR_MOBILITY"]
+        },
+        "MUD_PUPPY_CHARM": {
+            "name" : "Mud Puppy Charm",
+            "max_level" : 1,
+            "skills": ["MUCK_RESISTANCE", "LEAP_OF_FAITH"]
+        },
+        "MUSHROOM_CHARM": {
+            "name" : "Mushroom Charm",
+            "max_level" : 3,
+            "skills": ["MUSHROOMANCER"]
+        },
+        "NORMAL_SHOTS_CHARM": {
+            "name" : "Normal Shots Charm",
+            "max_level" : 2,
+            "skills": ["NORMAL_SHOTS"]
+        },
+        "PARA_COATING_CHARM": {
+            "name" : "Para Coating Charm",
+            "max_level" : 1,
+            "skills": ["PARALYSIS_FUNCTIONALITY"]
+        },
+        "PARALYSIS_CHARM": {
+            "name" : "Paralysis Charm",
+            "max_level" : 3,
+            "skills": ["PARALYSIS_RESISTANCE"]
+        },
+        "PENETRATION_CHARM": {
+            "name" : "Penetration Charm",
+            "max_level" : 2,
+            "skills": ["PIERCING_SHOTS"]
+        },
+        "PERFORMERS_CHARM": {
+            "name" : "Performer's Charm",
+            "max_level" : 2,
+            "skills": ["HORN_MAESTRO"]
+        },
+        "PHOENIX_CHARM": {
+            "name" : "Phoenix Charm",
+            "max_level" : 2,
+            "skills": ["COALESCENCE"]
+        },
+        "POISON_CHARM": {
+            "name" : "Poison Charm",
+            "max_level" : 3,
+            "skills": ["POISON_RESISTANCE"]
+        },
+        "POISON_COATING_CHARM": {
+            "name" : "Poison Coating Charm",
+            "max_level" : 1,
+            "skills": ["POISON_FUNCTIONALITY"]
+        },
+        "POWER_CHARM": {
+            "name" : "Power Charm",
+            "max_level" : 4,
+            "skills": ["LATENT_POWER"]
+        },
+        "PROCURERS_CHARM": {
+            "name" : "Procurer's Charm",
+            "max_level" : 1,
+            "skills": ["PRO_TRANSPORTER", "HONEY_HUNTER"]
+        },
+        "RALLY_CHARM": {
+            "name" : "Rally Charm",
+            "max_level" : 5,
+            "skills": ["PALICO_RALLY"]
+        },
+        "RAZOR_SHARP_CHARM": {
+            "name" : "Razor Sharp Charm",
+            "max_level" : 1,
+            "skills": ["RAZOR_SHARP_SPARE_SHOT"]
+        },
+        "RECOVERY_CHARM": {
+            "name" : "Recovery Charm",
+            "max_level" : 3,
+            "skills": ["RECOVERY_UP"]
+        },
+        "RIDERS_CHARM": {
+            "name" : "Rider's Charm",
+            "max_level" : 1,
+            "skills": ["MASTER_MOUNTER", "JUMP_MASTER"]
+        },
+        "SEALERS_CHARM": {
+            "name" : "Sealer's Charm",
+            "max_level" : 1,
+            "skills": ["ELDERSEAL_BOOST", "ADRENALINE"]
+        },
+        "SHEATH_CHARM": {
+            "name" : "Sheath Charm",
+            "max_level" : 3,
+            "skills": ["QUICK_SHEATH"]
+        },
+        "SHOCK_CHARM": {
+            "name" : "Shock Charm",
+            "max_level" : 5,
+            "skills": ["THUNDER_ATTACK"]
+        },
+        "SLEEP_CHARM": {
+            "name" : "Sleep Charm",
+            "max_level" : 3,
+            "skills": ["SLEEP_RESISTANCE"]
+        },
+        "SLEEP_COATING_CHARM": {
+            "name" : "Sleep Coating Charm",
+            "max_level" : 1,
+            "skills": ["SLEEP_FUNCTIONALITY"]
+        },
+        "SLINGER_CHARM": {
+            "name" : "Slinger Charm",
+            "max_level" : 3,
+            "skills": ["SLINGER_CAPACITY"]
+        },
+        "SMOKE_CHARM": {
+            "name" : "Smoke Charm",
+            "max_level" : 3,
+            "skills": ["SURVIVAL_EXPERT"]
+        },
+        "SPECIAL_SHOT_CHARM": {
+            "name" : "Special Shot Charm",
+            "max_level" : 2,
+            "skills": ["SPECIAL_AMMO_BOOST"]
+        },
+        "SPEED_HEAL_CHARM": {
+            "name" : "Speed Heal Charm",
+            "max_level" : 3,
+            "skills": ["RECOVERY_SPEED"]
+        },
+        "STEALTH_CHARM": {
+            "name" : "Stealth Charm",
+            "max_level" : 3,
+            "skills": ["STEALTH"]
+        },
+        "STUN_CHARM": {
+            "name" : "Stun Charm",
+            "max_level" : 3,
+            "skills": ["STUN_RESISTANCE"]
+        },
+        "SURGE_CHARM": {
+            "name" : "Surge Charm",
+            "max_level" : 3,
+            "skills": ["STAMINA_SURGE"]
+        },
+        "SURVEYORS_CHARM": {
+            "name" : "Surveyor's Charm",
+            "max_level" : 1,
+            "skills": ["SCOUTFLY_RANGE_UP", "SCHOLAR"]
+        },
+        "THUNDER_CHARM": {
+            "name" : "Thunder Charm",
+            "max_level" : 3,
+            "skills": ["THUNDER_RESISTANCE"]
+        },
+        "TRACKER_CHARM": {
+            "name" : "Tracker Charm",
+            "max_level" : 1,
+            "skills": ["SCENTHOUND"]
+        },
+        "TRANQ_CHARM": {
+            "name" : "Tranq Charm",
+            "max_level" : 4,
+            "skills": ["SLEEP_ATTACK"]
+        },
+        "TREMOR_CHARM": {
+            "name" : "Tremor Charm",
+            "max_level" : 3,
+            "skills": ["TREMOR_RESISTANCE"]
+        },
+        "TRICKSHOT_CHARM": {
+            "name" : "Trickshot Charm",
+            "max_level" : 1,
+            "skills": ["DUNGMASTER", "BLINDSIDER"]
+        },
+        "UNSCATHED_CHARM": {
+            "name" : "Unscathed Charm",
+            "max_level" : 3,
+            "skills": ["PEAK_PERFORMANCE"]
+        },
+        "VENOM_CHARM": {
+            "name" : "Venom Charm",
+            "max_level" : 4,
+            "skills": ["POISON_ATTACK"]
+        },
+        "WATER_CHARM": {
+            "name" : "Water Charm",
+            "max_level" : 3,
+            "skills": ["WATER_RESISTANCE"]
+        },
+        "WHETSTONE_CHARM": {
+            "name" : "Whetstone Charm",
+            "max_level" : 3,
+            "skills": ["SPEED_SHARPENING"]
+        },
+        "WINDPROOF_CHARM": {
+            "name" : "Windproof Charm",
+            "max_level" : 5,
+            "skills": ["WINDPROOF"]
+        },
+        "WYRMSBANE_CHARM": {
+            "name" : "Wyrmsbane Charm",
+            "max_level" : 5,
+            "skills": ["DRAGON_ATTACK"]
+        },
+        "WYRMSLAYER_CHARM": {
+            "name" : "Wyrmslayer Charm",
+            "max_level" : 1,
+            "skills": ["ELDERSEAL_BOOST", "DRAGON_ATTACK"]
+        }
+    }
+}

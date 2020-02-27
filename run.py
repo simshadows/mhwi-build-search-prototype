@@ -30,6 +30,9 @@ from database_armour      import (ArmourDiscriminator,
                                  ArmourSlot,
                                  armour_db,
                                  calculate_armour_contribution)
+from database_charms      import (charms_db,
+                                 charms_indexed_by_skill,
+                                 calculate_skills_dict_from_charm)
 from database_decorations import (Decoration,
                                  calculate_decorations_skills_contribution)
 from database_misc        import (POWERCHARM_ATTACK_POWER,
@@ -275,10 +278,11 @@ BuildValues = namedtuple(
 #           (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
 #       ]
 #
-def lookup_from_gear(weapon_name, armour_dict, decorations_list, skill_states_dict, augments_list):
+def lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, augments_list):
     assert isinstance(weapon_name, str)
     weapon = weapon_db[weapon_name]
     armour_contribution = calculate_armour_contribution(armour_dict)
+    charm = charms_db[charm_id] if (charm_id is not None) else None
     decorations_counter = Counter(decorations_list)
 
     slots_available_counter = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
@@ -311,6 +315,12 @@ def lookup_from_gear(weapon_name, armour_dict, decorations_list, skill_states_di
 
     # Armour regular skills
     skills_dict = armour_contribution.skills
+
+    # Charm skills
+    if charm is not None:
+        charm_skills_dict = calculate_skills_dict_from_charm(charm, charm.max_level)
+        for (skill, level) in charm_skills_dict.items():
+            skills_dict[skill] += level
 
     # Decoration skills
     deco_skills_dict = calculate_decorations_skills_contribution(decorations_counter)
@@ -363,6 +373,9 @@ def lookup_command(weapon_name):
         ArmourSlot.LEGS:  ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
     }
 
+    charm_id = "CHALLENGER_CHARM"
+    #charm_id = None
+
     #skills_dict = {
     #        #Skill.HANDICRAFT: 5,
     #        Skill.CRITICAL_EYE: 4,
@@ -387,7 +400,7 @@ def lookup_command(weapon_name):
 
     skill_states_dict = {
             #Skill.WEAKNESS_EXPLOIT: 2,
-            #Skill.AGITATOR: 1,
+            Skill.AGITATOR: 1,
             #Skill.PEAK_PERFORMANCE: 1,
         }
 
@@ -396,7 +409,7 @@ def lookup_command(weapon_name):
             #(IBWeaponAugmentType.AFFINITY_INCREASE, 1),
         ]
     
-    results = lookup_from_gear(weapon_name, armour_dict, decorations_list, skill_states_dict, augments_list)
+    results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, augments_list)
     sharpness_values = None
     efrs_strings = []
 
@@ -501,6 +514,7 @@ def tests_passed():
     augments_list = [] # Start with no augments
     weapon = weapon_db["Acid Shredder II"]
     decorations_list = [] # Start with no decorations
+    charm_id = None
 
     # This function will leave skills_dict with the skill at max_level.
     def test_with_incrementing_skill(skill, max_level, expected_efrs):
@@ -641,12 +655,12 @@ def tests_passed():
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [494.11, 515.59])
 
     def check_efr(expected_efr):
-        results = lookup_from_gear(weapon_name, armour_dict, decorations_list, skill_states_dict, augments_list)
+        results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, augments_list)
         if round(results.efr) != round(expected_efr):
             raise ValueError(f"EFR value mismatch. Expected {expected_efr}. Got {results.efr}.")
 
     def check_skill(expected_skill, expected_level):
-        results = lookup_from_gear(weapon_name, armour_dict, decorations_list, skill_states_dict, augments_list)
+        results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, augments_list)
         if Skill[expected_skill] not in results.skills:
             raise ValueError(f"Skill {expected_skill} not present.")
         returned_level = results.skills[Skill[expected_skill]]

@@ -49,7 +49,7 @@ def _obtain_decorations_enum():
 
     for (component_id, component_json_data) in json_data["simple_decorations"].items():
         if not isinstance(component_id, str):
-            validation_error("Decoration IDs must be strings. Instead, we have: " + str(tup.name))
+            validation_error("Decoration IDs must be strings. Instead, we have: " + str(component_id))
         elif len(component_id) == 0:
             validation_error("Decoration IDs must be non-empty strings.")
         elif component_id in deco_components:
