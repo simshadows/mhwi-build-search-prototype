@@ -68,7 +68,7 @@ class WeaponAugmentTracker(ABC):
 class NoWeaponAugments(WeaponAugmentTracker):
 
     def copy(self):
-        return self # It shouldn't doesn't matter at all
+        return self # It shouldn't matter at all
 
     def calculate_contribution(self):
         ret = WeaponAugmentsContribution (
@@ -129,7 +129,7 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
     IB_AFFINITY_AUGMENT_PERCENTAGES_CUMULATIVE = tuple(accumulate(IB_AFFINITY_AUGMENT_VALUES_PERCENTAGES))
 
     # {rarity: [config]}
-    _MAXIMIZED_CONFIGS = {
+    _MAXIMIZED_CONFIGS = { # TODO: Consider automating this definition.
             10: [
                 [
                     (IBWeaponAugmentType.ATTACK_INCREASE, 4),
@@ -185,7 +185,6 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
             # To implement auto_maximize==False, we'd need to actually allow lower augment levels.
 
         self._auto_maximize = auto_maximize
-        self._selections = []
 
         self._rarity    = rarity
         self._aug_level = 2
@@ -196,9 +195,7 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
 
     def copy(self):
         new = copy(self)
-        new._selections = copy(self._selections)
         new._augments = copy(self._augments)
-        assert self._state_is_valid()
         assert new._state_is_valid()
         return new
 
@@ -254,6 +251,142 @@ class WeaponAugmentationScheme(Enum):
     NONE       = auto()
     #BASE_GAME = auto() # Not used yet.
     ICEBORNE   = auto()
+
+
+WeaponUpgradesContribution = namedtuple(
+    "WeaponUpgradesContribution",
+    [
+        "added_attack_power",
+        "added_raw_affinity",
+    ],
+)
+class WeaponUpgradeTracker(ABC):
+
+    @classmethod
+    def get_instance(cls, weapon):
+        #assert isinstance(weapon, namedtuple) # TODO: Make a proper assertion.
+        if weapon.upgrade_scheme is WeaponUpgradeScheme.ICEBORNE_COMMON:
+            return IBCWeaponUpgradeTracker()
+        elif weapon.upgrade_scheme is WeaponUpgradeScheme.NONE:
+            return NoWeaponUpgrades()
+        else:
+            raise RuntimeError(f"Upgrade scheme {weapon.upgrade_scheme} not supported.")
+
+    # TODO: Use something better, like the __copy__() method.
+    @abstractmethod
+    def copy(self):
+        raise NotImplementedError
+
+    # Similar to WeaponAugmentTracker
+    @abstractmethod
+    def calculate_contribution(self):
+        raise NotImplementedError
+
+    # Similar to WeaponAugmentTracker
+    @abstractmethod
+    def get_maximized_configs(self):
+        raise NotImplementedError
+
+    # Similar to WeaponAugmentTracker
+    @abstractmethod
+    def update_with_config(self, selected_config):
+        raise NotImplementedError
+
+
+class NoWeaponUpgrades(WeaponUpgradeTracker):
+
+    def copy(self):
+        return self # It shouldn't matter at all
+
+    def calculate_contribution(self):
+        ret = WeaponUpgradesContribution (
+                added_attack_power = 0,
+                added_raw_affinity = 0,
+            )
+        return ret
+
+    def get_maximized_configs(self):
+        return [None]
+
+    def update_with_config(self, selected_config):
+        if selected_config is not None:
+            raise RuntimeError("Can't update the upgrades of a weapon that can't be upgraded.")
+        return
+
+
+class IBCWeaponUpgradeType(Enum):
+    ATTACK            = auto()
+    AFFINITY          = auto()
+    #ELEMENTAL_STATUS = auto() # I'm just gonna pretend these don't exist yet...
+    #DEFENSE          = auto()
+
+
+class IBCWeaponUpgradeTracker(WeaponUpgradeTracker):
+
+    __slots__ = [
+            "_upgrades",
+        ]
+
+    _IB_ATTACK_UPGRADE_VALUES   = (1, 1, 1, 1, 1, 1   )
+    _IB_AFFINITY_UPGRADE_VALUES = (1, 1, 1, 1, 1, None)
+    #                     level =  1  2  3  4  5  6
+
+    # {rarity: [config]}
+    _MAXIMIZED_CONFIGS = [ # TODO: Consider automating this definition.
+            [IBCWeaponUpgradeType.ATTACK] * 6,
+            ([IBCWeaponUpgradeType.AFFINITY] * 1) + ([IBCWeaponUpgradeType.ATTACK] * 5),
+            ([IBCWeaponUpgradeType.AFFINITY] * 2) + ([IBCWeaponUpgradeType.ATTACK] * 4),
+            ([IBCWeaponUpgradeType.AFFINITY] * 3) + ([IBCWeaponUpgradeType.ATTACK] * 3),
+            ([IBCWeaponUpgradeType.AFFINITY] * 4) + ([IBCWeaponUpgradeType.ATTACK] * 2),
+            ([IBCWeaponUpgradeType.AFFINITY] * 5) + ([IBCWeaponUpgradeType.ATTACK] * 1),
+        ]
+
+    def __init__(self):
+        self._upgrades = []
+        assert self._state_is_valid()
+        return
+
+    def copy(self):
+        new = copy(self)
+        new._upgrades = copy(self._upgrades)
+        assert new._state_is_valid()
+        return new
+
+    def calculate_contribution(self):
+        # IMPORTANT: We're actually mostly just relying on this function for debugging.
+        #            If this function doesn't raise an exception, then we're good.
+        added_attack_power = 0
+        added_raw_affinity = 0
+        for (i, upgrade) in enumerate(self._upgrades):
+            assert i < len(self._IB_ATTACK_UPGRADE_VALUES)
+            if upgrade is IBCWeaponUpgradeType.ATTACK:
+                added_attack_power += self._IB_ATTACK_UPGRADE_VALUES[i]
+            elif upgrade is IBCWeaponUpgradeType.AFFINITY:
+                added_raw_affinity += self._IB_AFFINITY_UPGRADE_VALUES[i]
+            else:
+                raise RuntimeError("Unsupported upgrade type found: " + str(type(upgrade)))
+
+        ret = WeaponUpgradesContribution (
+                added_attack_power = added_attack_power,
+                added_raw_affinity = added_raw_affinity,
+            )
+        return ret
+
+    def get_maximized_configs(self):
+        return self._MAXIMIZED_CONFIGS
+
+    def update_with_config(self, selected_config):
+        if selected_config is None:
+            self._upgrades = []
+        else:
+            assert isinstance(selected_config, list)
+            self._upgrades = selected_config
+        assert self._state_is_valid()
+        return
+
+    def _state_is_valid(self):
+        # We generally just rely on calculate_contribution() to raise exceptions when something's wrong.
+        return (len(self._upgrades) <= 7)
 
 
 # If None is used instead of this Enum, then the weapon cannot be upgraded.

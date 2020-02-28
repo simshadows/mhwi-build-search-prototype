@@ -22,6 +22,7 @@ from database_weapons     import (WeaponClass,
                                  weapon_db,
                                  IBWeaponAugmentType,
                                  WeaponAugmentationScheme,
+                                 IBCWeaponUpgradeType,
                                  WeaponUpgradeScheme)
 from database_armour      import (ArmourDiscriminator,
                                  ArmourVariant,
@@ -44,6 +45,7 @@ def run_tests():
     skills_dict = {} # Start with no skills
     skill_states_dict = {} # Start with no states
     weapon_augments_config = [] # Start with no augments
+    weapon_upgrades_config = None # Start with no upgrades
     weapon = weapon_db["ACID_SHREDDER_II"]
     decorations_list = [] # Start with no decorations
     charm_id = None
@@ -55,7 +57,7 @@ def run_tests():
 
         for level in range(max_level + 1):
             skills_dict[skill] = level
-            vals = lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_config)
+            vals = lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_config, weapon_upgrades_config)
             if round(vals.efr) != round(expected_efrs[level]):
                 raise ValueError(f"EFR value mismatch for skill level {level}. Got EFR = {vals.efr}.")
         return
@@ -186,12 +188,14 @@ def run_tests():
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [494.11, 515.59])
 
     def check_efr(expected_efr):
-        results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, weapon_augments_config)
+        results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, \
+                                            weapon_augments_config, weapon_upgrades_config)
         if round(results.efr) != round(expected_efr):
             raise ValueError(f"EFR value mismatch. Expected {expected_efr}. Got {results.efr}.")
 
     def check_skill(expected_skill, expected_level):
-        results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, weapon_augments_config)
+        results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, \
+                                            weapon_augments_config, weapon_upgrades_config)
         if Skill[expected_skill] not in results.skills:
             raise ValueError(f"Skill {expected_skill} not present.")
         returned_level = results.skills[Skill[expected_skill]]
@@ -313,9 +317,88 @@ def run_tests():
         }
 
     print("Testing to see if one indeterminate stateful skill get iterated.")
-    results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, weapon_augments_config)
+    results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, \
+                                            weapon_augments_config, weapon_upgrades_config)
     if len(results) != 3:
         raise ValueError("Results should've returned a list of 3 items (since Weakness Exploit is the only stateful skill).")
+
+    weapon_name = "JAGRAS_DEATHCLAW_II"
+
+    armour_dict = {
+            # Gonna keep it simple. All Teostra Alpha+.
+            ArmourSlot.HEAD:  ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_ALPHA_PLUS),
+            ArmourSlot.CHEST: ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_ALPHA_PLUS),
+            ArmourSlot.ARMS:  ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_ALPHA_PLUS),
+            ArmourSlot.WAIST: ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_ALPHA_PLUS),
+            ArmourSlot.LEGS:  ("Teostra", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_ALPHA_PLUS),
+        }
+
+    skill_states_dict = {
+            Skill.WEAKNESS_EXPLOIT: 2,
+        }
+
+    weapon_augments_config = [
+            (IBWeaponAugmentType.ATTACK_INCREASE,   1),
+        ]
+
+    weapon_upgrades_config = None # Start with no upgrades
+
+    decorations_list = [
+        Decoration.ELEMENTLESS,
+    ]
+
+    charm_id = "CRITICAL_CHARM"
+
+    print("Testing without weapon upgrades.")
+    check_efr(467.98)
+
+    weapon_augments_config = [
+            (IBWeaponAugmentType.ATTACK_INCREASE,   2),
+        ]
+
+    check_efr(477.56)
+
+    weapon_augments_config = [
+            (IBWeaponAugmentType.ATTACK_INCREASE,   2),
+            (IBWeaponAugmentType.AFFINITY_INCREASE, 2),
+        ]
+
+    check_efr(498.28)
+
+    print("Testing with weapon upgrades.")
+
+    weapon_upgrades_config = [
+            IBCWeaponUpgradeType.ATTACK,
+            IBCWeaponUpgradeType.ATTACK,
+            IBCWeaponUpgradeType.ATTACK,
+            IBCWeaponUpgradeType.ATTACK,
+            IBCWeaponUpgradeType.ATTACK,
+            IBCWeaponUpgradeType.ATTACK,
+        ]
+
+    check_efr(508.28)
+
+    weapon_upgrades_config = [
+            IBCWeaponUpgradeType.AFFINITY,
+            IBCWeaponUpgradeType.AFFINITY,
+            IBCWeaponUpgradeType.AFFINITY,
+            IBCWeaponUpgradeType.AFFINITY,
+            IBCWeaponUpgradeType.AFFINITY,
+            IBCWeaponUpgradeType.ATTACK,
+        ]
+
+    check_efr(506.88)
+
+    weapon_upgrades_config = [
+            IBCWeaponUpgradeType.AFFINITY,
+            IBCWeaponUpgradeType.ATTACK,
+            IBCWeaponUpgradeType.AFFINITY,
+            IBCWeaponUpgradeType.ATTACK,
+            IBCWeaponUpgradeType.AFFINITY,
+            IBCWeaponUpgradeType.ATTACK,
+        ]
+
+    check_efr(507.47)
 
     print("\nUnit tests are all passed.")
     print("\n==============================\n")

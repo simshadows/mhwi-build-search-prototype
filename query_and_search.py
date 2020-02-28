@@ -25,6 +25,7 @@ from database_weapons     import (WeaponClass,
                                  IBWeaponAugmentTracker,
                                  IBWeaponAugmentType,
                                  WeaponAugmentationScheme,
+                                 WeaponUpgradeTracker,
                                  WeaponUpgradeScheme)
 from database_armour      import (ArmourDiscriminator,
                                  ArmourVariant,
@@ -100,6 +101,7 @@ def _calculate_efr(**kwargs):
     added_affinity_percentage = kwargs["added_affinity_percentage"]
 
     augment_added_raw = kwargs["augment_added_raw"]
+    wepupgrade_added_raw = kwargs["wepupgrade_added_raw"]
 
     raw_sharpness_modifier = kwargs["raw_sharpness_modifier"]
     raw_crit_multiplier    = kwargs["raw_crit_multiplier"]
@@ -113,8 +115,8 @@ def _calculate_efr(**kwargs):
         # Positive Affinity
         raw_crit_modifier = (raw_crit_multiplier * raw_crit_chance) + (1 - raw_crit_chance)
 
-    true_raw_unrounded = ((weapon_base_raw + augment_added_raw) * weapon_raw_multiplier) + added_raw 
-    true_raw           = round(true_raw_unrounded, 0)
+    weapon_new_raw = (weapon_base_raw + augment_added_raw + wepupgrade_added_raw) * weapon_raw_multiplier
+    true_raw = round(weapon_new_raw, 0) + added_raw
 
     efr = true_raw * raw_sharpness_modifier * raw_crit_modifier
 
@@ -133,11 +135,12 @@ LookupFromSkillsValues = namedtuple(
 # This function is recursive.
 # For each condition missing from skill_conditions_dict,
 # it will call itself again for each possible state of the skill.
-def lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_config):
+def lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_config, weapon_upgrade_config):
     #assert isinstance(weapon, namedtuple) # idk how to implement this assertion. # TODO: This.
     assert isinstance(skills_dict, dict)
     assert isinstance(skill_states_dict, dict)
     assert isinstance(weapon_augments_config, list)
+    assert isinstance(weapon_upgrade_config, list) or (weapon_upgrade_config is None)
 
     skills_dict = clipped_skills_defaultdict(skills_dict)
 
@@ -178,13 +181,17 @@ def lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_c
         for level in range(total_states):
             new_skill_states_dict = skill_states_dict.copy()
             new_skill_states_dict[skill_to_iterate] = level
-            ret.append(lookup_from_skills(weapon, skills_dict, new_skill_states_dict, weapon_augments_config))
+            ret.append(lookup_from_skills(weapon, skills_dict, new_skill_states_dict, \
+                                                weapon_augments_config, weapon_upgrade_config))
 
     else:
         # We terminate recursion here.
 
         weapon_augments = WeaponAugmentTracker.get_instance(weapon)
         weapon_augments.update_with_config(weapon_augments_config)
+
+        weapon_upgrades = WeaponUpgradeTracker.get_instance(weapon)
+        weapon_upgrades.update_with_config(weapon_upgrade_config)
 
         maximum_sharpness_values = weapon.maximum_sharpness
         from_skills = calculate_skills_contribution(
@@ -194,6 +201,7 @@ def lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_c
                 weapon.is_raw
             )
         from_augments = weapon_augments.calculate_contribution()
+        from_weapon_upgrades = weapon_upgrades.calculate_contribution()
 
         handicraft_level = from_skills.handicraft_level
         sharpness_values, highest_sharpness_level = _actual_sharpness_level_values(maximum_sharpness_values, handicraft_level)
@@ -205,12 +213,14 @@ def lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_c
         kwargs["weapon_type"]                = weapon.type
         kwargs["weapon_affinity_percentage"] = weapon.affinity
         kwargs["added_raw"]                  = from_skills.added_attack_power + item_attack_power
-        kwargs["added_affinity_percentage"]  = from_skills.added_raw_affinity + from_augments.added_raw_affinity
+        kwargs["added_affinity_percentage"]  = from_skills.added_raw_affinity + from_augments.added_raw_affinity \
+                                                            + from_weapon_upgrades.added_raw_affinity
         kwargs["raw_sharpness_modifier"]     = RAW_SHARPNESS_MODIFIERS[highest_sharpness_level]
         kwargs["raw_crit_multiplier"]        = from_skills.raw_critical_multiplier
 
         kwargs["weapon_raw_multiplier"] = from_skills.weapon_base_attack_power_multiplier
-        kwargs["augment_added_raw"]     = from_augments.added_attack_power
+        kwargs["augment_added_raw"] = from_augments.added_attack_power
+        kwargs["wepupgrade_added_raw"] = from_weapon_upgrades.added_attack_power
 
         ret = LookupFromSkillsValues(
                 efr               = _calculate_efr(**kwargs),
@@ -256,8 +266,21 @@ BuildValues = namedtuple(
 #           (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
 #       ]
 #
-def lookup_from_gear(weapon_id, armour_dict, charm_id, decorations_list_or_dict, skill_states_dict, weapon_augments_config):
+#       weapon_upgrade_config = [
+#           IBCWeaponUpgradeType.Attack,
+#           IBCWeaponUpgradeType.Attack,
+#           IBCWeaponUpgradeType.Attack,
+#           IBCWeaponUpgradeType.Attack,
+#           IBCWeaponUpgradeType.Attack,
+#           IBCWeaponUpgradeType.Attack,
+#           IBCWeaponUpgradeType.Attack,
+#       ]
+#
+def lookup_from_gear(weapon_id, armour_dict, charm_id, decorations_list_or_dict, skill_states_dict, \
+                                                weapon_augments_config, weapon_upgrade_config):
     assert isinstance(weapon_id, str)
+    assert isinstance(weapon_upgrade_config, list) or (weapon_upgrade_config is None)
+
     weapon = weapon_db[weapon_id]
     armour_contribution = calculate_armour_contribution(armour_dict)
     charm = charms_db[charm_id] if (charm_id is not None) else None
@@ -312,7 +335,8 @@ def lookup_from_gear(weapon_id, armour_dict, charm_id, decorations_list_or_dict,
 
     skills_dict.update(skills_from_set_bonuses)
 
-    intermediate_results = lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_config)
+    intermediate_results = lookup_from_skills(weapon, skills_dict, skill_states_dict, \
+                                                    weapon_augments_config, weapon_upgrade_config)
 
     def transform_results_recursively(obj):
         if isinstance(obj, list):
@@ -444,11 +468,9 @@ def find_highest_efr_build():
             print("   " + k.name + " : " + v[0] + " " + v[2].name)
         for (augment, level) in weapon_augment_config:
             print(f"   {augment.name} {level}")
-
-    def recursively_try_augments(weapon, aug_sequence, augs_seen_set):
-        augments = WeaponAugmentTracker.get_instance(weapon)
-
-        return
+        if weapon_upgrade_config is not None:
+            for (stage, upgrade) in enumerate(weapon_upgrade_config):
+                print(f"   Weapon Upgrade: {upgrade.name} {stage}")
 
     best_efr = 0
 
@@ -466,26 +488,27 @@ def find_highest_efr_build():
         weapon = weapon_db[weapon_id]
         for head in head_list: # More predictable size for update_and_print_progress()
             for weapon_augment_config in WeaponAugmentTracker.get_instance(weapon).get_maximized_configs(): # Less predictable
-                for chest in chest_list:
-                    for arms in arms_list:
-                        for waist in waist_list:
-                            for legs in legs_list:
-                                for charm_id in charm_ids:
-                                    curr_decos = {}
-                                    #curr_skill_states = {}
-                                    curr_armour = {
-                                        ArmourSlot.HEAD:  head,
-                                        ArmourSlot.CHEST: chest,
-                                        ArmourSlot.ARMS:  arms,
-                                        ArmourSlot.WAIST: waist,
-                                        ArmourSlot.LEGS:  legs,
-                                    }
-                                    results = lookup_from_gear(weapon_id, curr_armour, charm_id, \
-                                                    curr_decos, full_skill_states, weapon_augment_config)
+                for weapon_upgrade_config in WeaponUpgradeTracker.get_instance(weapon).get_maximized_configs(): # Less predictable
+                    for chest in chest_list:
+                        for arms in arms_list:
+                            for waist in waist_list:
+                                for legs in legs_list:
+                                    for charm_id in charm_ids:
+                                        curr_decos = {}
+                                        #curr_skill_states = {}
+                                        curr_armour = {
+                                            ArmourSlot.HEAD:  head,
+                                            ArmourSlot.CHEST: chest,
+                                            ArmourSlot.ARMS:  arms,
+                                            ArmourSlot.WAIST: waist,
+                                            ArmourSlot.LEGS:  legs,
+                                        }
+                                        results = lookup_from_gear(weapon_id, curr_armour, charm_id, curr_decos, \
+                                                        full_skill_states, weapon_augment_config, weapon_upgrade_config)
 
-                                    if results.efr > best_efr:
-                                        best_efr = results.efr
-                                        print_current_build()
+                                        if results.efr > best_efr:
+                                            best_efr = results.efr
+                                            print_current_build()
             update_and_print_progress()
         #update_and_print_progress()
 
