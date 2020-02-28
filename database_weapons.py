@@ -47,66 +47,28 @@ class WeaponAugmentTracker(ABC):
     def copy(self):
         raise NotImplementedError
 
-    # Not used yet.
-    ## Sets the tracker to automatically maximize the augments where possible.
-    ## Basically, anything that can be used 100% of the time without negatively affecting
-    ## a build will be done automatically.
-    ##
-    ## If you want to turn this behaviour off, set value=False.
-    #@abstractmethod
-    #def set_auto_maximize(self, value=True):
-    #    raise NotImplementedError
-
-    # Gives back the sequence of get_options() "options", in order, that were used to arrive
-    # to the current augments.
-    @abstractmethod
-    def get_current_selections_sequence(self):
-        raise NotImplementedError
-
-    # Gives back a dictionary that describes the augments in a more convenient manner than
-    # get_current_selections_sequence(). The keys may not necessarily correspond to the references
-    # found in the get_current_selections_sequence() list.
-    @abstractmethod
-    def get_current_selections_dict(self):
-        raise NotImplementedError
-
     # Gives back a WeaponAugmentsContribution namedtuple with all the values the current
     # set of augments contributes to the build.
     @abstractmethod
     def calculate_contribution(self):
         raise NotImplementedError
 
-    # Gives back a list of arbitrary things describing all the possible things you can add
-    # to the build.
-    # This function is guaranteed to only give back "options" that add to the build, never
-    # undoing anything done.
+    # Gives back a list of arbitrary things describing all the possible maximum configurations.
+    # You can pass one of these things to update_with_config.
     @abstractmethod
-    def get_options(self):
+    def get_maximized_configs(self):
         raise NotImplementedError
 
-    # This function takes one of the things from the list returned by get_options() to update
-    # the build.
-    # This function will only accept references available from the get_options() list.
+    # Set the config to the selected config.
     @abstractmethod
-    def update_with_option(self, selected_option):
+    def update_with_config(self, selected_config):
         raise NotImplementedError
-
-    # A convenience function that returns a list of updated copies of this instance, where
-    # each copy corresponds to each reference from the get_options() list.
-    def do_all_options(self):
-        return [self.copy().update_with_option(option) for option in self.get_options()]
 
 
 class NoWeaponAugments(WeaponAugmentTracker):
 
     def copy(self):
         return self # It shouldn't doesn't matter at all
-
-    def get_current_selections_sequence(self):
-        return []
-
-    def get_current_selections_dict(self):
-        return {}
 
     def calculate_contribution(self):
         ret = WeaponAugmentsContribution (
@@ -116,10 +78,10 @@ class NoWeaponAugments(WeaponAugmentTracker):
             )
         return ret
 
-    def get_options(self):
+    def get_maximized_configs(self):
         return []
 
-    def update_with_option(self, selected_option):
+    def update_with_config(self, selected_config):
         raise RuntimeError("Can't update the augments of a weapon that can't be augmented.")
 
 
@@ -161,10 +123,58 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
     IB_AFFINITY_AUGMENT_VALUES_PERCENTAGES = (0, 10, 5, 5, 5)
     #                                level =  0  1   2  3  4
 
-    ib_slot_consumptions_cumulative = {k: list(accumulate(v)) for (k, v) in IB_SLOT_CONSUMPTIONS.items()}
+    IB_SLOT_CONSUMPTIONS_CUMULATIVE = {k: list(accumulate(v)) for (k, v) in IB_SLOT_CONSUMPTIONS.items()}
 
-    ib_attack_augment_cumulative               = tuple(accumulate(IB_ATTACK_AUGMENT_VALUES))
-    ib_affinity_augment_percentages_cumulative = tuple(accumulate(IB_AFFINITY_AUGMENT_VALUES_PERCENTAGES))
+    IB_ATTACK_AUGMENT_CUMULATIVE               = tuple(accumulate(IB_ATTACK_AUGMENT_VALUES))
+    IB_AFFINITY_AUGMENT_PERCENTAGES_CUMULATIVE = tuple(accumulate(IB_AFFINITY_AUGMENT_VALUES_PERCENTAGES))
+
+    # {rarity: [config]}
+    _MAXIMIZED_CONFIGS = {
+            10: [
+                [
+                    (IBWeaponAugmentType.ATTACK_INCREASE, 4),
+                ],
+                [
+                    (IBWeaponAugmentType.ATTACK_INCREASE  , 3),
+                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+                ],
+                [
+                    (IBWeaponAugmentType.ATTACK_INCREASE  , 2),
+                    (IBWeaponAugmentType.AFFINITY_INCREASE, 2),
+                ],
+                [
+                    (IBWeaponAugmentType.ATTACK_INCREASE  , 1),
+                    (IBWeaponAugmentType.AFFINITY_INCREASE, 3),
+                ],
+                [
+                    (IBWeaponAugmentType.AFFINITY_INCREASE, 4),
+                ],
+            ],
+            11: [
+                [
+                    (IBWeaponAugmentType.ATTACK_INCREASE, 2),
+                ],
+                [
+                    (IBWeaponAugmentType.ATTACK_INCREASE  , 1),
+                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+                ],
+                [
+                    (IBWeaponAugmentType.AFFINITY_INCREASE, 3),
+                ],
+            ],
+            12: [
+                [
+                    (IBWeaponAugmentType.ATTACK_INCREASE, 2),
+                ],
+                [
+                    (IBWeaponAugmentType.ATTACK_INCREASE  , 1),
+                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+                ],
+                [
+                    (IBWeaponAugmentType.AFFINITY_INCREASE, 2),
+                ],
+            ],
+        }
 
     def __init__(self, rarity, auto_maximize=True):
         assert isinstance(rarity, int)
@@ -192,15 +202,6 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
         assert new._state_is_valid()
         return new
 
-    def get_current_selections_sequence(self):
-        return copy(self._selections)
-
-    def get_current_selections_dict(self):
-        ret = copy(self._augments)
-        assert IBWeaponAugmentType.AUGMENT_LEVEL not in ret
-        ret[IBWeaponAugmentType.AUGMENT_LEVEL] = self._aug_level
-        return ret
-
     def calculate_contribution(self):
         attack_level = self._augments.get(IBWeaponAugmentType.ATTACK_INCREASE, 0)
         affinity_level = self._augments.get(IBWeaponAugmentType.AFFINITY_INCREASE, 0)
@@ -208,62 +209,26 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
 
         ret = WeaponAugmentsContribution (
                 added_attack_power = \
-                        self.ib_attack_augment_cumulative[attack_level],
+                        self.IB_ATTACK_AUGMENT_CUMULATIVE[attack_level],
                 added_raw_affinity = \
-                        self.ib_affinity_augment_percentages_cumulative[affinity_level],
+                        self.IB_AFFINITY_AUGMENT_PERCENTAGES_CUMULATIVE[affinity_level],
                 extra_decoration_slot_level = \
                         decoration_slot_level,
             )
         return ret
 
-    def get_options(self):
-        slots_maximum = self.IB_AUGMENTATION_SLOTS[self._rarity][self._aug_level]
+    def get_maximized_configs(self):
+        return self._MAXIMIZED_CONFIGS[self._rarity]
 
-        slots_used = 0
-        for (augment, _) in self.IB_SLOT_CONSUMPTIONS.items():
-            level = self._augments.get(augment, 0)
+    def update_with_config(self, selected_config):
+        assert isinstance(selected_config, list) # May accept dicts later.
+        #assert (selected_config in self.get_maximized_configs()) or (len(selected_config) == 0) # Fails if our config isn't maximized
+        assert all((level >= 0) and (level <= 4) for (augment, level) in selected_config)
 
-            # Add to slots_used
-            if (level > 0) and (level <= 4):
-                slots_used +=  self.ib_slot_consumptions_cumulative[augment][level - 1]
-                # IMPORTANT: Need to remember that the slot consumptions list starts at level 1.
+        self._augments = {augment: level for (augment, level) in selected_config}
 
-        # Now that we know how many slots we used, we take out the augments we can't appli
-        slots_unused = slots_maximum - slots_used
-        possible_augments = []
-        assert (slots_unused >= 0) and (slots_used >= 0)
-        if slots_unused > 0:
-            for (augment, slot_consumptions) in self.IB_SLOT_CONSUMPTIONS.items():
-                next_level = self._augments.get(augment, 0) + 1
-                # IMPORTANT: For this next line, need to remember that the slot consumptions list starts at level 1.
-                if (next_level > 0) and (next_level <= 4) and (slot_consumptions[next_level - 1] <= slots_unused):
-                    possible_augments.append((augment, next_level))
-                    
-        #else:
-            #possible_augments = [] # This path should run by default.
-
-        #print()
-        #print(f"max {slots_maximum}")
-        #print(f"used {slots_used}")
-        #print(self._augments)
-        #print()
-
-        return possible_augments
-
-    def update_with_option(self, selected_option):
-        assert isinstance(selected_option, tuple)
-        #print()
-        #print(f"Selected: {selected_option}")
-        #print(f"Available:\n{self.get_options()}")
-        #print()
-        assert selected_option in self.get_options()
-
-        augment, next_level = selected_option
-        assert ((augment not in self._augments) and (next_level == 1)) or (self._augments[augment] == (next_level - 1))
-        assert (next_level > 0) and (next_level <= 4)
-
-        self._augments[augment] = next_level
-        self._state_is_valid()
+        assert len(self._augments) == len(selected_config) # Quick check if we have any duplicates.
+        assert self._state_is_valid() # If our config breaks anything, it should be caught here
         return
 
     def _state_is_valid(self):
@@ -272,7 +237,7 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
         aug_used = 0
         for (augment, level) in self._augments.items():
             if level > 0:
-                aug_used += self.ib_slot_consumptions_cumulative[augment][level - 1]
+                aug_used += self.IB_SLOT_CONSUMPTIONS_CUMULATIVE[augment][level - 1]
                 # IMPORTANT: Need to remember that the slot consumptions list starts at level 1.
 
         ret = all(isinstance(k, IBWeaponAugmentType) and isinstance(v, int) for (k, v) in self._augments.items()) \

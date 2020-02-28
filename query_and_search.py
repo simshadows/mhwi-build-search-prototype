@@ -133,11 +133,11 @@ LookupFromSkillsValues = namedtuple(
 # This function is recursive.
 # For each condition missing from skill_conditions_dict,
 # it will call itself again for each possible state of the skill.
-def lookup_from_skills(weapon, skills_dict, skill_states_dict, augments_list):
+def lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_config):
     #assert isinstance(weapon, namedtuple) # idk how to implement this assertion. # TODO: This.
     assert isinstance(skills_dict, dict)
     assert isinstance(skill_states_dict, dict)
-    assert isinstance(augments_list, list)
+    assert isinstance(weapon_augments_config, list)
 
     skills_dict = clipped_skills_defaultdict(skills_dict)
 
@@ -178,20 +178,13 @@ def lookup_from_skills(weapon, skills_dict, skill_states_dict, augments_list):
         for level in range(total_states):
             new_skill_states_dict = skill_states_dict.copy()
             new_skill_states_dict[skill_to_iterate] = level
-            ret.append(lookup_from_skills(weapon, skills_dict, new_skill_states_dict, augments_list))
+            ret.append(lookup_from_skills(weapon, skills_dict, new_skill_states_dict, weapon_augments_config))
 
     else:
         # We terminate recursion here.
 
         weapon_augments = WeaponAugmentTracker.get_instance(weapon)
-        # TODO: Constructor as the enum value looks really fucking weird.
-
-        if weapon.augmentation_scheme is WeaponAugmentationScheme.ICEBORNE:
-            for augment in augments_list:
-                assert isinstance(augment, tuple) and (len(augment) == 2)
-                #assert isinstance(augment[0], IBWeaponAugmentType) and isinstance(augment[1], int)
-                assert isinstance(augment[1], int)
-                weapon_augments.update_with_option(augment)
+        weapon_augments.update_with_config(weapon_augments_config)
 
         maximum_sharpness_values = weapon.maximum_sharpness
         from_skills = calculate_skills_contribution(
@@ -258,12 +251,12 @@ BuildValues = namedtuple(
 #           Skill.PEAK_PERFORMANCE: 1,
 #       }
 #
-#       augments_list = [
+#       weapon_augments_config = [
 #           (IBWeaponAugmentType.HEALTH_REGEN,      1),
 #           (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
 #       ]
 #
-def lookup_from_gear(weapon_id, armour_dict, charm_id, decorations_list_or_dict, skill_states_dict, augments_list):
+def lookup_from_gear(weapon_id, armour_dict, charm_id, decorations_list_or_dict, skill_states_dict, weapon_augments_config):
     assert isinstance(weapon_id, str)
     weapon = weapon_db[weapon_id]
     armour_contribution = calculate_armour_contribution(armour_dict)
@@ -319,7 +312,7 @@ def lookup_from_gear(weapon_id, armour_dict, charm_id, decorations_list_or_dict,
 
     skills_dict.update(skills_from_set_bonuses)
 
-    intermediate_results = lookup_from_skills(weapon, skills_dict, skill_states_dict, augments_list)
+    intermediate_results = lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_config)
 
     def transform_results_recursively(obj):
         if isinstance(obj, list):
@@ -363,29 +356,6 @@ def find_highest_efr_build():
         Skill.WEAKNESS_EXPLOIT: 2,
     }
 
-    atk = IBWeaponAugmentType.ATTACK_INCREASE
-    aff = IBWeaponAugmentType.AFFINITY_INCREASE
-    slo = IBWeaponAugmentType.SLOT_UPGRADE
-    ib_weapon_augment_sequences = {
-            10: [
-                [(atk,1),(atk,2),(atk,3),(atk,4)],
-                [(atk,1),(atk,2),(atk,3),(aff,1)],
-                [(atk,1),(atk,2),(aff,1),(aff,2)],
-                [(atk,1),(aff,1),(aff,2),(aff,3)],
-                [(aff,1),(aff,2),(aff,3),(aff,4)],
-            ],
-            11: [
-                [(atk,1),(atk,2)],
-                [(atk,1),(aff,1)],
-                [(aff,1),(aff,2),(aff,3)],
-            ],
-            12: [
-                [(atk,1),(atk,2)],
-                [(atk,1),(aff,1)],
-                [(aff,1),(aff,2)],
-            ],
-        }
-
     ############################
     # STAGE 2: Component Lists #
     ############################
@@ -422,33 +392,6 @@ def find_highest_efr_build():
             if skill in deco.value.skills_dict:
                 decorations.add(deco)
     decorations = list(decorations) # More efficient for later stages
-
-    #ib_weapon_augment_sequences = defaultdict(list) # {rarity: [augment_sequence]}
-    # Oh my god the current API is trash. I'll need to rework this to make it possible to cleanly automate.
-    # for rarity in range(10, 13):
-    #     initial_augments_mockup = IBWeaponAugmentTracker(rarity)
-    #     initial_augment_type_stack = [
-    #             IBWeaponAugmentType.ATTACK_INCREASE,
-    #             IBWeaponAugmentType.AFFINITY_INCREASE,
-    #             IBWeaponAugmentType.SLOT_UPGRADE,
-    #         ]
-
-    #     def recursively_iterate_each_augment(current_sequence, augments_mockup, augment_type_stack):
-    #         options = augments_mockup.get_options()
-    #         next_sequence = None
-    #         for option in options:
-    #             assert next_sequence is None # We will actually continue the loop just to check this assertion.
-    #             if option[0] is augment_type_stack[0]:
-    #                 next_sequence = current_sequence + [option]
-    #                 #break # We'd ordinarily end the loop here for efficiency, but I want to check the assertion.
-    #         if next_sequence is None:
-    #             next_augment_type_stack = augment_type_stack[1:] # copy without first element
-
-    #             recursively_iterate_each_augment(current_sequence, None, augment_type_stack)
-    #         else:
-    #             recursively_iterate_each_augment(next_sequence, None, augment_type_stack)
-
-    #     recursively_iterate_each_augment([], initial_augments_mockup, initial_augment_type_stack)
 
 
     ####################
@@ -499,7 +442,7 @@ def find_highest_efr_build():
         print("   " + charm_id)
         for (k, v) in curr_armour.items():
             print("   " + k.name + " : " + v[0] + " " + v[2].name)
-        for (augment, level) in weapon_augment_sequence:
+        for (augment, level) in weapon_augment_config:
             print(f"   {augment.name} {level}")
 
     def recursively_try_augments(weapon, aug_sequence, augs_seen_set):
@@ -522,7 +465,7 @@ def find_highest_efr_build():
         #update_and_print_progress()
         weapon = weapon_db[weapon_id]
         for head in head_list: # More predictable size for update_and_print_progress()
-            for weapon_augment_sequence in ib_weapon_augment_sequences[weapon.rarity]: # Less predictable size
+            for weapon_augment_config in WeaponAugmentTracker.get_instance(weapon).get_maximized_configs(): # Less predictable
                 for chest in chest_list:
                     for arms in arms_list:
                         for waist in waist_list:
@@ -538,7 +481,7 @@ def find_highest_efr_build():
                                         ArmourSlot.LEGS:  legs,
                                     }
                                     results = lookup_from_gear(weapon_id, curr_armour, charm_id, \
-                                                    curr_decos, full_skill_states, weapon_augment_sequence)
+                                                    curr_decos, full_skill_states, weapon_augment_config)
 
                                     if results.efr > best_efr:
                                         best_efr = results.efr

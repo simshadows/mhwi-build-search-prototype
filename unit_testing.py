@@ -43,7 +43,7 @@ def run_tests():
 
     skills_dict = {} # Start with no skills
     skill_states_dict = {} # Start with no states
-    augments_list = [] # Start with no augments
+    weapon_augments_config = [] # Start with no augments
     weapon = weapon_db["ACID_SHREDDER_II"]
     decorations_list = [] # Start with no decorations
     charm_id = None
@@ -55,7 +55,7 @@ def run_tests():
 
         for level in range(max_level + 1):
             skills_dict[skill] = level
-            vals = lookup_from_skills(weapon, skills_dict, skill_states_dict, augments_list)
+            vals = lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_config)
             if round(vals.efr) != round(expected_efrs[level]):
                 raise ValueError(f"EFR value mismatch for skill level {level}. Got EFR = {vals.efr}.")
         return
@@ -163,14 +163,14 @@ def run_tests():
     print("Testing without augments.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [478.17, 498.96])
 
-    augments_list = [
+    weapon_augments_config = [
             (IBWeaponAugmentType.ATTACK_INCREASE, 1),
         ]
 
     print("Testing with Attack augment.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [485.60, 506.39])
 
-    augments_list = [
+    weapon_augments_config = [
             (IBWeaponAugmentType.ATTACK_INCREASE,   1),
             (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
         ]
@@ -178,8 +178,7 @@ def run_tests():
     print("Testing with Attack and Affinity augment.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [496.39, 517.64])
 
-    augments_list = [
-            (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+    weapon_augments_config = [
             (IBWeaponAugmentType.AFFINITY_INCREASE, 2),
         ]
 
@@ -187,12 +186,12 @@ def run_tests():
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [494.11, 515.59])
 
     def check_efr(expected_efr):
-        results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, augments_list)
+        results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, weapon_augments_config)
         if round(results.efr) != round(expected_efr):
             raise ValueError(f"EFR value mismatch. Expected {expected_efr}. Got {results.efr}.")
 
     def check_skill(expected_skill, expected_level):
-        results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, augments_list)
+        results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, weapon_augments_config)
         if Skill[expected_skill] not in results.skills:
             raise ValueError(f"Skill {expected_skill} not present.")
         returned_level = results.skills[Skill[expected_skill]]
@@ -213,7 +212,7 @@ def run_tests():
             Skill.WEAKNESS_EXPLOIT: 2,
         }
 
-    augments_list = [
+    weapon_augments_config = [
             (IBWeaponAugmentType.ATTACK_INCREASE,   1),
             #(IBWeaponAugmentType.AFFINITY_INCREASE, 1),
         ]
@@ -310,11 +309,11 @@ def run_tests():
     decorations_list = ([Decoration.CHALLENGER_X2] * 2) + ([Decoration.COMPOUND_TENDERIZER_VITALITY] * 2)
 
     skill_states_dict = {
-            Skill.AGITATOR:         1,
+            Skill.AGITATOR: 1,
         }
 
     print("Testing to see if one indeterminate stateful skill get iterated.")
-    results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, augments_list)
+    results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, weapon_augments_config)
     if len(results) != 3:
         raise ValueError("Results should've returned a list of 3 items (since Weakness Exploit is the only stateful skill).")
 
