@@ -32,6 +32,16 @@ WeaponAugmentsContribution = namedtuple(
 )
 class WeaponAugmentTracker(ABC):
 
+    @classmethod
+    def get_instance(cls, weapon):
+        #assert isinstance(weapon, namedtuple) # TODO: Make a proper assertion.
+        if weapon.augmentation_scheme is WeaponAugmentationScheme.ICEBORNE:
+            return IBWeaponAugmentTracker(weapon.rarity)
+        elif weapon.augmentation_scheme is WeaponAugmentationScheme.NONE:
+            return NoWeaponAugments()
+        else:
+            raise RuntimeError(f"Augmentation scheme {weapon.augmentation_scheme} not supported.")
+
     # TODO: Use something better, like the __copy__() method.
     @abstractmethod
     def copy(self):
@@ -205,23 +215,45 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
         return ret
 
     def get_options(self):
-        aug_maximum = self.IB_AUGMENTATION_SLOTS[self._rarity][self._aug_level]
+        slots_maximum = self.IB_AUGMENTATION_SLOTS[self._rarity][self._aug_level]
 
-        aug_used = 0
-        possible_augments = []
-        for (augment, slot_consumptions) in self.IB_AUGMENTATION_SLOT_CONSUMPTIONS.items():
+        slots_used = 0
+        for (augment, _) in self.IB_AUGMENTATION_SLOT_CONSUMPTIONS.items():
             level = self._augments.get(augment, 0)
-            next_level = level + 1
-            if level > 0:
-                aug_used += sum(self.IB_AUGMENTATION_SLOT_CONSUMPTIONS[augment][i] for i in range(level - 2))
-            if (next_level <= 4) and (self.IB_AUGMENTATION_SLOT_CONSUMPTIONS[augment][next_level] <= aug_maximum - aug_used):
-                possible_augments.append((augment, next_level))
 
-        assert (0 <= aug_used) and (aug_used <= aug_maximum)
+            # Add to slots_used
+            if (level > 0) and (level <= 4):
+                slots_used += sum(self.IB_AUGMENTATION_SLOT_CONSUMPTIONS[augment][i] for i in range(level))
+                # IMPORTANT: Need to remember that the slot consumptions list starts at level 1.
+
+        # Now that we know how many slots we used, we take out the augments we can't appli
+        slots_unused = slots_maximum - slots_used
+        possible_augments = []
+        assert (slots_unused >= 0) and (slots_used >= 0)
+        if slots_unused > 0:
+            for (augment, slot_consumptions) in self.IB_AUGMENTATION_SLOT_CONSUMPTIONS.items():
+                next_level = self._augments.get(augment, 0) + 1
+                # IMPORTANT: For this next line, need to remember that the slot consumptions list starts at level 1.
+                if (next_level > 0) and (next_level <= 4) and (slot_consumptions[next_level - 1] <= slots_unused):
+                    possible_augments.append((augment, next_level))
+                    
+        #else:
+            #possible_augments = [] # This path should run by default.
+
+        #print()
+        #print(f"max {slots_maximum}")
+        #print(f"used {slots_used}")
+        #print(self._augments)
+        #print()
 
         return possible_augments
 
     def update_with_option(self, selected_option):
+        assert isinstance(selected_option, tuple)
+        #print()
+        #print(f"Selected: {selected_option}")
+        #print(f"Available:\n{self.get_options()}")
+        #print()
         assert selected_option in self.get_options()
 
         augment, next_level = selected_option
@@ -238,7 +270,8 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
         aug_used = 0
         for (augment, level) in self._augments.items():
             if level > 0:
-                aug_used += sum(self.IB_AUGMENTATION_SLOT_CONSUMPTIONS[i] for i in range(level - 2))
+                aug_used += sum(self.IB_AUGMENTATION_SLOT_CONSUMPTIONS[augment][i] for i in range(level - 2))
+                # IMPORTANT: Need to remember that the slot consumptions list starts at level 1.
 
         ret = all(isinstance(k, IBWeaponAugmentType) and isinstance(v, int) for (k, v) in self._augments.items()) \
                 and all((v >= 0) and (v <= 4) for (k, v) in self._augments.items()) \
@@ -251,9 +284,9 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
 # If None is used instead of this Enum, then the weapon cannot be augmented.
 # Values of this enum are the WeaponAugmentTracker implementations.
 class WeaponAugmentationScheme(Enum):
-    NONE       = NoWeaponAugments
+    NONE       = auto()
     #BASE_GAME = auto() # Not used yet.
-    ICEBORNE   = IBWeaponAugmentTracker
+    ICEBORNE   = auto()
 
 
 # If None is used instead of this Enum, then the weapon cannot be upgraded.

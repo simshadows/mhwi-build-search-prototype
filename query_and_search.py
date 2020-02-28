@@ -10,8 +10,8 @@ This file contains various queries and search algorithms.
 
 import sys
 from copy import copy
+import multiprocessing as mp
 
-#from math import floor
 from collections import namedtuple, defaultdict, Counter
 
 from database_skills      import (RAW_BLUNDER_MULTIPLIER,
@@ -21,6 +21,8 @@ from database_skills      import (RAW_BLUNDER_MULTIPLIER,
                                  calculate_skills_contribution)
 from database_weapons     import (WeaponClass,
                                  weapon_db,
+                                 WeaponAugmentTracker,
+                                 IBWeaponAugmentTracker,
                                  IBWeaponAugmentType,
                                  WeaponAugmentationScheme,
                                  WeaponUpgradeScheme)
@@ -181,13 +183,14 @@ def lookup_from_skills(weapon, skills_dict, skill_states_dict, augments_list):
     else:
         # We terminate recursion here.
 
-        weapon_augments = weapon.augmentation_scheme.value(weapon.rarity)
+        weapon_augments = WeaponAugmentTracker.get_instance(weapon)
         # TODO: Constructor as the enum value looks really fucking weird.
 
         if weapon.augmentation_scheme is WeaponAugmentationScheme.ICEBORNE:
             for augment in augments_list:
                 assert isinstance(augment, tuple) and (len(augment) == 2)
-                assert isinstance(augment[0], IBWeaponAugmentType) and isinstance(augment[1], int)
+                #assert isinstance(augment[0], IBWeaponAugmentType) and isinstance(augment[1], int)
+                assert isinstance(augment[1], int)
                 weapon_augments.update_with_option(augment)
 
         maximum_sharpness_values = weapon.maximum_sharpness
@@ -323,12 +326,12 @@ def lookup_from_gear(weapon_id, armour_dict, charm_id, decorations_list_or_dict,
             return [transform_results_recursively(x) for x in obj]
         else:
             new_obj = BuildValues(
-                    efr              = obj.efr,
-                    sharpness_values = obj.sharpness_values,
+                    efr                     = obj.efr,
+                    sharpness_values        = obj.sharpness_values,
                     
-                    skills           = obj.skills,
+                    skills                  = obj.skills,
                     
-                    usable_slots     = slots_available_counter,
+                    usable_slots            = slots_available_counter,
                 )
             return new_obj
             
@@ -360,6 +363,29 @@ def find_highest_efr_build():
         Skill.WEAKNESS_EXPLOIT: 2,
     }
 
+    atk = IBWeaponAugmentType.ATTACK_INCREASE
+    aff = IBWeaponAugmentType.AFFINITY_INCREASE
+    slo = IBWeaponAugmentType.SLOT_UPGRADE
+    ib_weapon_augment_sequences = {
+            10: [
+                [(atk,1),(atk,2),(atk,3),(atk,4)],
+                [(atk,1),(atk,2),(atk,3),(aff,1)],
+                [(atk,1),(atk,2),(aff,1),(aff,2)],
+                [(atk,1),(aff,1),(aff,2),(aff,3)],
+                [(aff,1),(aff,2),(aff,3),(aff,4)],
+            ],
+            11: [
+                [(atk,1),(atk,2)],
+                [(atk,1),(aff,1)],
+                [(aff,1),(aff,2),(aff,3)],
+            ],
+            12: [
+                [(atk,1),(atk,2)],
+                [(atk,1),(aff,1)],
+                [(aff,1),(aff,2)],
+            ],
+        }
+
     ############################
     # STAGE 2: Component Lists #
     ############################
@@ -373,7 +399,11 @@ def find_highest_efr_build():
             # the missing slots are just missing
             for (gear_slot, piece) in variant_pieces.items():
                 armour_pieces[gear_slot].append((set_name, discrim, variant))
-    #print("\n".join(str(k.name) for (k, v) in armour_pieces.items()))
+    head_list  = armour_pieces[ArmourSlot.HEAD]
+    chest_list = armour_pieces[ArmourSlot.CHEST]
+    arms_list  = armour_pieces[ArmourSlot.ARMS]
+    waist_list = armour_pieces[ArmourSlot.WAIST]
+    legs_list  = armour_pieces[ArmourSlot.LEGS]
 
     charm_ids = set()
     for skill in efr_skills:
@@ -392,6 +422,34 @@ def find_highest_efr_build():
             if skill in deco.value.skills_dict:
                 decorations.add(deco)
     decorations = list(decorations) # More efficient for later stages
+
+    #ib_weapon_augment_sequences = defaultdict(list) # {rarity: [augment_sequence]}
+    # Oh my god the current API is trash. I'll need to rework this to make it possible to cleanly automate.
+    # for rarity in range(10, 13):
+    #     initial_augments_mockup = IBWeaponAugmentTracker(rarity)
+    #     initial_augment_type_stack = [
+    #             IBWeaponAugmentType.ATTACK_INCREASE,
+    #             IBWeaponAugmentType.AFFINITY_INCREASE,
+    #             IBWeaponAugmentType.SLOT_UPGRADE,
+    #         ]
+
+    #     def recursively_iterate_each_augment(current_sequence, augments_mockup, augment_type_stack):
+    #         options = augments_mockup.get_options()
+    #         next_sequence = None
+    #         for option in options:
+    #             assert next_sequence is None # We will actually continue the loop just to check this assertion.
+    #             if option[0] is augment_type_stack[0]:
+    #                 next_sequence = current_sequence + [option]
+    #                 #break # We'd ordinarily end the loop here for efficiency, but I want to check the assertion.
+    #         if next_sequence is None:
+    #             next_augment_type_stack = augment_type_stack[1:] # copy without first element
+
+    #             recursively_iterate_each_augment(current_sequence, None, augment_type_stack)
+    #         else:
+    #             recursively_iterate_each_augment(next_sequence, None, augment_type_stack)
+
+    #     recursively_iterate_each_augment([], initial_augments_mockup, initial_augment_type_stack)
+
 
     ####################
     # STAGE 3: Search! #
@@ -436,36 +494,55 @@ def find_highest_efr_build():
     #                            recursively_iterate_decos({}, 0)
 
     def print_current_build():
-        print(best_efr)
+        print(f"{best_efr} EFR")
         print("   " + weapon_id)
+        print("   " + charm_id)
         for (k, v) in curr_armour.items():
-            print("   " + k.name + " : " + v[0] + " " + v[1].name + " " + v[2].name)
+            print("   " + k.name + " : " + v[0] + " " + v[2].name)
+        for (augment, level) in weapon_augment_sequence:
+            print(f"   {augment.name} {level}")
+
+    def recursively_try_augments(weapon, aug_sequence, augs_seen_set):
+        augments = WeaponAugmentTracker.get_instance(weapon)
+
+        return
 
     best_efr = 0
 
-    for weapon_id in weapon_ids:
-        for head in armour_pieces[ArmourSlot.HEAD]:
-            for chest in armour_pieces[ArmourSlot.CHEST]:
-                for arms in armour_pieces[ArmourSlot.ARMS]:
-                    for waist in armour_pieces[ArmourSlot.WAIST]:
-                        for legs in armour_pieces[ArmourSlot.LEGS]:
-                            for charm_id in charm_ids:
-                                curr_decos = {}
-                                #curr_skill_states = {}
-                                curr_augments = []
-                                curr_armour = {
-                                    ArmourSlot.HEAD:  head,
-                                    ArmourSlot.CHEST: chest,
-                                    ArmourSlot.ARMS:  arms,
-                                    ArmourSlot.WAIST: waist,
-                                    ArmourSlot.LEGS:  legs,
-                                }
-                                results = lookup_from_gear(weapon_id, curr_armour, charm_id, \
-                                                curr_decos, full_skill_states, curr_augments)
+    progress_segment_size = 1 / (len(weapon_ids) * len(head_list))
+    curr_progress_segment = 0
+    def update_and_print_progress():
+        nonlocal curr_progress_segment
+        curr_progress_segment += 1
+        print(f"[SEARCH PROGRESS: {curr_progress_segment * progress_segment_size * 100 :.2f}%]")
 
-                                if results.efr > best_efr:
-                                    best_efr = results.efr
-                                    print_current_build()
+    for weapon_id in weapon_ids:
+        #update_and_print_progress()
+        weapon = weapon_db[weapon_id]
+        for head in head_list: # More predictable size for update_and_print_progress()
+            for weapon_augment_sequence in ib_weapon_augment_sequences[weapon.rarity]: # Less predictable size
+                for chest in chest_list:
+                    for arms in arms_list:
+                        for waist in waist_list:
+                            for legs in legs_list:
+                                for charm_id in charm_ids:
+                                    curr_decos = {}
+                                    #curr_skill_states = {}
+                                    curr_armour = {
+                                        ArmourSlot.HEAD:  head,
+                                        ArmourSlot.CHEST: chest,
+                                        ArmourSlot.ARMS:  arms,
+                                        ArmourSlot.WAIST: waist,
+                                        ArmourSlot.LEGS:  legs,
+                                    }
+                                    results = lookup_from_gear(weapon_id, curr_armour, charm_id, \
+                                                    curr_decos, full_skill_states, weapon_augment_sequence)
+
+                                    if results.efr > best_efr:
+                                        best_efr = results.efr
+                                        print_current_build()
+            update_and_print_progress()
+        #update_and_print_progress()
 
     return
 
