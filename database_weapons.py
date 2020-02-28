@@ -148,7 +148,7 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
             12: [3, 4, 5],
         }
 
-    IB_AUGMENTATION_SLOT_CONSUMPTIONS = {
+    IB_SLOT_CONSUMPTIONS = {
             IBWeaponAugmentType.ATTACK_INCREASE           : [3, 2, 2, 2],
             IBWeaponAugmentType.AFFINITY_INCREASE         : [2, 2, 2, 2],
             #IBWeaponAugmentType.DEFENSE_INCREASE         : [1, 1, 1, 2],
@@ -160,6 +160,8 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
     IB_ATTACK_AUGMENT_VALUES               = (0, 5,  5, 5, 5)
     IB_AFFINITY_AUGMENT_VALUES_PERCENTAGES = (0, 10, 5, 5, 5)
     #                                level =  0  1   2  3  4
+
+    ib_slot_consumptions_cumulative = {k: list(accumulate(v)) for (k, v) in IB_SLOT_CONSUMPTIONS.items()}
 
     ib_attack_augment_cumulative               = tuple(accumulate(IB_ATTACK_AUGMENT_VALUES))
     ib_affinity_augment_percentages_cumulative = tuple(accumulate(IB_AFFINITY_AUGMENT_VALUES_PERCENTAGES))
@@ -218,12 +220,12 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
         slots_maximum = self.IB_AUGMENTATION_SLOTS[self._rarity][self._aug_level]
 
         slots_used = 0
-        for (augment, _) in self.IB_AUGMENTATION_SLOT_CONSUMPTIONS.items():
+        for (augment, _) in self.IB_SLOT_CONSUMPTIONS.items():
             level = self._augments.get(augment, 0)
 
             # Add to slots_used
             if (level > 0) and (level <= 4):
-                slots_used += sum(self.IB_AUGMENTATION_SLOT_CONSUMPTIONS[augment][i] for i in range(level))
+                slots_used +=  self.ib_slot_consumptions_cumulative[augment][level - 1]
                 # IMPORTANT: Need to remember that the slot consumptions list starts at level 1.
 
         # Now that we know how many slots we used, we take out the augments we can't appli
@@ -231,7 +233,7 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
         possible_augments = []
         assert (slots_unused >= 0) and (slots_used >= 0)
         if slots_unused > 0:
-            for (augment, slot_consumptions) in self.IB_AUGMENTATION_SLOT_CONSUMPTIONS.items():
+            for (augment, slot_consumptions) in self.IB_SLOT_CONSUMPTIONS.items():
                 next_level = self._augments.get(augment, 0) + 1
                 # IMPORTANT: For this next line, need to remember that the slot consumptions list starts at level 1.
                 if (next_level > 0) and (next_level <= 4) and (slot_consumptions[next_level - 1] <= slots_unused):
@@ -270,7 +272,7 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
         aug_used = 0
         for (augment, level) in self._augments.items():
             if level > 0:
-                aug_used += sum(self.IB_AUGMENTATION_SLOT_CONSUMPTIONS[augment][i] for i in range(level - 2))
+                aug_used += self.ib_slot_consumptions_cumulative[augment][level - 1]
                 # IMPORTANT: Need to remember that the slot consumptions list starts at level 1.
 
         ret = all(isinstance(k, IBWeaponAugmentType) and isinstance(v, int) for (k, v) in self._augments.items()) \
