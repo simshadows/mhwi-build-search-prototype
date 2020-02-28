@@ -83,8 +83,6 @@ def _obtain_charms_db():
 
 charms_db, charms_indexed_by_skill = _obtain_charms_db()
 
-print("\n".join(str(k) for (k, v) in charms_indexed_by_skill.items()))
-
 
 # You give it a CharmInfo object, it gives you back info about the max level of the charm.
 def calculate_skills_dict_from_charm(charm_info, level):

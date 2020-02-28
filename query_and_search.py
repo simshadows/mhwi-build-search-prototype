@@ -8,7 +8,7 @@ Author:   contact@simshadows.com
 This file contains various queries and search algorithms.
 """
 
-import sys
+import sys, time
 from copy import copy
 import multiprocessing as mp
 
@@ -516,6 +516,8 @@ def find_highest_efr_build():
         curr_progress_segment += 1
         print(f"[SEARCH PROGRESS: {curr_progress_segment * progress_segment_size * 100 :.2f}%]")
 
+    start_real_time = time.time()
+
     for weapon_id in weapon_ids:
         #update_and_print_progress()
         weapon = weapon_db[weapon_id]
@@ -543,6 +545,16 @@ def find_highest_efr_build():
                                         print_current_build()
             update_and_print_progress()
         #update_and_print_progress()
+
+    end_real_time = time.time()
+
+    real_time_minutes = int((end_real_time - start_real_time) // 60)
+    real_time_seconds = int((end_real_time - start_real_time) % 60)
+
+    print()
+    print(f"Search execution time (in real time): {real_time_minutes:02}:{real_time_seconds:02}")
+    print(f"({end_real_time - start_real_time} seconds)")
+    print()
 
     return
 

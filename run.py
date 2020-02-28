@@ -212,6 +212,7 @@ def run():
             lookup_command(weapon_name)
     else:
         raise ValueError("Needs more arguments. (Just check the code. I can't be assed writing documentation at this time.)")
+
     return 0
 
 
