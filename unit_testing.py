@@ -28,6 +28,7 @@ from database_armour      import (ArmourDiscriminator,
                                  ArmourVariant,
                                  ArmourSlot,
                                  armour_db,
+                                 _armour_piece_supercedes, # For testing.
                                  calculate_armour_contribution)
 from database_charms      import (charms_db,
                                  charms_indexed_by_skill,
@@ -38,9 +39,20 @@ from database_misc        import (POWERCHARM_ATTACK_POWER,
                                   POWERTALON_ATTACK_POWER)
 
 
-# Super-simple unit testing. Will probably switch to a testing framework if I have complex needs.
 def run_tests():
-    print("Running unit tests.\n")
+    print("Running unit tests.")
+
+    _run_tests_lookup()
+    _run_tests_armour_pruning()
+
+    print("\nUnit tests are all passed.")
+    print("\n==============================\n")
+    return
+
+
+# Super-simple unit testing. Will probably switch to a testing framework if I have complex needs.
+def _run_tests_lookup():
+    print()
 
     skills_dict = {} # Start with no skills
     skill_states_dict = {} # Start with no states
@@ -400,8 +412,66 @@ def run_tests():
 
     check_efr(507.47)
 
-    print("\nUnit tests are all passed.")
-    print("\n==============================\n")
+    return True
+
+
+def _run_tests_armour_pruning():
+    print()
+
+    def test_supercedes_common(gear_slot, p1_set_name, p1_discrim, p1_variant, p2_set_name, p2_discrim, p2_variant, p1_preferred):
+        gear_slot = ArmourSlot[gear_slot]
+        p1_discrim = ArmourDiscriminator[p1_discrim]
+        p2_discrim = ArmourDiscriminator[p2_discrim]
+        p1_variant = ArmourVariant[p1_variant]
+        p2_variant = ArmourVariant[p2_variant]
+
+        p1_set = armour_db[(p1_set_name, p1_discrim)]
+        p2_set = armour_db[(p2_set_name, p2_discrim)]
+
+        p1 = p1_set.variants[p1_variant][gear_slot]
+        p2 = p2_set.variants[p2_variant][gear_slot]
+
+        p1_set_bonus = p1_set.set_bonus
+        p2_set_bonus = p2_set.set_bonus
+        return _armour_piece_supercedes(p1, p1_set_bonus, p2, p2_set_bonus, p1_preferred)
+
+    def test_supercedes(*args):
+        result = test_supercedes_common(*args)
+        if not result:
+            raise ValueError("_armour_piece_supercedes() test failed. Arguments: " + str(args))
+        return
+
+    def test_not_supercedes(*args):
+        result = test_supercedes_common(*args)
+        if result:
+            raise ValueError("_armour_piece_supercedes() test failed. Arguments: " + str(args))
+        return
+
+    def test_not_supercedes_in_reverse(*args):
+        args = (args[0], args[4], args[5], args[6], args[1], args[2], args[3], args[7])
+        result = test_supercedes_common(*args)
+        if result:
+            raise ValueError("_armour_piece_supercedes() test failed. Arguments: " + str(args))
+        return
+
+    print("Checking that (head) Kaiser Beta always supercedes Kaiser Alpha.")
+    test_supercedes("HEAD", "Teostra", "HIGH_RANK", "HR_BETA", "Teostra", "HIGH_RANK", "HR_ALPHA", True)
+    test_supercedes("HEAD", "Teostra", "HIGH_RANK", "HR_BETA", "Teostra", "HIGH_RANK", "HR_ALPHA", False)
+    test_not_supercedes_in_reverse("HEAD", "Teostra", "HIGH_RANK", "HR_BETA", "Teostra", "HIGH_RANK", "HR_ALPHA", True)
+    test_not_supercedes_in_reverse("HEAD", "Teostra", "HIGH_RANK", "HR_BETA", "Teostra", "HIGH_RANK", "HR_ALPHA", False)
+
+    print("Checking that (head) Kaiser Beta+ always supercedes Kaiser Alpha.")
+    test_supercedes("HEAD", "Teostra", "MASTER_RANK", "MR_BETA_PLUS", "Teostra", "HIGH_RANK", "HR_ALPHA", True)
+    test_supercedes("HEAD", "Teostra", "MASTER_RANK", "MR_BETA_PLUS", "Teostra", "HIGH_RANK", "HR_ALPHA", False)
+    test_not_supercedes_in_reverse("HEAD", "Teostra", "MASTER_RANK", "MR_BETA_PLUS", "Teostra", "HIGH_RANK", "HR_ALPHA", True)
+    test_not_supercedes_in_reverse("HEAD", "Teostra", "MASTER_RANK", "MR_BETA_PLUS", "Teostra", "HIGH_RANK", "HR_ALPHA", False)
+
+    print("Checking that (head) Kaiser Beta+ never supercedes Kaiser Alpha.")
+    test_not_supercedes("HEAD", "Teostra", "MASTER_RANK", "MR_BETA_PLUS", "Teostra", "HIGH_RANK", "HR_GAMMA", True)
+    test_not_supercedes("HEAD", "Teostra", "MASTER_RANK", "MR_BETA_PLUS", "Teostra", "HIGH_RANK", "HR_GAMMA", False)
+    test_not_supercedes_in_reverse("HEAD", "Teostra", "MASTER_RANK", "MR_BETA_PLUS", "Teostra", "HIGH_RANK", "HR_GAMMA", True)
+    test_not_supercedes_in_reverse("HEAD", "Teostra", "MASTER_RANK", "MR_BETA_PLUS", "Teostra", "HIGH_RANK", "HR_GAMMA", False)
+
     return True
 
 

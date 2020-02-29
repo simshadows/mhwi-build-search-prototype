@@ -5,6 +5,7 @@ Author:   contact@simshadows.com
 This file provides the MHWI build optimizer script's armour database.
 """
 
+from copy import copy
 from collections import namedtuple, defaultdict
 from enum import Enum, auto
 
@@ -239,9 +240,9 @@ def _armour_piece_supercedes(p1, p1_set_bonus, p2, p2_set_bonus, p1_is_preferred
     # Stage 2: We simplify available information.
 
     # At worst, we put size-1 jewels in size-4 slots
-    p1_slots_underest = (p1_size1 + p1_size4, p1_size2, p1_size3)
+    p1_slots_underest = (p1_size1, p1_size2, p1_size3 + p1_size4)
     # At best, we can put the equivalent of two size-3 jewels into a size-4 slot
-    p2_slots_overest = (p2_size1, p2_size2, p2_size3 + (p1_size4 * 2)) 
+    p2_slots_overest = (p2_size1, p2_size2, p2_size3 + (p2_size4 * 2)) 
 
     all_skills = set(p1_skills) | set(p2_skills)
 
@@ -266,35 +267,62 @@ def _armour_piece_supercedes(p1, p1_set_bonus, p2, p2_set_bonus, p1_is_preferred
         slots_required_to_recreate_p2_unique_skills[size_required - 1] += level
 
     # Stage 3: We do the more complex processing.
-    
-    # (We could try being more algorithmic, but doing a cascade of if-statements will work for this small set of sizes.)
 
-    required = slots_required_to_recreate_p2_unique_skills
-    available = list(p1_slots_underest)
-    assert len(required) == 3
-    assert len(available) == 3
+    p2_required = slots_required_to_recreate_p2_unique_skills
+    p2_available = list(p2_slots_overest)
+    p1_available = list(p1_slots_underest)
 
-    if available[0] >= required[0]:
-        available[0] -= required[0]
-    else:
-        required[1] += required[0] - available[0]
-        available[0] = 0
-    # Don't care about required[0] anymore. Don't use required[0].
+    # Subtracts slots in b from slots in a.
+    # Effectively "a minus b".
+    # Returns None if a cannot be subtracted by b.
+    def subtract_slots(a, b):
+        assert len(a) == 3
+        assert len(b) == 3
 
-    if available[1] >= required[1]:
-        available[1] -= required[1]
-    else:
-        required[2] += required[1] - available[1]
-        available[1] = 0
-    # Don't care about required[1] anymore. Don't use required[1].
+        # (We could try being more algorithmic, but doing a cascade of if-statements will work for this small set of sizes.)
 
-    if available[2] >= required[2]:
-        available[2] -= required[2]
-    else:
-        return False # We return here since we know we don't have enough available decoration slots.
-    # Don't care about required[2] anymore. Don't use required[2].
+        a = copy(a)
+        b = copy(b)
 
-    if any(x > 0 for x in available):
+        if a[0] >= b[0]:
+            a[0] -= b[0]
+        else:
+            b[1] += b[0] - a[0]
+            a[0] = 0
+        # Don't care about b[0] anymore.
+
+        if a[1] >= b[1]:
+            a[1] -= b[1]
+        else:
+            b[2] += b[1] - a[1]
+            a[1] = 0
+        # Don't care about b[1] anymore.
+
+        if a[2] >= b[2]:
+            a[2] -= b[2]
+        else:
+            return None # We return here since we know we don't have enough p1_available decoration slots.
+        # Don't care about b[2] anymore.
+
+        return a
+
+    p1_initialy_has_decos = any(x > 0 for x in p1_available)
+
+    p1_available = subtract_slots(p1_available, p2_available)
+
+    p1_has_more_decos = any(x > 0 for x in p1_available) if (p1_available is not None) else NotImplemented
+
+    if p1_available is None:
+        return False # p1 cannot supercede p2 because p1 effectively has less slots than p2
+
+    p1_available = subtract_slots(p1_available, p2_required)
+
+    if p1_available is None:
+        return False # p1 cannot supercede p2 because p1 isn't guaranteed to be able to also recreate p2's skills.
+
+    p1_has_extra_slots = any(x > 0 for x in p1_available)
+
+    if p1_has_more_decos:
         return True # We can recreate the same skills with room to spare.
     elif len(skills_unique_to_p1) > 0:
         return True # We can recreate exactly the same skills, but also with additional skills.
@@ -302,7 +330,7 @@ def _armour_piece_supercedes(p1, p1_set_bonus, p2, p2_set_bonus, p1_is_preferred
     # Stage 4: What happens if we don't necessarily have room to spare?
 
     if p1_is_preferred:
-        return True
+        return True # p1 is higher in the sort order, so we'll allow it to supercede p2.
 
     return False
 
@@ -334,7 +362,7 @@ def _obtain_skillsonly_pruned_armour_db(original_easyiterate_armour_db):
 
             for (j, piece2) in enumerate(piece_list):
                 if piece1 is piece2:
-                    break
+                    continue
 
                 piece2_armour_set = armour_db[(piece2.set_name, piece2.discrim)]
                 piece2_set_bonus = piece2_armour_set.set_bonus
@@ -345,29 +373,58 @@ def _obtain_skillsonly_pruned_armour_db(original_easyiterate_armour_db):
                 assert isinstance(piece2_info, ArmourPieceInfo)
 
                 # We determine tie-breaker preference using sort order.
-                p1_is_preferred = (i > j)
+                p2_is_preferred = (j > i)
 
                 #piece1_supercedes_piece2 = _armour_piece_supercedes(piece1, piece1_set_bonus, piece2, piece2_set_bonus) 
                 piece2_supercedes_piece1 = _armour_piece_supercedes(piece2_info, piece2_set_bonus, piece1_info, \
-                                                                        piece1_set_bonus, p1_is_preferred) 
+                                                                        piece1_set_bonus, p2_is_preferred) 
+                #if piece2_supercedes_piece1:
+                #    print(f"       !!! {gear_slot.name} {piece2.set_name} {piece2.variant.name}  supercedes  " + \
+                #            f"{gear_slot.name} {piece1.set_name} {piece1.variant.name}")
+                #else:
+                #    print(f"           {gear_slot.name} {piece2.set_name} {piece2.variant.name}  does NOT supercede  " + \
+                #            f"{gear_slot.name} {piece1.set_name} {piece1.variant.name}")
+                
+                #print("ret true" if piece2_supercedes_piece1 else "ret false")
 
                 if piece2_supercedes_piece1:
                     piece1_is_never_superceded = False
-                    buf = []
-                    buf.append(gear_slot.name.ljust(6))
-                    buf.append(piece1.set_name.ljust(15))
-                    buf.append(piece1.discrim.name.ljust(12))
-                    buf.append(piece1.variant.value.ascii_postfix)
-                    buf = " ".join(buf)
-
-                    print(f"ARMOUR PIECE PRUNED: {buf}")
                     break
 
             if piece1_is_never_superceded:
                 best_pieces.append(piece1)
+                #######################################
+                buf = []
+                buf.append(gear_slot.name.ljust(6))
+                buf.append(piece1.set_name.ljust(15))
+                #buf.append(piece1.discrim.name.ljust(12))
+                buf.append(piece1.variant.value.ascii_postfix)
+                buf = " ".join(buf)
+                print(f"KEPT: {buf}")
+                #######################################
+            else:
+                #######################################
+                buf = []
+                buf.append(gear_slot.name.ljust(6))
+                buf.append(piece1.set_name.ljust(15))
+                #buf.append(piece1.discrim.name.ljust(12))
+                buf.append(piece1.variant.value.ascii_postfix)
+                buf = " ".join(buf)
+                print(f"                                               PRUNED: {buf}")
+                #######################################
+
+        print()
+        print("=============================")
+        print()
 
         intermediate[gear_slot] = best_pieces
 
+    total_kept = sum(len(x) for (_, x) in intermediate.items())
+    total_original = sum(len(x) for (_, x) in original_easyiterate_armour_db.items())
+
+    print()
+    print("kept: " + str(total_kept))
+    print("pruned: " + str(total_original - total_kept))
     print()
 
     return intermediate

@@ -394,6 +394,22 @@ def find_highest_efr_build():
     waist_list = skillsonly_pruned_armour[ArmourSlot.WAIST]
     legs_list  = skillsonly_pruned_armour[ArmourSlot.LEGS]
 
+    #print()
+    #print("Armour we kept:")
+    #print()
+    #for (gear_slot, pieces) in skillsonly_pruned_armour.items():
+    #    for piece in pieces:
+    #        buf = []
+    #        buf.append(gear_slot.name.ljust(6))
+    #        buf.append(piece.set_name.ljust(15))
+    #        buf.append(piece.discrim.name.ljust(12))
+    #        buf.append(piece.variant.value.ascii_postfix)
+    #        buf = " ".join(buf)
+    #        print(f"ARMOUR PIECE KEPT: {buf}")
+    #print()
+    #print("kept: " + str(sum(len(x) for (_, x) in skillsonly_pruned_armour.items())))
+    #print()
+
     # IMPORTANT: The commented section below is useful as a rough check that the pruned
     #            gear can still produce the same EFRs as though the armour hasn't been pruned.
     #head_list  = easyiterate_armour[ArmourSlot.HEAD]
