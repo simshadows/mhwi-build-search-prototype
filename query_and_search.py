@@ -31,6 +31,8 @@ from database_armour      import (ArmourDiscriminator,
                                  ArmourVariant,
                                  ArmourSlot,
                                  armour_db,
+                                 easyiterate_armour,
+                                 skillsonly_pruned_armour,
                                  calculate_armour_contribution)
 from database_charms      import (charms_db,
                                  charms_indexed_by_skill,
@@ -386,18 +388,25 @@ def find_highest_efr_build():
 
     weapon_ids = [weapon_id for (weapon_id, weapon_info) in weapon_db.items() if weapon_info.type is desired_weapon]
 
-    armour_pieces = defaultdict(list)
-    for ((set_name, discrim), set_info) in armour_db.items():
-        for (variant, variant_pieces) in set_info.variants.items():
-            # We assume that within variant_pieces, if we don't have the full set of 5 slots,
-            # the missing slots are just missing
-            for (gear_slot, piece) in variant_pieces.items():
-                armour_pieces[gear_slot].append((set_name, discrim, variant))
-    head_list  = armour_pieces[ArmourSlot.HEAD]
-    chest_list = armour_pieces[ArmourSlot.CHEST]
-    arms_list  = armour_pieces[ArmourSlot.ARMS]
-    waist_list = armour_pieces[ArmourSlot.WAIST]
-    legs_list  = armour_pieces[ArmourSlot.LEGS]
+    head_list  = skillsonly_pruned_armour[ArmourSlot.HEAD]
+    chest_list = skillsonly_pruned_armour[ArmourSlot.CHEST]
+    arms_list  = skillsonly_pruned_armour[ArmourSlot.ARMS]
+    waist_list = skillsonly_pruned_armour[ArmourSlot.WAIST]
+    legs_list  = skillsonly_pruned_armour[ArmourSlot.LEGS]
+
+    # IMPORTANT: The commented section below is useful as a rough check that the pruned
+    #            gear can still produce the same EFRs as though the armour hasn't been pruned.
+    #head_list  = easyiterate_armour[ArmourSlot.HEAD]
+    #chest_list = easyiterate_armour[ArmourSlot.CHEST]
+    #arms_list  = easyiterate_armour[ArmourSlot.ARMS]
+    #waist_list = easyiterate_armour[ArmourSlot.WAIST]
+    #legs_list  = easyiterate_armour[ArmourSlot.LEGS]
+
+    assert len(head_list) > 0
+    assert len(chest_list) > 0
+    assert len(arms_list) > 0
+    assert len(waist_list) > 0
+    assert len(legs_list) > 0
 
     charm_ids = set()
     for skill in efr_skills:

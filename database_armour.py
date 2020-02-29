@@ -9,6 +9,7 @@ from collections import namedtuple, defaultdict
 from enum import Enum, auto
 
 from database_skills import Skill, SetBonus
+from database_decorations import skill_to_simple_deco_size
 from enums import Tier
 from utils import json_read
 
@@ -188,7 +189,201 @@ def _obtain_armour_db():
     return armour_db_intermediate
 
 
+def _obtain_easyiterate_armour_db(original_armour_db):
+    intermediate = {slot: [] for slot in ArmourSlot}
+
+    for ((set_name, discrim), set_info) in original_armour_db.items():
+        for (variant, variant_pieces) in set_info.variants.items():
+            for (gear_slot, piece) in variant_pieces.items():
+                intermediate[gear_slot].append(ArmourEasyIterateInfo(set_name=set_name, discrim=discrim, variant=variant))
+    return dict(intermediate) # TODO: We should make it so we just start off with a regular dictionary from the start.
+
+
+
+# Returns if p1 supercedes p2.
+# What this means is that p1 supercedes p2 if it is guaranteed that every possible set of skills, levels, and
+# the set bonus of p2 can be recreated by p1 with more flexibility, and/or more skills.
+#
+# The code for this function is (particularly) disgusting. We should clean it up when possible.
+#
+# You can technically just make this function return False and the program will still work, albeit super-slow.
+# This function only determines if it knows *for sure* if p1 supercedes p2.
+# There may be cases where p1 can actually supercede p2, but the current version of this function doesn't
+# check for the specific conditions allowing p1 to supercede p2.
+def _armour_piece_supercedes(p1, p1_set_bonus, p2, p2_set_bonus, p1_is_preferred):
+    assert isinstance(p1, ArmourPieceInfo)
+    assert isinstance(p2, ArmourPieceInfo)
+    assert isinstance(p1_set_bonus, SetBonus) or (p1_set_bonus is None)
+    assert isinstance(p2_set_bonus, SetBonus) or (p2_set_bonus is None)
+    assert isinstance(p1_is_preferred, bool)
+
+    if (p2_set_bonus is not None) and (p1_set_bonus is not p2_set_bonus):
+        # If p2 provides a set bonus that p1 doesn't, then p1 can't supercede it.
+        return False
+
+    # Stage 1: We gather available information.
+
+    p1_size1 = sum(1 for slot_size in p1.decoration_slots if slot_size == 1)
+    p1_size2 = sum(1 for slot_size in p1.decoration_slots if slot_size == 2)
+    p1_size3 = sum(1 for slot_size in p1.decoration_slots if slot_size == 3)
+    p1_size4 = sum(1 for slot_size in p1.decoration_slots if slot_size == 4)
+
+    p2_size1 = sum(1 for slot_size in p2.decoration_slots if slot_size == 1)
+    p2_size2 = sum(1 for slot_size in p2.decoration_slots if slot_size == 2)
+    p2_size3 = sum(1 for slot_size in p2.decoration_slots if slot_size == 3)
+    p2_size4 = sum(1 for slot_size in p2.decoration_slots if slot_size == 4)
+
+    p1_skills = p1.skills
+    p2_skills = p2.skills
+
+    # Stage 2: We simplify available information.
+
+    # At worst, we put size-1 jewels in size-4 slots
+    p1_slots_underest = (p1_size1 + p1_size4, p1_size2, p1_size3)
+    # At best, we can put the equivalent of two size-3 jewels into a size-4 slot
+    p2_slots_overest = (p2_size1, p2_size2, p2_size3 + (p1_size4 * 2)) 
+
+    all_skills = set(p1_skills) | set(p2_skills)
+
+    skills_unique_to_p1 = {}
+    skills_unique_to_p2 = {}
+    for skill in all_skills:
+        p1_level = p1_skills.get(skill, 0)
+        p2_level = p2_skills.get(skill, 0)
+
+        if p1_level - p2_level > 0:
+            skills_unique_to_p1[skill] = p1_level - p2_level
+        elif p2_level - p1_level > 0:
+            skills_unique_to_p2[skill] = p2_level - p1_level
+        else:
+            assert p1_level - p2_level == 0
+    
+    slots_required_to_recreate_p2_unique_skills = [0, 0, 0]
+    for (skill, level) in skills_unique_to_p2.items():
+        if skill not in skill_to_simple_deco_size:
+            return False # We return here since we know p2 has unique skills that don't have decorations.
+        size_required = skill_to_simple_deco_size[skill]
+        slots_required_to_recreate_p2_unique_skills[size_required - 1] += level
+
+    # Stage 3: We do the more complex processing.
+    
+    # (We could try being more algorithmic, but doing a cascade of if-statements will work for this small set of sizes.)
+
+    required = slots_required_to_recreate_p2_unique_skills
+    available = list(p1_slots_underest)
+    assert len(required) == 3
+    assert len(available) == 3
+
+    if available[0] >= required[0]:
+        available[0] -= required[0]
+    else:
+        required[1] += required[0] - available[0]
+        available[0] = 0
+    # Don't care about required[0] anymore. Don't use required[0].
+
+    if available[1] >= required[1]:
+        available[1] -= required[1]
+    else:
+        required[2] += required[1] - available[1]
+        available[1] = 0
+    # Don't care about required[1] anymore. Don't use required[1].
+
+    if available[2] >= required[2]:
+        available[2] -= required[2]
+    else:
+        return False # We return here since we know we don't have enough available decoration slots.
+    # Don't care about required[2] anymore. Don't use required[2].
+
+    if any(x > 0 for x in available):
+        return True # We can recreate the same skills with room to spare.
+    elif len(skills_unique_to_p1) > 0:
+        return True # We can recreate exactly the same skills, but also with additional skills.
+
+    # Stage 4: What happens if we don't necessarily have room to spare?
+
+    if p1_is_preferred:
+        return True
+
+    return False
+
+
+def _obtain_skillsonly_pruned_armour_db(original_easyiterate_armour_db):
+
+    print()
+    print("======= Armour Pruning =======")
+    print()
+
+    intermediate = {}
+    for (gear_slot, piece_list) in original_easyiterate_armour_db.items():
+
+        # We consider set bonuses to make certain pieces worth it.
+        best_pieces = [] # [(set_name, discriminator, variant)]
+
+        # This loop is a mostly-unnecessary O(n^2) for n pieces in the list.
+        # I have a very good feeling this can be improved on later if needed. Just keeping things simple for now.
+        for (i, piece1) in enumerate(piece_list):
+            piece1_armour_set = armour_db[(piece1.set_name, piece1.discrim)]
+            piece1_set_bonus = piece1_armour_set.set_bonus
+            piece1_info = piece1_armour_set.variants[piece1.variant][gear_slot]
+
+            assert isinstance(piece1_armour_set, ArmourSetInfo)
+            assert isinstance(piece1_set_bonus, SetBonus) or (piece1_set_bonus is None)
+            assert isinstance(piece1_info, ArmourPieceInfo)
+
+            piece1_is_never_superceded = True
+
+            for (j, piece2) in enumerate(piece_list):
+                if piece1 is piece2:
+                    break
+
+                piece2_armour_set = armour_db[(piece2.set_name, piece2.discrim)]
+                piece2_set_bonus = piece2_armour_set.set_bonus
+                piece2_info = piece2_armour_set.variants[piece2.variant][gear_slot]
+
+                assert isinstance(piece2_armour_set, ArmourSetInfo)
+                assert isinstance(piece2_set_bonus, SetBonus) or (piece2_set_bonus is None)
+                assert isinstance(piece2_info, ArmourPieceInfo)
+
+                # We determine tie-breaker preference using sort order.
+                p1_is_preferred = (i > j)
+
+                #piece1_supercedes_piece2 = _armour_piece_supercedes(piece1, piece1_set_bonus, piece2, piece2_set_bonus) 
+                piece2_supercedes_piece1 = _armour_piece_supercedes(piece2_info, piece2_set_bonus, piece1_info, \
+                                                                        piece1_set_bonus, p1_is_preferred) 
+
+                if piece2_supercedes_piece1:
+                    piece1_is_never_superceded = False
+                    buf = []
+                    buf.append(gear_slot.name.ljust(6))
+                    buf.append(piece1.set_name.ljust(15))
+                    buf.append(piece1.discrim.name.ljust(12))
+                    buf.append(piece1.variant.value.ascii_postfix)
+                    buf = " ".join(buf)
+
+                    print(f"ARMOUR PIECE PRUNED: {buf}")
+                    break
+
+            if piece1_is_never_superceded:
+                best_pieces.append(piece1)
+
+        intermediate[gear_slot] = best_pieces
+
+    print()
+
+    return intermediate
+
+
 armour_db = _obtain_armour_db()
+
+# This will contain a more iterator-friendly version, at the cost of indexability.
+# (armour_db will be used for indexing.)
+ArmourEasyIterateInfo = namedtuple("ArmourEasyIterateInfo", ["set_name", "discrim", "variant"])
+easyiterate_armour = _obtain_easyiterate_armour_db(armour_db)
+
+# This will prune out pieces that can be recreated better or more flexibly by another piece.
+# Importantly, the data structure is the same as easyiterate_armour.
+# This will make this practically interchangable with easyiterate_armour if all you care about are skills.
+skillsonly_pruned_armour = _obtain_skillsonly_pruned_armour_db(easyiterate_armour)
 
 
 # calculate_armour_contribution() input looks like this:

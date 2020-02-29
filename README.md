@@ -22,6 +22,10 @@ This project is written for Python 3.8.
 
 8) Create a framework that can be used to help build other build optimization tools.
 
+## TODOs
+
+1) I'll need to be confident that the armour pruning doesn't throw away armour pieces that are still useful.
+
 ## License
 
 ```

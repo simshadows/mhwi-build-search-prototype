@@ -152,7 +152,27 @@ def _obtain_decorations_enum():
 
     return Enum("Decoration", decos_intermediate)
 
+
+def _get_index_for_skill_to_size():
+    intermediate_dict = {}
+    for deco in Decoration:
+        if len(deco.value.skills_dict) == 1:
+            for (skill, level) in deco.value.skills_dict.items():
+                pass
+            if level == 1:
+                if skill in intermediate_dict:
+                    raise ValueError("Found a duplicate skill for the skill_to_simple_deco_size index.")
+                intermediate_dict[skill] = deco.value.slot_size
+    if len(intermediate_dict) == 0:
+        raise RuntimeError("We should have at least one item for the index.")
+    return intermediate_dict
+
+
+# This provides all decorations
 Decoration = _obtain_decorations_enum()
+
+# This provides a useful index for finding a skill's associated single-skill decoration's size.
+skill_to_simple_deco_size = _get_index_for_skill_to_size()
 
 
 def calculate_decorations_skills_contribution(decorations_counter):
