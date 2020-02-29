@@ -33,6 +33,7 @@ from database_armour      import (ArmourDiscriminator,
                                  armour_db,
                                  easyiterate_armour,
                                  skillsonly_pruned_armour,
+                                 prune_easyiterate_armour_db,
                                  calculate_armour_contribution)
 from database_charms      import (charms_db,
                                  charms_indexed_by_skill,
@@ -365,16 +366,16 @@ def find_highest_efr_build():
 
     desired_weapon = WeaponClass.GREATSWORD
 
-    efr_skills = [
-        #Skill.AGITATOR,
-        #Skill.ATTACK_BOOST,
+    efr_skills = {
+        Skill.AGITATOR,
+        Skill.ATTACK_BOOST,
         Skill.CRITICAL_BOOST,
-        #Skill.CRITICAL_EYE,
-        #Skill.NON_ELEMENTAL_BOOST,
-        #Skill.HANDICRAFT,
-        #Skill.PEAK_PERFORMANCE,
-        #Skill.WEAKNESS_EXPLOIT
-    ]
+        Skill.CRITICAL_EYE,
+        Skill.NON_ELEMENTAL_BOOST,
+        Skill.HANDICRAFT,
+        Skill.PEAK_PERFORMANCE,
+        Skill.WEAKNESS_EXPLOIT
+    }
 
     full_skill_states = {
         Skill.AGITATOR: 1,
@@ -388,27 +389,13 @@ def find_highest_efr_build():
 
     weapon_ids = [weapon_id for (weapon_id, weapon_info) in weapon_db.items() if weapon_info.type is desired_weapon]
 
-    head_list  = skillsonly_pruned_armour[ArmourSlot.HEAD]
-    chest_list = skillsonly_pruned_armour[ArmourSlot.CHEST]
-    arms_list  = skillsonly_pruned_armour[ArmourSlot.ARMS]
-    waist_list = skillsonly_pruned_armour[ArmourSlot.WAIST]
-    legs_list  = skillsonly_pruned_armour[ArmourSlot.LEGS]
+    pruned_armour_db = prune_easyiterate_armour_db(skillsonly_pruned_armour, skill_subset=efr_skills)
 
-    #print()
-    #print("Armour we kept:")
-    #print()
-    #for (gear_slot, pieces) in skillsonly_pruned_armour.items():
-    #    for piece in pieces:
-    #        buf = []
-    #        buf.append(gear_slot.name.ljust(6))
-    #        buf.append(piece.set_name.ljust(15))
-    #        buf.append(piece.discrim.name.ljust(12))
-    #        buf.append(piece.variant.value.ascii_postfix)
-    #        buf = " ".join(buf)
-    #        print(f"ARMOUR PIECE KEPT: {buf}")
-    #print()
-    #print("kept: " + str(sum(len(x) for (_, x) in skillsonly_pruned_armour.items())))
-    #print()
+    head_list  = pruned_armour_db[ArmourSlot.HEAD]
+    chest_list = pruned_armour_db[ArmourSlot.CHEST]
+    arms_list  = pruned_armour_db[ArmourSlot.ARMS]
+    waist_list = pruned_armour_db[ArmourSlot.WAIST]
+    legs_list  = pruned_armour_db[ArmourSlot.LEGS]
 
     # IMPORTANT: The commented section below is useful as a rough check that the pruned
     #            gear can still produce the same EFRs as though the armour hasn't been pruned.

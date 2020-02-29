@@ -211,12 +211,13 @@ def _obtain_easyiterate_armour_db(original_armour_db):
 # This function only determines if it knows *for sure* if p1 supercedes p2.
 # There may be cases where p1 can actually supercede p2, but the current version of this function doesn't
 # check for the specific conditions allowing p1 to supercede p2.
-def _armour_piece_supercedes(p1, p1_set_bonus, p2, p2_set_bonus, p1_is_preferred):
+def _armour_piece_supercedes(p1, p1_set_bonus, p2, p2_set_bonus, p1_is_preferred, skill_subset=None):
     assert isinstance(p1, ArmourPieceInfo)
     assert isinstance(p2, ArmourPieceInfo)
     assert isinstance(p1_set_bonus, SetBonus) or (p1_set_bonus is None)
     assert isinstance(p2_set_bonus, SetBonus) or (p2_set_bonus is None)
     assert isinstance(p1_is_preferred, bool)
+    assert (isinstance(skill_subset, set) and all(isinstance(x, Skill) for x in skill_subset)) or (skill_subset is None)
 
     if (p2_set_bonus is not None) and (p1_set_bonus is not p2_set_bonus):
         # If p2 provides a set bonus that p1 doesn't, then p1 can't supercede it.
@@ -245,6 +246,8 @@ def _armour_piece_supercedes(p1, p1_set_bonus, p2, p2_set_bonus, p1_is_preferred
     p2_slots_overest = (p2_size1, p2_size2, p2_size3 + (p2_size4 * 2)) 
 
     all_skills = set(p1_skills) | set(p2_skills)
+    if skill_subset is not None:
+        all_skills = all_skills & skill_subset # We ignore anything not in the subset
 
     skills_unique_to_p1 = {}
     skills_unique_to_p2 = {}
@@ -335,7 +338,7 @@ def _armour_piece_supercedes(p1, p1_set_bonus, p2, p2_set_bonus, p1_is_preferred
     return False
 
 
-def _obtain_skillsonly_pruned_armour_db(original_easyiterate_armour_db):
+def prune_easyiterate_armour_db(original_easyiterate_armour_db, skill_subset=None):
 
     print()
     print("======= Armour Pruning =======")
@@ -377,7 +380,7 @@ def _obtain_skillsonly_pruned_armour_db(original_easyiterate_armour_db):
 
                 #piece1_supercedes_piece2 = _armour_piece_supercedes(piece1, piece1_set_bonus, piece2, piece2_set_bonus) 
                 piece2_supercedes_piece1 = _armour_piece_supercedes(piece2_info, piece2_set_bonus, piece1_info, \
-                                                                        piece1_set_bonus, p2_is_preferred) 
+                                                        piece1_set_bonus, p2_is_preferred, skill_subset=skill_subset) 
                 #if piece2_supercedes_piece1:
                 #    print(f"       !!! {gear_slot.name} {piece2.set_name} {piece2.variant.name}  supercedes  " + \
                 #            f"{gear_slot.name} {piece1.set_name} {piece1.variant.name}")
@@ -440,7 +443,7 @@ easyiterate_armour = _obtain_easyiterate_armour_db(armour_db)
 # This will prune out pieces that can be recreated better or more flexibly by another piece.
 # Importantly, the data structure is the same as easyiterate_armour.
 # This will make this practically interchangable with easyiterate_armour if all you care about are skills.
-skillsonly_pruned_armour = _obtain_skillsonly_pruned_armour_db(easyiterate_armour)
+skillsonly_pruned_armour = prune_easyiterate_armour_db(easyiterate_armour) # We don't need this right now.
 
 
 # calculate_armour_contribution() input looks like this:
