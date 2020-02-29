@@ -341,6 +341,7 @@ def _armour_piece_supercedes(p1, p1_set_bonus, p2, p2_set_bonus, p1_is_preferred
 def prune_easyiterate_armour_db(original_easyiterate_armour_db, skill_subset=None):
 
     print()
+    print()
     print("======= Armour Pruning =======")
     print()
 
@@ -425,9 +426,11 @@ def prune_easyiterate_armour_db(original_easyiterate_armour_db, skill_subset=Non
     total_kept = sum(len(x) for (_, x) in intermediate.items())
     total_original = sum(len(x) for (_, x) in original_easyiterate_armour_db.items())
 
-    print()
     print("kept: " + str(total_kept))
     print("pruned: " + str(total_original - total_kept))
+    print()
+    print("=============================")
+    print()
     print()
 
     return intermediate

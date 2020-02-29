@@ -217,6 +217,17 @@ def _obtain_skills_enum():
 
 Skill, SetBonus = _obtain_skills_enum()
 
+skills_with_implemented_features = {
+        Skill.AGITATOR,
+        Skill.ATTACK_BOOST,
+        Skill.CRITICAL_BOOST,
+        Skill.CRITICAL_EYE,
+        Skill.NON_ELEMENTAL_BOOST,
+        Skill.HANDICRAFT,
+        Skill.PEAK_PERFORMANCE,
+        Skill.WEAKNESS_EXPLOIT
+    }
+
 
 # This will take a dict like {Skill.AGITATOR: 10, ...} and clip it down to the maximum.
 # This also returns a defaultdict with default value of zero.

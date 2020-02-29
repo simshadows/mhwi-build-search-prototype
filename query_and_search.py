@@ -16,6 +16,7 @@ from collections import namedtuple, defaultdict, Counter
 
 from database_skills      import (RAW_BLUNDER_MULTIPLIER,
                                  Skill,
+                                 skills_with_implemented_features,
                                  clipped_skills_defaultdict,
                                  calculate_set_bonus_skills,
                                  calculate_skills_contribution)
@@ -39,6 +40,7 @@ from database_charms      import (charms_db,
                                  charms_indexed_by_skill,
                                  calculate_skills_dict_from_charm)
 from database_decorations import (Decoration,
+                                 get_pruned_deco_set,
                                  calculate_decorations_skills_contribution)
 from database_misc        import (POWERCHARM_ATTACK_POWER,
                                   POWERTALON_ATTACK_POWER)
@@ -47,6 +49,17 @@ from database_misc        import (POWERCHARM_ATTACK_POWER,
 # Corresponds to each level from red through to purple, in increasing-modifier order.
 SHARPNESS_LEVEL_NAMES   = ("Red", "Orange", "Yellow", "Green", "Blue", "White", "Purple")
 RAW_SHARPNESS_MODIFIERS = (0.5,   0.75,     1.0,      1.05,    1.2,    1.32,    1.39    )
+
+
+def calculate_deco_slots_from_gear(weapon, armour_dict, weapon_augments_config):
+    # assert isinstance(weapon, namedtuple) # TODO: Implement a proper assert here
+    assert isinstance(armour_dict, dict)
+    assert isinstance(weapon_augments_config, list)
+
+    armour_contribution = calculate_armour_contribution(armour_dict)
+    slots_available_counter = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
+    assert all((slot_size > 0) and (slot_size <= 4) for (slot_size, num) in slots_available_counter.items())
+    return slots_available_counter
 
 
 # Returns both the values of the new sharpness bar, and the highest sharpness level.
@@ -358,6 +371,19 @@ def lookup_from_gear(weapon_id, armour_dict, charm_id, decorations_list_or_dict,
     return transform_results_recursively(intermediate_results)
 
 
+def _generate_deco_lists(slots_available_counter, decos_dict):
+    assert isinstance(slots_available_counter, dict)
+    assert isinstance(decos_dict, dict)
+    # assert all(x in slots_available_counter for x in [1, 2, 3, 4]) # This isn't enforced anymore.
+    # assert all(x in decos_dict for x in [1, 2, 3, 4]) # This isn't enforced anymore.
+    assert len(slots_available_counter) <= 4
+    assert len(decos_dict) <= 4
+
+    # TODO: Implement this.
+
+    return [[]]
+
+
 def find_highest_efr_build():
 
     ##############################
@@ -366,16 +392,7 @@ def find_highest_efr_build():
 
     desired_weapon = WeaponClass.GREATSWORD
 
-    efr_skills = {
-        Skill.AGITATOR,
-        Skill.ATTACK_BOOST,
-        Skill.CRITICAL_BOOST,
-        Skill.CRITICAL_EYE,
-        Skill.NON_ELEMENTAL_BOOST,
-        Skill.HANDICRAFT,
-        Skill.PEAK_PERFORMANCE,
-        Skill.WEAKNESS_EXPLOIT
-    }
+    efr_skills = skills_with_implemented_features 
 
     full_skill_states = {
         Skill.AGITATOR: 1,
@@ -420,15 +437,16 @@ def find_highest_efr_build():
         charm_ids = [None]
     else:
         charm_ids = list(charm_ids)
-    #print(charm_ids)
 
-    decorations = set()
-    for deco in Decoration:
-        for skill in efr_skills:
-            if skill in deco.value.skills_dict:
-                decorations.add(deco)
-    decorations = list(decorations) # More efficient for later stages
+    decorations = get_pruned_deco_set(efr_skills, bonus_skills=[Skill.FOCUS])
 
+    decos_dict = {
+            1: [deco for deco in decorations if deco.value.slot_size == 1],
+            2: [deco for deco in decorations if deco.value.slot_size == 2],
+            3: [deco for deco in decorations if deco.value.slot_size == 3],
+            4: [deco for deco in decorations if deco.value.slot_size == 4],
+        }
+    assert len(decos_dict[1]) + len(decos_dict[2]) + len(decos_dict[3]) + len(decos_dict[4]) == len(decorations)
 
     ####################
     # STAGE 3: Search! #
@@ -478,7 +496,7 @@ def find_highest_efr_build():
         print("   " + charm_id)
         for (k, v) in curr_armour.items():
             print("   " + k.name + " : " + v[0] + " " + v[2].name)
-        for (augment, level) in weapon_augment_config:
+        for (augment, level) in weapon_augments_config:
             print(f"   {augment.name} {level}")
         if weapon_upgrade_config is not None:
             for (stage, upgrade) in enumerate(weapon_upgrade_config):
@@ -499,28 +517,34 @@ def find_highest_efr_build():
         #update_and_print_progress()
         weapon = weapon_db[weapon_id]
         for head in head_list: # More predictable size for update_and_print_progress()
-            for weapon_augment_config in WeaponAugmentTracker.get_instance(weapon).get_maximized_configs(): # Less predictable
-                for weapon_upgrade_config in WeaponUpgradeTracker.get_instance(weapon).get_maximized_configs(): # Less predictable
-                    for chest in chest_list:
-                        for arms in arms_list:
-                            for waist in waist_list:
-                                for legs in legs_list:
-                                    for charm_id in charm_ids:
-                                        curr_decos = {}
-                                        #curr_skill_states = {}
-                                        curr_armour = {
-                                            ArmourSlot.HEAD:  head,
-                                            ArmourSlot.CHEST: chest,
-                                            ArmourSlot.ARMS:  arms,
-                                            ArmourSlot.WAIST: waist,
-                                            ArmourSlot.LEGS:  legs,
-                                        }
-                                        results = lookup_from_gear(weapon_id, curr_armour, charm_id, curr_decos, \
-                                                        full_skill_states, weapon_augment_config, weapon_upgrade_config)
+            for weapon_augments_config in WeaponAugmentTracker.get_instance(weapon).get_maximized_configs(): # Less predictable
+                for chest in chest_list:
+                    for arms in arms_list:
+                        for waist in waist_list:
+                            for legs in legs_list:
 
-                                        if results.efr > best_efr:
-                                            best_efr = results.efr
-                                            print_current_build()
+                                curr_armour = {
+                                    ArmourSlot.HEAD:  head,
+                                    ArmourSlot.CHEST: chest,
+                                    ArmourSlot.ARMS:  arms,
+                                    ArmourSlot.WAIST: waist,
+                                    ArmourSlot.LEGS:  legs,
+                                }
+
+                                deco_slots = calculate_deco_slots_from_gear(weapon, curr_armour, weapon_augments_config)
+                                deco_lists = _generate_deco_lists(deco_slots, decos_dict)
+                                assert len(deco_lists) > 0
+
+                                for weapon_upgrade_config in WeaponUpgradeTracker.get_instance(weapon).get_maximized_configs(): # Less predictable
+                                    for deco_list in deco_lists:
+                                        for charm_id in charm_ids:
+                                            curr_decos = {}
+                                            results = lookup_from_gear(weapon_id, curr_armour, charm_id, deco_list, \
+                                                            full_skill_states, weapon_augments_config, weapon_upgrade_config)
+
+                                            if results.efr > best_efr:
+                                                best_efr = results.efr
+                                                print_current_build()
             update_and_print_progress()
         #update_and_print_progress()
 
