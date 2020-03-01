@@ -9,6 +9,7 @@ This file contains various queries and search algorithms.
 """
 
 import sys, time
+from math import ceil
 from copy import copy
 import multiprocessing as mp
 
@@ -371,17 +372,73 @@ def lookup_from_gear(weapon_id, armour_dict, charm_id, decorations_list_or_dict,
     return transform_results_recursively(intermediate_results)
 
 
-def _generate_deco_lists(slots_available_counter, decos_dict):
+def _generate_deco_dicts(slots_available_counter, all_possible_decos):
     assert isinstance(slots_available_counter, dict)
-    assert isinstance(decos_dict, dict)
+    assert isinstance(all_possible_decos, list)
     # assert all(x in slots_available_counter for x in [1, 2, 3, 4]) # This isn't enforced anymore.
-    # assert all(x in decos_dict for x in [1, 2, 3, 4]) # This isn't enforced anymore.
+    # assert all(x in all_possible_decos for x in [1, 2, 3, 4]) # This isn't enforced anymore.
     assert len(slots_available_counter) <= 4
-    assert len(decos_dict) <= 4
+    assert len(all_possible_decos) > 0
 
-    # TODO: Implement this.
+    # TODO: We should turn it into a list before even passing it into the function.
+    initial_slots_available_list = list(sorted(slots_available_counter.elements()))
+    assert initial_slots_available_list[0] <= initial_slots_available_list[-1] # Quick sanity check on order.
 
-    return [[]]
+    intermediate = [({}, initial_slots_available_list)]
+
+    for deco in all_possible_decos:
+        #print(deco.value.name)
+        next_intermediate = []
+        deco_size = deco.value.slot_size
+        deco_limit = int(max(ceil(skill.value.limit / level) for (skill, level) in deco.value.skills_dict.items()))
+
+        # TODO: This algorithm is probably nowhere near as efficient as it could be.
+        #       Try to rewrite it with a better algorithm :)
+        for (trial_deco_dict, trial_slots_available) in intermediate:
+            assert deco not in trial_deco_dict
+            assert isinstance(trial_deco_dict, dict)
+
+            trial_deco_dict = copy(trial_deco_dict)
+            trial_slots_available = copy(trial_slots_available) # TODO: Consider not copying. Don't need to.
+
+            # First we "add zero"
+
+            next_intermediate.append((copy(trial_deco_dict), copy(trial_slots_available)))
+
+            # Now, we add the deco incrementally.
+
+            for num_to_add in range(deco_limit + 1):
+
+                trial_deco_dict2 = copy(trial_deco_dict)
+                trial_slots_available2 = copy(trial_slots_available)
+
+                assert isinstance(trial_deco_dict, dict)
+
+                trial_deco_dict2[deco] = num_to_add
+
+                new_trial_slots_available = []
+                while (num_to_add > 0) and (len(trial_slots_available2) > 0):
+                    candidate_slot_size = trial_slots_available2.pop(0)
+                    if candidate_slot_size >= deco_size:
+                        num_to_add -= 1
+                    else:
+                        new_trial_slots_available.append(candidate_slot_size)
+
+                if num_to_add == 0:
+                    new_trial_slots_available += trial_slots_available2
+                    assert len(new_trial_slots_available) == len(trial_slots_available) - trial_deco_dict2[deco]
+                    next_intermediate.append((trial_deco_dict2, new_trial_slots_available))
+
+        assert len(next_intermediate) > 0
+        intermediate = next_intermediate
+
+        #print("          deco limit = " + str(deco_limit))
+        #print("                    deco combos: " + str(len(intermediate)))
+
+        #if len(intermediate) < 300:
+        #    print("\n".join(" ".join(y.name + " " + str(z) for (y,z) in x[0].items()) for x in intermediate))
+
+    return [x[0] for x in intermediate]
 
 
 def find_highest_efr_build():
@@ -399,6 +456,16 @@ def find_highest_efr_build():
         Skill.PEAK_PERFORMANCE: 1,
         Skill.WEAKNESS_EXPLOIT: 2,
     }
+
+    decoration_skills = {
+        Skill.CRITICAL_EYE,
+        Skill.WEAKNESS_EXPLOIT,
+    }
+
+    decorations_test_subset = [
+        Decoration.TENDERIZER,
+        Decoration.EXPERT,
+    ]
 
     ############################
     # STAGE 2: Component Lists #
@@ -438,15 +505,17 @@ def find_highest_efr_build():
     else:
         charm_ids = list(charm_ids)
 
-    decorations = get_pruned_deco_set(efr_skills, bonus_skills=[Skill.FOCUS])
+    #decorations = list(get_pruned_deco_set(decoration_skills, bonus_skills=[Skill.FOCUS]))
+    decorations = decorations_test_subset
 
-    decos_dict = {
-            1: [deco for deco in decorations if deco.value.slot_size == 1],
-            2: [deco for deco in decorations if deco.value.slot_size == 2],
-            3: [deco for deco in decorations if deco.value.slot_size == 3],
-            4: [deco for deco in decorations if deco.value.slot_size == 4],
-        }
-    assert len(decos_dict[1]) + len(decos_dict[2]) + len(decos_dict[3]) + len(decos_dict[4]) == len(decorations)
+    # Not currently used.
+    #decos_dict = {
+    #        1: [deco for deco in decorations if deco.value.slot_size == 1],
+    #        2: [deco for deco in decorations if deco.value.slot_size == 2],
+    #        3: [deco for deco in decorations if deco.value.slot_size == 3],
+    #        4: [deco for deco in decorations if deco.value.slot_size == 4],
+    #    }
+    #assert len(decos_dict[1]) + len(decos_dict[2]) + len(decos_dict[3]) + len(decos_dict[4]) == len(decorations)
 
     ####################
     # STAGE 3: Search! #
@@ -501,10 +570,12 @@ def find_highest_efr_build():
         if weapon_upgrade_config is not None:
             for (stage, upgrade) in enumerate(weapon_upgrade_config):
                 print(f"   Weapon Upgrade: {upgrade.name} {stage}")
+        for (deco, level) in deco_dict.items():
+            print(f"   DECO: {deco.name} {level}")
 
     best_efr = 0
 
-    progress_segment_size = 1 / (len(weapon_ids) * len(head_list))
+    progress_segment_size = 1 / (len(weapon_ids) * len(head_list) * len(chest_list) * len(arms_list) * len(waist_list))
     curr_progress_segment = 0
     def update_and_print_progress():
         nonlocal curr_progress_segment
@@ -517,10 +588,10 @@ def find_highest_efr_build():
         #update_and_print_progress()
         weapon = weapon_db[weapon_id]
         for head in head_list: # More predictable size for update_and_print_progress()
-            for weapon_augments_config in WeaponAugmentTracker.get_instance(weapon).get_maximized_configs(): # Less predictable
-                for chest in chest_list:
-                    for arms in arms_list:
-                        for waist in waist_list:
+            for chest in chest_list:
+                for arms in arms_list:
+                    for waist in waist_list:
+                        for weapon_augments_config in WeaponAugmentTracker.get_instance(weapon).get_maximized_configs(): # Less predictable
                             for legs in legs_list:
 
                                 curr_armour = {
@@ -532,20 +603,23 @@ def find_highest_efr_build():
                                 }
 
                                 deco_slots = calculate_deco_slots_from_gear(weapon, curr_armour, weapon_augments_config)
-                                deco_lists = _generate_deco_lists(deco_slots, decos_dict)
-                                assert len(deco_lists) > 0
+                                deco_dicts = _generate_deco_dicts(deco_slots, decorations)
+                                assert len(deco_dicts) > 0
 
                                 for weapon_upgrade_config in WeaponUpgradeTracker.get_instance(weapon).get_maximized_configs(): # Less predictable
-                                    for deco_list in deco_lists:
+                                    for deco_dict in deco_dicts:
                                         for charm_id in charm_ids:
                                             curr_decos = {}
-                                            results = lookup_from_gear(weapon_id, curr_armour, charm_id, deco_list, \
+                                            results = lookup_from_gear(weapon_id, curr_armour, charm_id, deco_dict, \
                                                             full_skill_states, weapon_augments_config, weapon_upgrade_config)
 
                                             if results.efr > best_efr:
                                                 best_efr = results.efr
                                                 print_current_build()
-            update_and_print_progress()
+                        update_and_print_progress()
+                    #update_and_print_progress()
+                #update_and_print_progress()
+            #update_and_print_progress()
         #update_and_print_progress()
 
     end_real_time = time.time()

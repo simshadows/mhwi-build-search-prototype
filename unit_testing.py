@@ -418,7 +418,8 @@ def _run_tests_lookup():
 def _run_tests_armour_pruning():
     print()
 
-    def test_supercedes_common(gear_slot, p1_set_name, p1_discrim, p1_variant, p2_set_name, p2_discrim, p2_variant, p1_preferred):
+    def test_supercedes_common(gear_slot, p1_set_name, p1_discrim, p1_variant, p2_set_name, p2_discrim, p2_variant, \
+                                                    p1_preferred, **kwargs):
         gear_slot = ArmourSlot[gear_slot]
         p1_discrim = ArmourDiscriminator[p1_discrim]
         p2_discrim = ArmourDiscriminator[p2_discrim]
@@ -433,25 +434,23 @@ def _run_tests_armour_pruning():
 
         p1_set_bonus = p1_set.set_bonus
         p2_set_bonus = p2_set.set_bonus
-        return _armour_piece_supercedes(p1, p1_set_bonus, p2, p2_set_bonus, p1_preferred)
+        return _armour_piece_supercedes(p1, p1_set_bonus, p2, p2_set_bonus, p1_preferred, **kwargs)
 
-    def test_supercedes(*args):
-        result = test_supercedes_common(*args)
+    def test_supercedes(*args, **kwargs):
+        result = test_supercedes_common(*args, **kwargs)
         if not result:
-            raise ValueError("_armour_piece_supercedes() test failed. Arguments: " + str(args))
+            raise ValueError("_armour_piece_supercedes() test failed. Arguments: " + str(args) + " " + str(kwargs))
         return
 
-    def test_not_supercedes(*args):
-        result = test_supercedes_common(*args)
+    def test_not_supercedes(*args, **kwargs):
+        result = test_supercedes_common(*args, **kwargs)
         if result:
-            raise ValueError("_armour_piece_supercedes() test failed. Arguments: " + str(args))
+            raise ValueError("_armour_piece_supercedes() test failed. Arguments: " + str(args) + " " + str(kwargs))
         return
 
-    def test_not_supercedes_in_reverse(*args):
+    def test_not_supercedes_in_reverse(*args, **kwargs):
         args = (args[0], args[4], args[5], args[6], args[1], args[2], args[3], args[7])
-        result = test_supercedes_common(*args)
-        if result:
-            raise ValueError("_armour_piece_supercedes() test failed. Arguments: " + str(args))
+        test_not_supercedes(*args, **kwargs)
         return
 
     print("Checking that (head) Kaiser Beta always supercedes Kaiser Alpha.")
@@ -471,6 +470,16 @@ def _run_tests_armour_pruning():
     test_not_supercedes("HEAD", "Teostra", "MASTER_RANK", "MR_BETA_PLUS", "Teostra", "HIGH_RANK", "HR_GAMMA", False)
     test_not_supercedes_in_reverse("HEAD", "Teostra", "MASTER_RANK", "MR_BETA_PLUS", "Teostra", "HIGH_RANK", "HR_GAMMA", True)
     test_not_supercedes_in_reverse("HEAD", "Teostra", "MASTER_RANK", "MR_BETA_PLUS", "Teostra", "HIGH_RANK", "HR_GAMMA", False)
+
+    print("Checking that (legs) Garuga Beta+ never supercedes Garuga Alpha+, even when filtering out Piercing Shots.")
+    test_not_supercedes("LEGS", "Yian Garuga", "MASTER_RANK", "MR_BETA_PLUS", "Yian Garuga", "MASTER_RANK", "MR_ALPHA_PLUS", \
+                                True, skill_subset={Skill.CRITICAL_EYE,})
+    test_not_supercedes("LEGS", "Yian Garuga", "MASTER_RANK", "MR_BETA_PLUS", "Yian Garuga", "MASTER_RANK", "MR_ALPHA_PLUS", \
+                                False, skill_subset={Skill.CRITICAL_EYE,})
+    test_not_supercedes_in_reverse("LEGS", "Yian Garuga", "MASTER_RANK", "MR_BETA_PLUS", "Yian Garuga", "MASTER_RANK", \
+                                    "MR_ALPHA_PLUS", True, skill_subset={Skill.CRITICAL_EYE,})
+    test_not_supercedes_in_reverse("LEGS", "Yian Garuga", "MASTER_RANK", "MR_BETA_PLUS", "Yian Garuga", "MASTER_RANK", \
+                                    "MR_ALPHA_PLUS", False, skill_subset={Skill.CRITICAL_EYE,})
 
     return True
 
