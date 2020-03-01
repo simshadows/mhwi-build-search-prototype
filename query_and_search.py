@@ -464,7 +464,7 @@ def find_highest_efr_build():
 
     decorations_test_subset = [
         Decoration.TENDERIZER,
-        Decoration.EXPERT,
+        Decoration.ELEMENTLESS,
     ]
 
     ############################
@@ -560,38 +560,71 @@ def find_highest_efr_build():
     #                            recursively_iterate_decos({}, 0)
 
     def print_current_build():
+        print()
         print(f"{best_efr} EFR")
-        print("   " + weapon_id)
-        print("   " + charm_id)
-        for (k, v) in curr_armour.items():
-            print("   " + k.name + " : " + v[0] + " " + v[2].name)
+
+        print()
+        print("      " + weapon_db[weapon_id].name)
+
+        print()
         for (augment, level) in weapon_augments_config:
-            print(f"   {augment.name} {level}")
+            print(f"      {augment.name} {level}")
         if weapon_upgrade_config is not None:
             for (stage, upgrade) in enumerate(weapon_upgrade_config):
-                print(f"   Weapon Upgrade: {upgrade.name} {stage}")
+                print(f"      Custom Upgrade: {upgrade.name} {stage+1}")
+
+        print()
+        for (k, v) in curr_armour.items():
+            a = armour_db[(v[0], v[1])].variants[v[2]][k]
+            armour_str = (k.name.ljust(5) + ": " + v[0] + " " + v[2].value.ascii_postfix).ljust(25)
+            deco_str = " ".join(str(x) for x in a.decoration_slots) if (len(a.decoration_slots) > 0) else "(none)"
+
+            print(f"      {armour_str} slots: {deco_str}")
+
+        print()
+        print("      CHARM: " + charms_db[charm_id].name)
+
+        print()
         for (deco, level) in deco_dict.items():
-            print(f"   DECO: {deco.name} {level}")
+            print(f"      x{level} {deco.value.name}")
+
+        print()
+        return
 
     best_efr = 0
 
-    progress_segment_size = 1 / (len(weapon_ids) * len(head_list) * len(chest_list) * len(arms_list) * len(waist_list))
+    total_progress_segments = len(weapon_ids) * len(head_list) * len(chest_list) * len(arms_list) * len(waist_list)
+    progress_segment_size = 1 / total_progress_segments
     curr_progress_segment = 0
     def update_and_print_progress():
         nonlocal curr_progress_segment
         curr_progress_segment += 1
-        print(f"[SEARCH PROGRESS: {curr_progress_segment * progress_segment_size * 100 :.2f}%]")
+        curr_progress = curr_progress_segment * progress_segment_size
+        curr_progress_percent_rnd = round(curr_progress * 100, 2)
+        curr_progress_str = f"{curr_progress_percent_rnd:.02f}%"
+
+        progress_real_time = time.time() - start_real_time
+        progress_real_time_minutes = int(progress_real_time // 60)
+        progress_real_time_seconds = int(progress_real_time % 60)
+        progress_real_time_str = f"{progress_real_time_minutes:02}:{progress_real_time_seconds:02}"
+
+        seconds_per_segment = progress_real_time / curr_progress_segment
+        seconds_estimate = seconds_per_segment * total_progress_segments
+        estimate_minutes = int(seconds_estimate // 60)
+        estimate_seconds = int(seconds_estimate % 60) # This naming is so confusing lmao
+        estimate_str = f"{estimate_minutes:02}:{estimate_seconds:02}"
+
+        print(f"[SEARCH PROGRESS: {curr_progress_str}] elapsed {progress_real_time_str}, estimate {estimate_str}")
 
     start_real_time = time.time()
 
     for weapon_id in weapon_ids:
-        #update_and_print_progress()
         weapon = weapon_db[weapon_id]
-        for head in head_list: # More predictable size for update_and_print_progress()
+        for head in head_list: 
             for chest in chest_list:
                 for arms in arms_list:
                     for waist in waist_list:
-                        for weapon_augments_config in WeaponAugmentTracker.get_instance(weapon).get_maximized_configs(): # Less predictable
+                        for weapon_augments_config in WeaponAugmentTracker.get_instance(weapon).get_maximized_configs():
                             for legs in legs_list:
 
                                 curr_armour = {
@@ -606,7 +639,7 @@ def find_highest_efr_build():
                                 deco_dicts = _generate_deco_dicts(deco_slots, decorations)
                                 assert len(deco_dicts) > 0
 
-                                for weapon_upgrade_config in WeaponUpgradeTracker.get_instance(weapon).get_maximized_configs(): # Less predictable
+                                for weapon_upgrade_config in WeaponUpgradeTracker.get_instance(weapon).get_maximized_configs():
                                     for deco_dict in deco_dicts:
                                         for charm_id in charm_ids:
                                             curr_decos = {}
