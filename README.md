@@ -26,6 +26,60 @@ This project is written for Python 3.8.
 
 1) I'll need to be confident that the armour pruning doesn't throw away armour pieces that are still useful.
 
+2) Free Element will need to be taken into account since adding it can actually reduce a build's EFR by disabling Non-elemental Boost. My pruning algorithms currently don't take this into account, so it is possible for a gear piece with Free Element to cause another gear piece without Free Element to be pruned, even if it may be better for pure-raw builds.
+
+## Nerd Stuff
+
+The current version of the search algorithm is brute force with pruning.
+
+This works by first going through the list of head pieces and pruning away all head pieces that is *clearly inferior* to any other head piece. Head piece A is clearly inferior to head piece B if B can reproduce any possible combination of skills (and their respective levels) that you can make with A, possibly even with extras. This process is then repeated for the chest, hands, waist, and leg slots.
+
+As a concrete example, *Kaiser Vambraces Alpha+* is clearly inferior to *Kaiser Vambraces Beta+*. This is because while Beta+ lacks a level of Weakness Exploit, it comes with an extra Level 4 decoration slot compared to Alpha+. A decoration containing Weakness Exploit easily fits in this slot.
+
+Charms and decorations are also pruned to ignore charms with skills we don't care about. Weapon augments are always practically maximized. For example, we don't care about having only Attack I if we can also add Attack II or Affinity I on top of it. Weapon custom upgrades are also somewhat pruned in a similar fashion.
+
+Once all the pruning described above has taken place, we simply try every possible combination.
+
+### Current Efficiency
+
+Armour piece pruning has the potential to prune all gear down to mostly Master Rank Beta+. Assuming a ballpark of `300` pieces for each of the categories of head, chest, hands, waist, and legs, we have `300^5 = approx. 2.4 * 10^12` before pruning. Pruning down to a conservative `150` pieces brings us down to `7.6 * 10^10`. **Though, this is yet to be tested on a full armour database since I'm using a subset of armour for testing.** My current pruning algorithm runs in `O(n^2)` for `n` individual pieces in each armour set.
+
+Charms and decorations are much easier to filter out due to their simplicity. All we do is check if a charm/decoration contains a skill that we care about. Charms don't have decorations lots, and decorations are already their own atomic unit. These operations are easily `O(n)`.
+
+Weapon augments and custom upgrades are simply hard-coded for the meantime since there are very few useful augment combinations. A proper algorithm may be written in the future if the need arises.
+
+After pruning, the worst-case time complexity of the overall algorithm may be considered to be `O(a^5 * c * w * a * u * d * l)` for `a` armour sets, `c` charms, `w` weapons, `a` weapon augments, `u` custom upgrades, `d` decorations, and `l` for the maximum level of any skill.
+
+**This is about as bad as it gets in the overall.**
+
+### Ideas for optimization: Dynamic programming? Divide and conquer?
+
+We can probably try techniques like dynamic programming, or divide and conquer.
+
+I'll need to do some research into how these and other techniques might be applied.
+
+### Ideas for optimization: Slightly over-pruning the level 4 decorations.
+
+There may be times where the algorithm can, for example, put Critical/Vitality, Critical/Vitality, Critical/Vitality, and Tenderizer/Maintenance into the build. But what if we just don't care about highly optional skills? This may lead the algorithm to add Tenderizer instead of the clearly superior Tenderizer/Maintenance decoration.
+
+But for the sake of efficiency, we might want to consider doing it anyway. We don't really care about those *extra* skills anyway in many level 4 decorations, and we don't lose any core features in our build to use lower-level ones. If it's discovered that our final build can fit more extra skills after all, then it's easy to make modifications to add these extra skills in.
+
+### Ideas for optimization: Pruning entire combinations of armour.
+
+As discussed above, we can easily prune within a category of head, chest, waist, or legs, and my algorithm currently runs in `O(n^2)` on each category separately.
+
+But what if we applied the same pruning technique over *a set of gear combinations*? Instead of just considering whether a head piece is clearly inferior to another head piece, what if we also considered if a specific combination of head+chest+arms+waist+legs is clearly inferior to another combination of head+chest+arms+waist+legs?
+
+However, that would have a blown up time complexity of `O((n^5)^2)` for `n` armour pieces within each category. Assuming we pruned down to 150 pieces per category, we get `(150^5)^2 = 5.8 * 10^21`. That is a buttload of combinations.
+
+To improve on the efficiency, I'm thinking of applying *memoization* to check every armour combination in a single pass, building a data structure of "superior armour combinations" (likely some sort of tree) that can simply be traversed instead of a brute-force pair-wise comparison. This data structure may require an overhead of `s` skills (counting only skills that affect the build meaningfully) to access, though `s` is unlikely to exceed roughly 12 skills (in my opinion). Being a single-pass, the worst-case time complexity is `O(s*(n^5))` if we include `s`, or `O(n^5)` for practical purposes.
+
+### Ideas for optimization: Pruning weapons.
+
+There may be some condition in which we can prune a weapon out. In most cases, weapons that are direct upgrades of each other can lead to one of these weapons being pruned away.
+
+But I'll need to somehow formalize the conditions necessary for this to happen.
+
 ## License
 
 ```
