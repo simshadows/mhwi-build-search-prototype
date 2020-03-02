@@ -5,14 +5,16 @@ Author:   contact@simshadows.com
 This file provides the MHWI build optimizer script's armour database.
 """
 
+import time
 from copy import copy
-from collections import namedtuple, defaultdict
+from collections import namedtuple, defaultdict, Counter
 from enum import Enum, auto
+from itertools import product
 
-from database_skills import Skill, SetBonus
+from database_skills import Skill, SetBonus, calculate_set_bonus_skills
 from database_decorations import skill_to_simple_deco_size
 from enums import Tier
-from utils import json_read
+from utils import json_read, update_and_print_progress
 
 
 ARMOUR_DATA_FILENAME = "database_armour.json"
@@ -447,6 +449,265 @@ easyiterate_armour = _obtain_easyiterate_armour_db(armour_db)
 # Importantly, the data structure is the same as easyiterate_armour.
 # This will make this practically interchangable with easyiterate_armour if all you care about are skills.
 skillsonly_pruned_armour = prune_easyiterate_armour_db(easyiterate_armour) # We don't need this right now.
+
+
+# TODO: Merge this with the older version.
+# IMPORTANT: p1_skills and p2_skills include skills provided by set bonuses.
+def _skills_and_slots_supercedes(p1_skills, p1_slots, p2_skills, p2_slots, p1_is_preferred, skill_subset=None):
+    assert isinstance(p1_skills, dict)
+    assert isinstance(p2_skills, dict)
+    assert isinstance(p1_slots, Counter)
+    assert isinstance(p2_slots, Counter)
+    assert (isinstance(skill_subset, set) and all(isinstance(x, Skill) for x in skill_subset)) or (skill_subset is None)
+
+    # Stage 1: We gather available information.
+
+    p1_size1 = p1_slots[1]
+    p1_size2 = p1_slots[2]
+    p1_size3 = p1_slots[3]
+    p1_size4 = p1_slots[4]
+    #assert len(p1_slots) == 4 # It's probably a defaultdict
+
+    p2_size1 = p2_slots[1]
+    p2_size2 = p2_slots[2]
+    p2_size3 = p2_slots[3]
+    p2_size4 = p2_slots[4]
+    #assert len(p2_slots) == 4 # It's probably a defaultdict
+
+    # Stage 2: We simplify available information.
+
+    # At worst, we put size-1 jewels in size-4 slots
+    p1_slots_underest = (p1_size1, p1_size2, p1_size3 + p1_size4)
+    # At best, we can put the equivalent of two size-3 jewels into a size-4 slot
+    p2_slots_overest = (p2_size1, p2_size2, p2_size3 + (p2_size4 * 2)) 
+
+    all_skills = set(p1_skills) | set(p2_skills)
+    if skill_subset is not None:
+        all_skills = all_skills & skill_subset # We ignore anything not in the subset
+
+    skills_unique_to_p1 = {}
+    skills_unique_to_p2 = {}
+    for skill in all_skills:
+        p1_level = p1_skills.get(skill, 0)
+        p2_level = p2_skills.get(skill, 0)
+
+        if p1_level - p2_level > 0:
+            skills_unique_to_p1[skill] = p1_level - p2_level
+        elif p2_level - p1_level > 0:
+            skills_unique_to_p2[skill] = p2_level - p1_level
+        else:
+            assert p1_level - p2_level == 0
+    
+    slots_required_to_recreate_p2_unique_skills = [0, 0, 0]
+    for (skill, level) in skills_unique_to_p2.items():
+        if skill not in skill_to_simple_deco_size:
+            return False # We return here since we know p2 has unique skills that don't have decorations.
+        size_required = skill_to_simple_deco_size[skill]
+        slots_required_to_recreate_p2_unique_skills[size_required - 1] += level
+
+    # Stage 3: We do the more complex processing.
+
+    p2_required = slots_required_to_recreate_p2_unique_skills
+    p2_available = list(p2_slots_overest)
+    p1_available = list(p1_slots_underest)
+
+    # Subtracts slots in b from slots in a.
+    # Effectively "a minus b".
+    # Returns None if a cannot be subtracted by b.
+    def subtract_slots(a, b):
+        assert len(a) == 3
+        assert len(b) == 3
+
+        # (We could try being more algorithmic, but doing a cascade of if-statements will work for this small set of sizes.)
+
+        a = copy(a)
+        b = copy(b)
+
+        if a[0] >= b[0]:
+            a[0] -= b[0]
+        else:
+            b[1] += b[0] - a[0]
+            a[0] = 0
+        # Don't care about b[0] anymore.
+
+        if a[1] >= b[1]:
+            a[1] -= b[1]
+        else:
+            b[2] += b[1] - a[1]
+            a[1] = 0
+        # Don't care about b[1] anymore.
+
+        if a[2] >= b[2]:
+            a[2] -= b[2]
+        else:
+            return None # We return here since we know we don't have enough p1_available decoration slots.
+        # Don't care about b[2] anymore.
+
+        return a
+
+    p1_initialy_has_decos = any(x > 0 for x in p1_available)
+
+    p1_available = subtract_slots(p1_available, p2_available)
+
+    p1_has_more_decos = any(x > 0 for x in p1_available) if (p1_available is not None) else NotImplemented
+
+    if p1_available is None:
+        return False # p1 cannot supercede p2 because p1 effectively has less slots than p2
+
+    p1_available = subtract_slots(p1_available, p2_required)
+
+    if p1_available is None:
+        return False # p1 cannot supercede p2 because p1 isn't guaranteed to be able to also recreate p2's skills.
+
+    p1_has_extra_slots = any(x > 0 for x in p1_available)
+
+    if p1_has_more_decos:
+        return True # We can recreate the same skills with room to spare.
+    elif len(skills_unique_to_p1) > 0:
+        return True # We can recreate exactly the same skills, but also with additional skills.
+
+    # Stage 4: What happens if we don't necessarily have room to spare?
+
+    if p1_is_preferred:
+        return True # p1 is higher in the sort order, so we'll allow it to supercede p2.
+
+    return False
+
+
+def _armour_combination_iter(original_easyiterate_armour_db):
+
+    combinations_iter = product(
+            original_easyiterate_armour_db[ArmourSlot.HEAD],
+            original_easyiterate_armour_db[ArmourSlot.CHEST],
+            original_easyiterate_armour_db[ArmourSlot.ARMS],
+            original_easyiterate_armour_db[ArmourSlot.WAIST],
+            original_easyiterate_armour_db[ArmourSlot.LEGS],
+        ) # TODO: Ugh, this is so ugly.
+
+    for (head, chest, arms, waist, legs) in combinations_iter:
+
+        combination = {
+                ArmourSlot.HEAD:  head,
+                ArmourSlot.CHEST: chest,
+                ArmourSlot.ARMS:  arms,
+                ArmourSlot.WAIST: waist,
+                ArmourSlot.LEGS:  legs,
+            }
+
+        total_skills = defaultdict(lambda : 0)
+        total_slots = Counter()
+
+        total_set_bonuses = defaultdict(lambda : 0) # Don't use this after we update total_skills.
+
+        # We fill the totals in this loop.
+        for (gear_slot, piece_summary) in combination.items():
+            armour_set = armour_db[(piece_summary.set_name, piece_summary.discrim)]
+            set_bonus = armour_set.set_bonus
+            piece = armour_set.variants[piece_summary.variant][gear_slot]
+
+            assert isinstance(armour_set, ArmourSetInfo)
+            assert isinstance(set_bonus, SetBonus) or (set_bonus is None)
+            assert isinstance(piece, ArmourPieceInfo)
+
+            for (skill, level) in piece.skills.items():
+                total_skills[skill] += level
+
+            if set_bonus is not None:
+                total_set_bonuses[set_bonus] += 1
+
+            total_slots.update(piece.decoration_slots)
+
+        if __debug__:
+            num_total_regular_skills = len(total_skills)
+
+        total_set_bonus_skills = calculate_set_bonus_skills(total_set_bonuses)
+        total_skills.update(total_set_bonus_skills)
+        assert len(total_skills) == len(total_set_bonus_skills) + num_total_regular_skills
+
+        yield (combination, total_skills, total_slots)
+
+
+# Applies the same pruning rule as _armour_piece_supercedes(), but over an entire armour set instead!
+#
+# Returns a list of dictionaries of {ArmourSlot: ArmourEasyIterateInfo}
+def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill_subset=None):
+
+    print()
+    print()
+    print("===== Armour Set Pruning =====")
+    print()
+
+    debug_head_total  = len(original_easyiterate_armour_db[ArmourSlot.HEAD])
+    debug_chest_total = len(original_easyiterate_armour_db[ArmourSlot.CHEST])
+    debug_arms_total  = len(original_easyiterate_armour_db[ArmourSlot.ARMS])
+    debug_waist_total = len(original_easyiterate_armour_db[ArmourSlot.WAIST])
+    debug_legs_total  = len(original_easyiterate_armour_db[ArmourSlot.LEGS])
+    debug_total_combinations = debug_head_total * debug_chest_total * debug_arms_total * debug_waist_total * debug_legs_total
+    print(f"possible_combinations = {debug_total_combinations}")
+
+    start_real_time = time.time()
+
+    total_progress_segments = debug_total_combinations // 100
+    progress_segment_size = 1 / total_progress_segments
+    curr_progress_segment = 0
+
+    def progress():
+        nonlocal curr_progress_segment
+        nonlocal total_progress_segments
+        nonlocal start_real_time
+        update_and_print_progress("COMBINATION PRUNING", int(curr_progress_segment // 100), total_progress_segments, start_real_time)
+
+
+    # We consider set bonuses to make certain pieces worth it.
+    best_combinations = [] # [{ArmourSlot: ArmourEasyIterateInfo}]
+
+    # This loop is a mostly-unnecessary O(n^2) for n pieces in the list.
+    # I have a very good feeling this can be improved on later if needed. Just keeping things simple for now.
+    it1 = enumerate(_armour_combination_iter(original_easyiterate_armour_db))
+    for i, (combination_1, total_skills_1, total_slots_1) in it1:
+        assert isinstance(combination_1, dict)
+        assert all(isinstance(combination_1[slot], ArmourEasyIterateInfo) for slot in ArmourSlot) # Important for identity
+        assert isinstance(total_skills_1, dict)
+        assert isinstance(total_slots_1, Counter)
+
+        set1_is_never_superceded = True
+
+        it2 = enumerate(_armour_combination_iter(original_easyiterate_armour_db))
+        for j, (combination_2, total_skills_2, total_slots_2) in it2:
+            assert isinstance(combination_2, dict)
+            assert isinstance(total_skills_2, dict)
+            assert isinstance(total_slots_2, Counter)
+
+            if all((combination_1[slot] is combination_2[slot]) for slot in ArmourSlot):
+                continue
+
+            # We determine tie-breaker preference using sort order.
+            set2_is_preferred = (j > i)
+
+            set2_supercedes_set1 = _skills_and_slots_supercedes(total_skills_2, total_slots_2, \
+                                                                total_skills_1, total_slots_1, \
+                                                                set2_is_preferred, skill_subset=skill_subset)
+
+            if set2_supercedes_set1:
+                set1_is_never_superceded = False
+                break
+
+        if set1_is_never_superceded:
+            best_combinations.append(combination_1)
+
+        curr_progress_segment += 1
+        if curr_progress_segment % 99 == 0:
+            progress()
+
+
+    print("total: " + str(i + 1))
+    print("kept: " + str(len(best_combinations)))
+    print()
+    print("=============================")
+    print()
+    print()
+
+    return best_combinations
 
 
 # calculate_armour_contribution() input looks like this:

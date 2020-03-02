@@ -36,6 +36,7 @@ from database_armour      import (ArmourDiscriminator,
                                  easyiterate_armour,
                                  skillsonly_pruned_armour,
                                  prune_easyiterate_armour_db,
+                                 generate_and_prune_armour_combinations,
                                  calculate_armour_contribution)
 from database_charms      import (charms_db,
                                  charms_indexed_by_skill,
@@ -45,6 +46,8 @@ from database_decorations import (Decoration,
                                  calculate_decorations_skills_contribution)
 from database_misc        import (POWERCHARM_ATTACK_POWER,
                                   POWERTALON_ATTACK_POWER)
+
+from utils import update_and_print_progress
 
 
 # Corresponds to each level from red through to purple, in increasing-modifier order.
@@ -443,6 +446,8 @@ def _generate_deco_dicts(slots_available_counter, all_possible_decos):
 
 def find_highest_efr_build():
 
+    total_start_real_time = time.time()
+
     ##############################
     # STAGE 1: Basic Definitions #
     ##############################
@@ -474,26 +479,7 @@ def find_highest_efr_build():
     weapon_ids = [weapon_id for (weapon_id, weapon_info) in weapon_db.items() if weapon_info.type is desired_weapon]
 
     pruned_armour_db = prune_easyiterate_armour_db(skillsonly_pruned_armour, skill_subset=efr_skills)
-
-    head_list  = pruned_armour_db[ArmourSlot.HEAD]
-    chest_list = pruned_armour_db[ArmourSlot.CHEST]
-    arms_list  = pruned_armour_db[ArmourSlot.ARMS]
-    waist_list = pruned_armour_db[ArmourSlot.WAIST]
-    legs_list  = pruned_armour_db[ArmourSlot.LEGS]
-
-    # IMPORTANT: The commented section below is useful as a rough check that the pruned
-    #            gear can still produce the same EFRs as though the armour hasn't been pruned.
-    #head_list  = easyiterate_armour[ArmourSlot.HEAD]
-    #chest_list = easyiterate_armour[ArmourSlot.CHEST]
-    #arms_list  = easyiterate_armour[ArmourSlot.ARMS]
-    #waist_list = easyiterate_armour[ArmourSlot.WAIST]
-    #legs_list  = easyiterate_armour[ArmourSlot.LEGS]
-
-    assert len(head_list) > 0
-    assert len(chest_list) > 0
-    assert len(arms_list) > 0
-    assert len(waist_list) > 0
-    assert len(legs_list) > 0
+    pruned_armour_combos = generate_and_prune_armour_combinations(pruned_armour_db, skill_subset=efr_skills)
 
     charm_ids = set()
     for skill in efr_skills:
@@ -593,76 +579,56 @@ def find_highest_efr_build():
 
     best_efr = 0
 
-    total_progress_segments = len(weapon_ids) * len(head_list) * len(chest_list) * len(arms_list) * len(waist_list)
-    progress_segment_size = 1 / total_progress_segments
-    curr_progress_segment = 0
-    def update_and_print_progress():
-        nonlocal curr_progress_segment
-        curr_progress_segment += 1
-        curr_progress = curr_progress_segment * progress_segment_size
-        curr_progress_percent_rnd = round(curr_progress * 100, 2)
-        curr_progress_str = f"{curr_progress_percent_rnd:.02f}%"
-
-        progress_real_time = time.time() - start_real_time
-        progress_real_time_minutes = int(progress_real_time // 60)
-        progress_real_time_seconds = int(progress_real_time % 60)
-        progress_real_time_str = f"{progress_real_time_minutes:02}:{progress_real_time_seconds:02}"
-
-        seconds_per_segment = progress_real_time / curr_progress_segment
-        seconds_estimate = seconds_per_segment * total_progress_segments
-        estimate_minutes = int(seconds_estimate // 60)
-        estimate_seconds = int(seconds_estimate % 60) # This naming is so confusing lmao
-        estimate_str = f"{estimate_minutes:02}:{estimate_seconds:02}"
-
-        print(f"[SEARCH PROGRESS: {curr_progress_str}] elapsed {progress_real_time_str}, estimate {estimate_str}")
-
     start_real_time = time.time()
 
-    for weapon_id in weapon_ids:
-        weapon = weapon_db[weapon_id]
-        for head in head_list: 
-            for chest in chest_list:
-                for arms in arms_list:
-                    for waist in waist_list:
-                        for weapon_augments_config in WeaponAugmentTracker.get_instance(weapon).get_maximized_configs():
-                            for legs in legs_list:
+    total_progress_segments = len(pruned_armour_combos) * len(weapon_ids)
+    progress_segment_size = 1 / total_progress_segments
+    curr_progress_segment = 0
 
-                                curr_armour = {
-                                    ArmourSlot.HEAD:  head,
-                                    ArmourSlot.CHEST: chest,
-                                    ArmourSlot.ARMS:  arms,
-                                    ArmourSlot.WAIST: waist,
-                                    ArmourSlot.LEGS:  legs,
-                                }
+    def progress():
+        nonlocal curr_progress_segment
+        nonlocal total_progress_segments
+        nonlocal start_real_time
+        curr_progress_segment = update_and_print_progress("SEARCH", curr_progress_segment, total_progress_segments, start_real_time)
 
-                                deco_slots = calculate_deco_slots_from_gear(weapon, curr_armour, weapon_augments_config)
-                                deco_dicts = _generate_deco_dicts(deco_slots, decorations)
-                                assert len(deco_dicts) > 0
+    for curr_armour in pruned_armour_combos:
+        for weapon_id in weapon_ids:
+            weapon = weapon_db[weapon_id]
+            for weapon_augments_config in WeaponAugmentTracker.get_instance(weapon).get_maximized_configs():
 
-                                for weapon_upgrade_config in WeaponUpgradeTracker.get_instance(weapon).get_maximized_configs():
-                                    for deco_dict in deco_dicts:
-                                        for charm_id in charm_ids:
-                                            curr_decos = {}
-                                            results = lookup_from_gear(weapon_id, curr_armour, charm_id, deco_dict, \
-                                                            full_skill_states, weapon_augments_config, weapon_upgrade_config)
+                deco_slots = calculate_deco_slots_from_gear(weapon, curr_armour, weapon_augments_config)
+                deco_dicts = _generate_deco_dicts(deco_slots, decorations)
+                assert len(deco_dicts) > 0
 
-                                            if results.efr > best_efr:
-                                                best_efr = results.efr
-                                                print_current_build()
-                        update_and_print_progress()
-                    #update_and_print_progress()
-                #update_and_print_progress()
-            #update_and_print_progress()
-        #update_and_print_progress()
+                for weapon_upgrade_config in WeaponUpgradeTracker.get_instance(weapon).get_maximized_configs():
+                    for deco_dict in deco_dicts:
+                        for charm_id in charm_ids:
+                            curr_decos = {}
+                            results = lookup_from_gear(weapon_id, curr_armour, charm_id, deco_dict, \
+                                            full_skill_states, weapon_augments_config, weapon_upgrade_config)
+
+                            if results.efr > best_efr:
+                                best_efr = results.efr
+                                print_current_build()
+            progress()
+        #progress()
 
     end_real_time = time.time()
 
-    real_time_minutes = int((end_real_time - start_real_time) // 60)
-    real_time_seconds = int((end_real_time - start_real_time) % 60)
+    search_real_time_minutes = int((end_real_time - start_real_time) // 60)
+    search_real_time_seconds = int((end_real_time - start_real_time) % 60)
 
     print()
-    print(f"Search execution time (in real time): {real_time_minutes:02}:{real_time_seconds:02}")
+    print(f"Search execution time (in real time): {search_real_time_minutes:02}:{search_real_time_seconds:02}")
     print(f"({end_real_time - start_real_time} seconds)")
+    print()
+
+    total_real_time_minutes = int((end_real_time - total_start_real_time) // 60)
+    total_real_time_seconds = int((end_real_time - total_start_real_time) % 60)
+
+    print()
+    print(f"Total execution time (in real time): {total_real_time_minutes:02}:{total_real_time_seconds:02}")
+    print(f"({end_real_time - total_start_real_time} seconds)")
     print()
 
     return

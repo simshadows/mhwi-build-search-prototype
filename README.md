@@ -24,9 +24,11 @@ This project is written for Python 3.8.
 
 ## TODOs
 
-1) I'll need to be confident that the armour pruning doesn't throw away armour pieces that are still useful.
+1) I'll need to be confident that the armour pruning doesn't throw away armour pieces that are still useful. This will need continued testing.
 
-2) Free Element will need to be taken into account since adding it can actually reduce a build's EFR by disabling Non-elemental Boost. My pruning algorithms currently don't take this into account, so it is possible for a gear piece with Free Element to cause another gear piece without Free Element to be pruned, even if it may be better for pure-raw builds.
+2) I'll also need to be confident that the armour pruning doesn't throw away armour *sets* that are still useful. This will need toncinued testing.
+
+3) Free Element will need to be taken into account since adding it can actually reduce a build's EFR by disabling Non-elemental Boost. My pruning algorithms currently don't take this into account, so it is possible for a gear piece with Free Element to cause another gear piece without Free Element to be pruned, even if it may be better for pure-raw builds.
 
 ## Nerd Stuff
 
@@ -48,7 +50,7 @@ Charms and decorations are much easier to filter out due to their simplicity. Al
 
 Weapon augments and custom upgrades are simply hard-coded for the meantime since there are very few useful augment combinations. A proper algorithm may be written in the future if the need arises.
 
-After pruning, the worst-case time complexity of the overall algorithm may be considered to be `O(a^5 * c * w * a * u * d * l)` for `a` armour sets, `c` charms, `w` weapons, `a` weapon augments, `u` custom upgrades, `d` decorations, and `l` for the maximum level of any skill.
+After pruning, the worst-case time complexity of the overall algorithm may be considered to be `O(s^5 * c * w * a * u * d * l)` for `s` armour sets, `c` charms, `w` weapons, `a` weapon augments, `u` custom upgrades, `d` decorations, and `l` for the maximum level of any skill.
 
 **This is about as bad as it gets in the overall.**
 
