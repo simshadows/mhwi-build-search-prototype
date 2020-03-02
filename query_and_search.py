@@ -474,6 +474,7 @@ def find_highest_efr_build():
     decorations_test_subset = [
         Decoration.TENDERIZER,
         Decoration.ELEMENTLESS,
+        Decoration.EXPERT,
     ]
 
     ############################
