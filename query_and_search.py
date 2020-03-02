@@ -462,6 +462,10 @@ def find_highest_efr_build():
         Skill.WEAKNESS_EXPLOIT: 2,
     }
 
+    required_set_bonus_skills = { # IMPORTANT: We're not checking yet if these skills are actually attainable via. set bonus.
+        Skill.MASTERS_TOUCH,
+    }
+
     decoration_skills = {
         Skill.CRITICAL_EYE,
         Skill.WEAKNESS_EXPLOIT,
@@ -479,7 +483,8 @@ def find_highest_efr_build():
     weapon_ids = [weapon_id for (weapon_id, weapon_info) in weapon_db.items() if weapon_info.type is desired_weapon]
 
     pruned_armour_db = prune_easyiterate_armour_db(skillsonly_pruned_armour, skill_subset=efr_skills)
-    pruned_armour_combos = generate_and_prune_armour_combinations(pruned_armour_db, skill_subset=efr_skills)
+    pruned_armour_combos = generate_and_prune_armour_combinations(pruned_armour_db, skill_subset=efr_skills, \
+                                                                    required_set_bonus_skills=required_set_bonus_skills)
 
     charm_ids = set()
     for skill in efr_skills:
@@ -581,7 +586,7 @@ def find_highest_efr_build():
 
     start_real_time = time.time()
 
-    total_progress_segments = len(pruned_armour_combos) * len(weapon_ids)
+    total_progress_segments = len(pruned_armour_combos)
     progress_segment_size = 1 / total_progress_segments
     curr_progress_segment = 0
 
@@ -610,8 +615,7 @@ def find_highest_efr_build():
                             if results.efr > best_efr:
                                 best_efr = results.efr
                                 print_current_build()
-            progress()
-        #progress()
+        progress()
 
     end_real_time = time.time()
 

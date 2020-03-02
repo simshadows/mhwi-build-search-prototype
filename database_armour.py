@@ -630,7 +630,8 @@ def _armour_combination_iter(original_easyiterate_armour_db):
 # Applies the same pruning rule as _armour_piece_supercedes(), but over an entire armour set instead!
 #
 # Returns a list of dictionaries of {ArmourSlot: ArmourEasyIterateInfo}
-def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill_subset=None):
+def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill_subset=None, required_set_bonus_skills=set()):
+    assert isinstance(required_set_bonus_skills, set)
 
     print()
     print()
@@ -670,29 +671,34 @@ def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill
         assert isinstance(total_skills_1, dict)
         assert isinstance(total_slots_1, Counter)
 
-        set1_is_never_superceded = True
+        prune_combination_1 = False
 
-        it2 = enumerate(_armour_combination_iter(original_easyiterate_armour_db))
-        for j, (combination_2, total_skills_2, total_slots_2) in it2:
-            assert isinstance(combination_2, dict)
-            assert isinstance(total_skills_2, dict)
-            assert isinstance(total_slots_2, Counter)
+        if not all(skill in total_skills_1 for skill in required_set_bonus_skills):
+            prune_combination_1 = True
+        else:
+            it2 = enumerate(_armour_combination_iter(original_easyiterate_armour_db))
+            for j, (combination_2, total_skills_2, total_slots_2) in it2:
+                assert isinstance(combination_2, dict)
+                assert isinstance(total_skills_2, dict)
+                assert isinstance(total_slots_2, Counter)
 
-            if all((combination_1[slot] is combination_2[slot]) for slot in ArmourSlot):
-                continue
+                if all((combination_1[slot] is combination_2[slot]) for slot in ArmourSlot):
+                    continue # We don't compare equivalent combinations.
+                elif not all(skill in total_skills_2 for skill in required_set_bonus_skills):
+                    continue # We don't compare pieces against other pieces that lack the set bonuses.
 
-            # We determine tie-breaker preference using sort order.
-            set2_is_preferred = (j > i)
+                # We determine tie-breaker preference using sort order.
+                set2_is_preferred = (j > i)
 
-            set2_supercedes_set1 = _skills_and_slots_supercedes(total_skills_2, total_slots_2, \
-                                                                total_skills_1, total_slots_1, \
-                                                                set2_is_preferred, skill_subset=skill_subset)
+                set2_supercedes_set1 = _skills_and_slots_supercedes(total_skills_2, total_slots_2, \
+                                                                    total_skills_1, total_slots_1, \
+                                                                    set2_is_preferred, skill_subset=skill_subset)
 
-            if set2_supercedes_set1:
-                set1_is_never_superceded = False
-                break
+                if set2_supercedes_set1:
+                    prune_combination_1 = True
+                    break
 
-        if set1_is_never_superceded:
+        if not prune_combination_1:
             best_combinations.append(combination_1)
 
         curr_progress_segment += 1
