@@ -55,17 +55,6 @@ SHARPNESS_LEVEL_NAMES   = ("Red", "Orange", "Yellow", "Green", "Blue", "White", 
 RAW_SHARPNESS_MODIFIERS = (0.5,   0.75,     1.0,      1.05,    1.2,    1.32,    1.39    )
 
 
-def calculate_deco_slots_from_gear(weapon, armour_dict, weapon_augments_config):
-    # assert isinstance(weapon, namedtuple) # TODO: Implement a proper assert here
-    assert isinstance(armour_dict, dict)
-    assert isinstance(weapon_augments_config, list)
-
-    armour_contribution = calculate_armour_contribution(armour_dict)
-    slots_available_counter = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
-    assert all((slot_size > 0) and (slot_size <= 4) for (slot_size, num) in slots_available_counter.items())
-    return slots_available_counter
-
-
 # Returns both the values of the new sharpness bar, and the highest sharpness level.
 # The new sharpness bar corresponds to the indices in RAW_SHARPNESS_LEVEL_MODIFIERS and SHARPNESS_LEVEL_NAMES.
 # The highest sharpness level also corresponds to the same indices.
@@ -375,9 +364,10 @@ def lookup_from_gear(weapon_id, armour_dict, charm_id, decorations_list_or_dict,
     return transform_results_recursively(intermediate_results)
 
 
-def _generate_deco_dicts(slots_available_counter, all_possible_decos):
+def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_skills, skill_subset=None):
     assert isinstance(slots_available_counter, dict)
     assert isinstance(all_possible_decos, list)
+    assert isinstance(existing_skills, dict)
     # assert all(x in slots_available_counter for x in [1, 2, 3, 4]) # This isn't enforced anymore.
     # assert all(x in all_possible_decos for x in [1, 2, 3, 4]) # This isn't enforced anymore.
     assert len(slots_available_counter) <= 4
@@ -393,7 +383,21 @@ def _generate_deco_dicts(slots_available_counter, all_possible_decos):
         #print(deco.value.name)
         next_intermediate = []
         deco_size = deco.value.slot_size
-        deco_limit = int(max(ceil(skill.value.limit / level) for (skill, level) in deco.value.skills_dict.items()))
+        deco_limit = 0
+        for (skill, levels_granted_by_deco) in deco.value.skills_dict.items():
+            if (skill_subset is not None) and (skill not in skill_subset):
+                continue
+            levels_to_go = skill.value.limit - existing_skills.get(skill, 0)
+            # TODO: skip calculations if levels_to_go <= 0?
+            # TODO: Consider using floor instead of ceiling. This is because we can assume
+            # lower-size jewels will be tested instead of size-4 jewels (which are the only
+            # jewels that have multiple levels).
+            deco_limit_for_this_skill = ceil(levels_to_go / levels_granted_by_deco)
+            if deco_limit_for_this_skill > deco_limit:
+                deco_limit = deco_limit_for_this_skill
+
+        if deco_limit == 0:
+            continue
 
         # TODO: This algorithm is probably nowhere near as efficient as it could be.
         #       Try to rewrite it with a better algorithm :)
@@ -513,44 +517,6 @@ def find_highest_efr_build():
     # STAGE 3: Search! #
     ####################
 
-    #def recursively_iterate_decos(decos_dict, index_into_decos_list):
-    #    if index_into_decos_list == len(decorations):
-    #        try:
-    #            results = lookup_from_gear(weapon_id, current_armour, charm_id, modified_decos_dict, \
-    #                            full_skill_states, [])
-    #        except:
-    #            return
-    #    else:
-    #        for n in range(10):
-    #            modified_decos_dict = copy(decos_dict)
-    #            decorations[index_into_decos_list]
-    #            modified_decos_dict[decorations[index_into_decos_list]] = n
-    #            recursively_iterate_decos(modified_decos_dict, index_into_decos_list + 1)
-
-    #segments = len(weapon_ids) * len(armour_pieces[ArmourSlot.HEAD]) * len(armour_pieces[ArmourSlot.CHEST]) * \
-    #            len(armour_pieces[ArmourSlot.ARMS])
-    #segment_percentage = 1 / segments
-    #current_segment_count = 0
-
-    #for weapon_id in weapon_ids:
-    #    for head in armour_pieces[ArmourSlot.HEAD]:
-    #        for chest in armour_pieces[ArmourSlot.CHEST]:
-    #            for arms in armour_pieces[ArmourSlot.ARMS]:
-    #                for waist in armour_pieces[ArmourSlot.WAIST]:
-    #                    for legs in armour_pieces[ArmourSlot.LEGS]:
-    #                        for charm_id in charm_ids:
-    #                            #current_segment_count += 1
-    #                            print(f"Progress: another segment")
-    #                            #print(f"Progress: {current_segment_count*segment_percentage*100}%")
-    #                            current_armour = {
-    #                                ArmourSlot.HEAD:  head,
-    #                                ArmourSlot.CHEST: chest,
-    #                                ArmourSlot.ARMS:  arms,
-    #                                ArmourSlot.WAIST: waist,
-    #                                ArmourSlot.LEGS:  legs,
-    #                            }
-    #                            recursively_iterate_decos({}, 0)
-
     def print_current_build():
         print()
         print(f"{best_efr} EFR")
@@ -598,17 +564,33 @@ def find_highest_efr_build():
         curr_progress_segment = update_and_print_progress("SEARCH", curr_progress_segment, total_progress_segments, start_real_time)
 
     for curr_armour in pruned_armour_combos:
-        for weapon_id in weapon_ids:
-            weapon = weapon_db[weapon_id]
-            for weapon_augments_config in WeaponAugmentTracker.get_instance(weapon).get_maximized_configs():
 
-                deco_slots = calculate_deco_slots_from_gear(weapon, curr_armour, weapon_augments_config)
-                deco_dicts = _generate_deco_dicts(deco_slots, decorations)
-                assert len(deco_dicts) > 0
+        armour_contribution = calculate_armour_contribution(curr_armour)
 
-                for weapon_upgrade_config in WeaponUpgradeTracker.get_instance(weapon).get_maximized_configs():
-                    for deco_dict in deco_dicts:
-                        for charm_id in charm_ids:
+        armour_set_bonus_skills = calculate_set_bonus_skills(armour_contribution.set_bonuses)
+
+        all_armour_skills = defaultdict(lambda : 0)
+        all_armour_skills.update(armour_contribution.skills)
+        all_armour_skills.update(armour_set_bonus_skills)
+        assert len(set(armour_contribution.skills) & set(armour_set_bonus_skills)) == 0 # No intersection.
+
+        for charm_id in charm_ids:
+            charm = charms_db[charm_id]
+
+            including_charm_skills = copy(all_armour_skills)
+            for skill in calculate_skills_dict_from_charm(charm, charm.max_level):
+                including_charm_skills[skill] += charm.max_level
+
+            for weapon_id in weapon_ids:
+                weapon = weapon_db[weapon_id]
+
+                for weapon_augments_config in WeaponAugmentTracker.get_instance(weapon).get_maximized_configs():
+                    deco_slots = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
+                    deco_dicts = _generate_deco_dicts(deco_slots, decorations, including_charm_skills, skill_subset=efr_skills)
+                    assert len(deco_dicts) > 0
+
+                    for weapon_upgrade_config in WeaponUpgradeTracker.get_instance(weapon).get_maximized_configs():
+                        for deco_dict in deco_dicts:
                             curr_decos = {}
                             results = lookup_from_gear(weapon_id, curr_armour, charm_id, deco_dict, \
                                             full_skill_states, weapon_augments_config, weapon_upgrade_config)
