@@ -304,6 +304,12 @@
 
                 "tooltip": "((TODO))"
         },
+        "FREE_MEAL_SECRET": {
+                "name": "Free Meal Secret",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
         "FROSTCRAFT": {
                 "name": "Frostcraft",
                 "limit": 1,
@@ -803,6 +809,15 @@
         }
     },
     "set_bonuses": {
+        "TIGREX_ESSENCE": {
+            "name": "Tigrex Essence",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "FREE_MEAL_SECRET"
+                }
+            ]
+        },
         "TEOSTRA_TECHNIQUE": {
             "name": "Teostra Technique",
             "stages": [

@@ -13,6 +13,20 @@
             "Vambraces",
             "Tassets",
             "Greaves"
+        ],
+        "COMMON_SCHEME_3": [
+            "Helm",
+            "Mail",
+            "Braces",
+            "Coil",
+            "Greaves"
+        ],
+        "BUFF_BODY_SCHEME": [
+            "(invalid)",
+            "Chest",
+            "Arms",
+            "Waist",
+            "Legs"
         ]
     },
     "armour": [
@@ -46,6 +60,31 @@
                 "ARMS" : [[3],   {"CRITICAL_EYE": 3                       }],
                 "WAIST": [[1,1], {"LATENT_POWER": 3                       }],
                 "LEGS" : [[3,1], {"CRITICAL_EYE": 2                       }]
+            }
+        },
+        {
+            "set": "Brute Tigrex",
+            "discriminator": "MASTER_RANK",
+            "rarity": 11,
+            
+            "prefix": "Rex Roar",
+            "naming_scheme": "COMMON_SCHEME_3",
+
+            "set_bonus": "TIGREX_ESSENCE",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[3], {"ATTACK_BOOST": 3, "FREE_MEAL":        1}],
+                "CHEST": [[3], {"ATTACK_BOOST": 3, "WEAKNESS_EXPLOIT": 1}],
+                "ARMS" : [[3], {"HEALTH_BOOST": 3, "ATTACK_BOOST":     2}],
+                "WAIST": [[2], {"RECOVERY_UP":  3, "WEAKNESS_EXPLOIT": 1}],
+                "LEGS" : [[1], {"AGITATOR":     3, "WEAKNESS_EXPLOIT": 1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4],   {"ATTACK_BOOST": 2, "FREE_MEAL":        1}],
+                "CHEST": [[4,1], {"ATTACK_BOOST": 2, "WEAKNESS_EXPLOIT": 1}],
+                "ARMS" : [[4],   {"HEALTH_BOOST": 2, "ATTACK_BOOST":     2}],
+                "WAIST": [[4],   {"RECOVERY_UP":  2, "WEAKNESS_EXPLOIT": 1}],
+                "LEGS" : [[4],   {"AGITATOR":     2, "WEAKNESS_EXPLOIT": 1}]
             }
         },
         {
@@ -146,6 +185,23 @@
                 "ARMS" : [[4],     {"EARPLUGS":     2                     }],
                 "WAIST": [[4,3],   {"RESENTMENT":   2                     }],
                 "LEGS" : [[4,2,2], {"CRITICAL_EYE": 2                     }]
+            }
+        },
+        {
+            "set": "Buff Body",
+            "discriminator": "MASTER_RANK",
+            "rarity": 11,
+            
+            "prefix": "Buff",
+            "naming_scheme": "BUFF_BODY_SCHEME",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "CHEST": [[1,1,1], {"AGITATOR":     3, "FORTIFY":     1}],
+                "ARMS" : [[4],     {"ATTACK_BOOST": 3, "RESUSCITATE": 1}],
+                "WAIST": [[4],     {"AGITATOR":     2, "HEROICS":     3}],
+                "LEGS" : [[4],     {"ATTACK_BOOST": 3, "HEROICS":     2}]
             }
         }
     ]
