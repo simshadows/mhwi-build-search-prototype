@@ -136,6 +136,7 @@ LookupFromSkillsValues = namedtuple(
     "LookupFromSkillsValues",
     [
         "efr",
+        "affinity",
         "sharpness_values",
 
         "skills",
@@ -233,6 +234,7 @@ def lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_c
 
         ret = LookupFromSkillsValues(
                 efr               = _calculate_efr(**kwargs),
+                affinity          = kwargs["weapon_affinity_percentage"] + kwargs["added_affinity_percentage"],
                 sharpness_values  = sharpness_values,
 
                 skills = skills_dict,
@@ -246,6 +248,7 @@ BuildValues = namedtuple(
     "BuildValues",
     [
         "efr",
+        "affinity",
         "sharpness_values",
 
         "skills",
@@ -353,6 +356,7 @@ def lookup_from_gear(weapon_id, armour_dict, charm_id, decorations_list_or_dict,
         else:
             new_obj = BuildValues(
                     efr                     = obj.efr,
+                    affinity                = obj.affinity,
                     sharpness_values        = obj.sharpness_values,
                     
                     skills                  = obj.skills,
@@ -491,6 +495,7 @@ def find_highest_efr_build():
     pruned_armour_combos = generate_and_prune_armour_combinations(pruned_armour_db, skill_subset=efr_skills, \
                                                                     required_set_bonus_skills=required_set_bonus_skills)
 
+
     charm_ids = set()
     for skill in efr_skills:
         if skill in charms_indexed_by_skill:
@@ -519,7 +524,7 @@ def find_highest_efr_build():
 
     def print_current_build():
         print()
-        print(f"{best_efr} EFR")
+        print(f"{best_efr} EFR @ {associated_affinity} affinity")
 
         print()
         print("      " + weapon_db[weapon_id].name)
@@ -566,13 +571,13 @@ def find_highest_efr_build():
     for curr_armour in pruned_armour_combos:
 
         armour_contribution = calculate_armour_contribution(curr_armour)
-
         armour_set_bonus_skills = calculate_set_bonus_skills(armour_contribution.set_bonuses)
 
         all_armour_skills = defaultdict(lambda : 0)
         all_armour_skills.update(armour_contribution.skills)
         all_armour_skills.update(armour_set_bonus_skills)
         assert len(set(armour_contribution.skills) & set(armour_set_bonus_skills)) == 0 # No intersection.
+        # Now, we have all armour skills and set bonus skills
 
         for charm_id in charm_ids:
             charm = charms_db[charm_id]
@@ -580,23 +585,34 @@ def find_highest_efr_build():
             including_charm_skills = copy(all_armour_skills)
             for skill in calculate_skills_dict_from_charm(charm, charm.max_level):
                 including_charm_skills[skill] += charm.max_level
+            # Now, we also have charm skills included.
 
             for weapon_id in weapon_ids:
                 weapon = weapon_db[weapon_id]
 
                 for weapon_augments_config in WeaponAugmentTracker.get_instance(weapon).get_maximized_configs():
+
                     deco_slots = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
                     deco_dicts = _generate_deco_dicts(deco_slots, decorations, including_charm_skills, skill_subset=efr_skills)
                     assert len(deco_dicts) > 0
+                    # Every possible decoration that can go in.
 
                     for weapon_upgrade_config in WeaponUpgradeTracker.get_instance(weapon).get_maximized_configs():
+
                         for deco_dict in deco_dicts:
-                            curr_decos = {}
-                            results = lookup_from_gear(weapon_id, curr_armour, charm_id, deco_dict, \
-                                            full_skill_states, weapon_augments_config, weapon_upgrade_config)
+
+                            including_deco_skills = copy(including_charm_skills)
+                            for (skill, level) in calculate_decorations_skills_contribution(deco_dict).items():
+                                including_deco_skills[skill] += level
+                                # Now, we also have decoration skills included.
+                            
+                            results = lookup_from_skills(weapon, including_deco_skills, full_skill_states, \
+                                                            weapon_augments_config, weapon_upgrade_config)
+                            assert results is not list
 
                             if results.efr > best_efr:
                                 best_efr = results.efr
+                                associated_affinity = results.affinity
                                 print_current_build()
         progress()
 
