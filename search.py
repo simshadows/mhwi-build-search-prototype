@@ -1,7 +1,7 @@
 # -*- coding: ascii -*-
 
 """
-Filename: query_and_search.py
+Filename: query.py
 Author:   contact@simshadows.com
 
 This file contains various queries and search algorithms.
@@ -14,8 +14,10 @@ import multiprocessing as mp
 
 from collections import namedtuple, defaultdict, Counter
 
-from builds_and_saving    import (Build,
-                                 lookup_from_skills)
+from builds import (Build,
+                   lookup_from_skills)
+from utils  import update_and_print_progress
+
 from database_skills      import (Skill,
                                  skills_with_implemented_features,
                                  calculate_set_bonus_skills)
@@ -35,7 +37,6 @@ from database_decorations import (Decoration,
                                  get_pruned_deco_set,
                                  calculate_decorations_skills_contribution)
 
-from utils import update_and_print_progress
 
 
 def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_skills, skill_subset=None):

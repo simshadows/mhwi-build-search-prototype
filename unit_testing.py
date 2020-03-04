@@ -8,11 +8,11 @@ Author:   contact@simshadows.com
 import sys
 from copy import copy
 
-#from math import floor
 from collections import namedtuple, defaultdict, Counter
 
-from builds_and_saving    import (Build,
-                                 lookup_from_skills)
+from builds import (Build,
+                   lookup_from_skills)
+
 from database_skills      import (Skill,
                                  clipped_skills_defaultdict,
                                  calculate_set_bonus_skills,
