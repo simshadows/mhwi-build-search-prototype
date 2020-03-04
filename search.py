@@ -1,7 +1,7 @@
 # -*- coding: ascii -*-
 
 """
-Filename: query.py
+Filename: search.py
 Author:   contact@simshadows.com
 
 This file contains various queries and search algorithms.
@@ -167,15 +167,15 @@ def find_highest_efr_build():
                                                                     required_set_bonus_skills=required_set_bonus_skills)
 
 
-    charm_ids = set()
+    charms = set()
     for skill in efr_skills:
         if skill in charms_indexed_by_skill:
-            for charm_id in charms_indexed_by_skill[skill]:
-                charm_ids.add(charm_id)
-    if len(charm_ids) == 0:
-        charm_ids = [None]
+            for charm in charms_indexed_by_skill[skill]:
+                charms.add(charm)
+    if len(charms) == 0:
+        charms = [None]
     else:
-        charm_ids = list(charm_ids)
+        charms = list(charms)
 
     #decorations = list(get_pruned_deco_set(decoration_skills, bonus_skills=[Skill.FOCUS]))
     decorations = decorations_test_subset
@@ -220,8 +220,7 @@ def find_highest_efr_build():
         assert len(set(armour_contribution.skills) & set(armour_set_bonus_skills)) == 0 # No intersection.
         # Now, we have all armour skills and set bonus skills
 
-        for charm_id in charm_ids:
-            charm = charms_db[charm_id]
+        for charm in charms:
 
             including_charm_skills = copy(all_armour_skills)
             for skill in calculate_skills_dict_from_charm(charm, charm.max_level):
@@ -254,9 +253,8 @@ def find_highest_efr_build():
                             if results.efr > best_efr:
                                 best_efr = results.efr
                                 associated_affinity = results.affinity
-                                associated_build = Build(curr_armour, charm_id, weapon_id, \
-                                                            weapon_augments_config, weapon_upgrade_config, \
-                                                            deco_dict)
+                                associated_build = Build(weapon, curr_armour, charm, weapon_augments_config, \
+                                                            weapon_upgrade_config, deco_dict)
                                 print()
                                 print(f"{best_efr} EFR @ {associated_affinity} affinity")
                                 print()

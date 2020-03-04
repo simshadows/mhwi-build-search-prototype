@@ -59,7 +59,7 @@ def _run_tests_lookup():
     weapon_upgrades_config = None # Start with no upgrades
     weapon = weapon_db["ACID_SHREDDER_II"]
     decorations_list = [] # Start with no decorations
-    charm_id = None
+    charm = None
 
     # This function will leave skills_dict with the skill at max_level.
     def test_with_incrementing_skill(skill, max_level, expected_efrs):
@@ -199,14 +199,16 @@ def _run_tests_lookup():
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [494.11, 515.59])
 
     def check_efr(expected_efr):
-        build = Build(armour_dict, charm_id, weapon_name, weapon_augments_config, weapon_upgrades_config, \
+        transformed_armour_dict = {k: armour_db[(v[0], v[1])].variants[v[2]][k] for (k, v) in armour_dict.items()}
+        build = Build(weapon, transformed_armour_dict, charm, weapon_augments_config, weapon_upgrades_config, \
                                             decorations_list)
         results = build.calculate_performance(skill_states_dict)
         if round(results.efr) != round(expected_efr):
             raise ValueError(f"EFR value mismatch. Expected {expected_efr}. Got {results.efr}.")
 
     def check_skill(expected_skill, expected_level):
-        build = Build(armour_dict, charm_id, weapon_name, weapon_augments_config, weapon_upgrades_config, \
+        transformed_armour_dict = {k: armour_db[(v[0], v[1])].variants[v[2]][k] for (k, v) in armour_dict.items()}
+        build = Build(weapon, transformed_armour_dict, charm, weapon_augments_config, weapon_upgrades_config, \
                                             decorations_list)
         results = build.calculate_performance(skill_states_dict)
         if Skill[expected_skill] not in results.skills:
@@ -215,7 +217,7 @@ def _run_tests_lookup():
         if returned_level != expected_level:
             raise ValueError(f"Skill level mismatch for {expected_skill}. Expected {expected_level}. Got {returned_level}.")
 
-    weapon_name = "ROYAL_VENUS_BLADE"
+    weapon = weapon_db["ROYAL_VENUS_BLADE"]
 
     armour_dict = {
             ArmourSlot.HEAD:  ("Teostra", ArmourDiscriminator.HIGH_RANK,   ArmourVariant.HR_GAMMA),
@@ -330,13 +332,14 @@ def _run_tests_lookup():
         }
 
     print("Testing to see if one indeterminate stateful skill get iterated.")
-    build = Build(armour_dict, charm_id, weapon_name, weapon_augments_config, weapon_upgrades_config, \
+    transformed_armour_dict = {k: armour_db[(v[0], v[1])].variants[v[2]][k] for (k, v) in armour_dict.items()}
+    build = Build(weapon, transformed_armour_dict, charm, weapon_augments_config, weapon_upgrades_config, \
                                         decorations_list)
     results = build.calculate_performance(skill_states_dict)
     if len(results) != 3:
         raise ValueError("Results should've returned a list of 3 items (since Weakness Exploit is the only stateful skill).")
 
-    weapon_name = "JAGRAS_DEATHCLAW_II"
+    weapon = weapon_db["JAGRAS_DEATHCLAW_II"]
 
     armour_dict = {
             # Gonna keep it simple. All Teostra Alpha+.
@@ -361,7 +364,7 @@ def _run_tests_lookup():
         Decoration.ELEMENTLESS,
     ]
 
-    charm_id = "CRITICAL_CHARM"
+    charm = charms_db["CRITICAL_CHARM"]
 
     print("Testing without weapon upgrades.")
     check_efr(467.98)

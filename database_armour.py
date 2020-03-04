@@ -13,10 +13,11 @@ from collections import namedtuple, defaultdict, Counter
 from enum import Enum, auto
 from itertools import product
 
-from database_skills import Skill, SetBonus, calculate_set_bonus_skills
-from database_decorations import skill_to_simple_deco_size
 from enums import Tier
 from utils import json_read, update_and_print_progress
+
+from database_skills import Skill, SetBonus, calculate_set_bonus_skills
+from database_decorations import skill_to_simple_deco_size
 
 
 ARMOUR_DATA_FILENAME = "database_armour.json"
@@ -59,8 +60,8 @@ ArmourNamingScheme = namedtuple(
 ArmourSetInfo = namedtuple(
         "ArmourInfo",
         [
-            "set_name",      # string
-            "discriminator", # ArmourDiscriminator
+            "set_name",      # string                          # Left side of the key.
+            "discriminator", # ArmourDiscriminator             # Right side of the key.
             "rarity",        # int
 
             "prefix",        # string
@@ -75,9 +76,12 @@ ArmourSetInfo = namedtuple(
 ArmourPieceInfo = namedtuple(
         "ArmourVariantInfo",
         [
-            "armour_slot",      # ArmourSlot
-            "decoration_slots", # [int]
-            "skills",           # {Skill: int}
+            "armour_set",         # ArmourSetInfo              # This points us back to the original set.
+
+            "armour_set_variant", # ArmourVariant
+            "armour_slot",        # ArmourSlot
+            "decoration_slots",   # [int]
+            "skills",             # {Skill: int}
         ]
     )
 
@@ -133,20 +137,22 @@ def _obtain_armour_db():
 
             "set_bonus"    : SetBonus[armour_set["set_bonus"]] if (armour_set["set_bonus"] is not None) else None,
 
-            "variants"     : None, # Will fill this again later.
+            "variants"     : {},
         }
 
-        tier = set_kwargs["discriminator"].value.tier
+        set_info = ArmourSetInfo(**set_kwargs)
+
+        if (set_info.set_name, set_info.discriminator) in armour_db_intermediate:
+            raise validation_error(f"Duplicate set: {set_info.set_name}, {set_info.discriminator}")
 
         # Quickly check if there are any unexpected keys.
+        tier = set_info.discriminator.value.tier
         relevant_variant_names = {variant.name for variant in ArmourVariant if (variant.value.tier is tier)}
         all_possible_set_keys = {"set", "discriminator", "rarity", "prefix", "naming_scheme", \
                                         "set_bonus"} | relevant_variant_names
         unexpected_keys = set(armour_set) - all_possible_set_keys
         if len(unexpected_keys) > 0:
             validation_error("Got unexpected keys: " + str(unexpected_keys))
-
-        variants = {}
 
         for variant in ArmourVariant:
             if (variant.value.tier is tier) and (variant.name in armour_set):
@@ -159,9 +165,12 @@ def _obtain_armour_db():
                         validation_error("Expecting exactly two items in the list.", variant=variant, slot=armour_slot_name)
                     
                     piece = ArmourPieceInfo(
-                            armour_slot      = ArmourSlot[armour_slot_name],
-                            decoration_slots = tuple(piece_json_data[0]),
-                            skills           = {Skill[k]: v for (k, v) in piece_json_data[1].items()},
+                            armour_set         = set_info,
+
+                            armour_set_variant = variant,
+                            armour_slot        = ArmourSlot[armour_slot_name],
+                            decoration_slots   = tuple(piece_json_data[0]),
+                            skills             = {Skill[k]: v for (k, v) in piece_json_data[1].items()},
                         )
 
                     if (len(piece.decoration_slots) > 3) or any((not isinstance(x, int)) for x in piece.decoration_slots):
@@ -172,21 +181,14 @@ def _obtain_armour_db():
 
                     subset[piece.armour_slot] = piece
 
-                variants[variant] = subset
+                set_info.variants[variant] = subset
 
-        if len(variants) == 0:
+        if len(set_info.variants) == 0:
             set_name = set_kwargs["set_name"]
             disc = set_kwargs["discriminator"]
             raise validation_error(f"No armour set variants found for {set_name} {disc}.")
 
-        set_kwargs["variants"] = variants
-
-        set_info_tup = ArmourSetInfo(**set_kwargs)
-
-        if (set_info_tup.set_name, set_info_tup.discriminator) in armour_db_intermediate:
-            raise validation_error(f"Duplicate set: {set_info_tup.set_name}, {set_info_tup.discriminator}")
-
-        armour_db_intermediate[(set_info_tup.set_name, set_info_tup.discriminator)] = set_info_tup
+        armour_db_intermediate[(set_info.set_name, set_info.discriminator)] = set_info
 
     if len(armour_db_intermediate) == 0:
         validation_error("No armour sets found.")
@@ -200,7 +202,7 @@ def _obtain_easyiterate_armour_db(original_armour_db):
     for ((set_name, discrim), set_info) in original_armour_db.items():
         for (variant, variant_pieces) in set_info.variants.items():
             for (gear_slot, piece) in variant_pieces.items():
-                intermediate[gear_slot].append(ArmourEasyIterateInfo(set_name=set_name, discrim=discrim, variant=variant))
+                intermediate[gear_slot].append(piece)
     return dict(intermediate) # TODO: We should make it so we just start off with a regular dictionary from the start.
 
 
@@ -358,42 +360,28 @@ def prune_easyiterate_armour_db(original_easyiterate_armour_db, skill_subset=Non
         # This loop is a mostly-unnecessary O(n^2) for n pieces in the list.
         # I have a very good feeling this can be improved on later if needed. Just keeping things simple for now.
         for (i, piece1) in enumerate(piece_list):
-            piece1_armour_set = armour_db[(piece1.set_name, piece1.discrim)]
-            piece1_set_bonus = piece1_armour_set.set_bonus
-            piece1_info = piece1_armour_set.variants[piece1.variant][gear_slot]
+            assert isinstance(piece1, ArmourPieceInfo)
 
-            assert isinstance(piece1_armour_set, ArmourSetInfo)
+            piece1_set_bonus = piece1.armour_set.set_bonus
             assert isinstance(piece1_set_bonus, SetBonus) or (piece1_set_bonus is None)
-            assert isinstance(piece1_info, ArmourPieceInfo)
 
             piece1_is_never_superceded = True
 
             for (j, piece2) in enumerate(piece_list):
+                assert isinstance(piece2, ArmourPieceInfo)
+                
                 if piece1 is piece2:
                     continue
 
-                piece2_armour_set = armour_db[(piece2.set_name, piece2.discrim)]
-                piece2_set_bonus = piece2_armour_set.set_bonus
-                piece2_info = piece2_armour_set.variants[piece2.variant][gear_slot]
+                piece2_set_bonus = piece2.armour_set.set_bonus
 
-                assert isinstance(piece2_armour_set, ArmourSetInfo)
                 assert isinstance(piece2_set_bonus, SetBonus) or (piece2_set_bonus is None)
-                assert isinstance(piece2_info, ArmourPieceInfo)
 
                 # We determine tie-breaker preference using sort order.
                 p2_is_preferred = (j > i)
 
-                #piece1_supercedes_piece2 = _armour_piece_supercedes(piece1, piece1_set_bonus, piece2, piece2_set_bonus) 
-                piece2_supercedes_piece1 = _armour_piece_supercedes(piece2_info, piece2_set_bonus, piece1_info, \
+                piece2_supercedes_piece1 = _armour_piece_supercedes(piece2, piece2_set_bonus, piece1, \
                                                         piece1_set_bonus, p2_is_preferred, skill_subset=skill_subset) 
-                #if piece2_supercedes_piece1:
-                #    print(f"       !!! {gear_slot.name} {piece2.set_name} {piece2.variant.name}  supercedes  " + \
-                #            f"{gear_slot.name} {piece1.set_name} {piece1.variant.name}")
-                #else:
-                #    print(f"           {gear_slot.name} {piece2.set_name} {piece2.variant.name}  does NOT supercede  " + \
-                #            f"{gear_slot.name} {piece1.set_name} {piece1.variant.name}")
-                
-                #print("ret true" if piece2_supercedes_piece1 else "ret false")
 
                 if piece2_supercedes_piece1:
                     piece1_is_never_superceded = False
@@ -404,9 +392,8 @@ def prune_easyiterate_armour_db(original_easyiterate_armour_db, skill_subset=Non
                 #######################################
                 buf = []
                 buf.append(gear_slot.name.ljust(6))
-                buf.append(piece1.set_name.ljust(15))
-                #buf.append(piece1.discrim.name.ljust(12))
-                buf.append(piece1.variant.value.ascii_postfix)
+                buf.append(piece1.armour_set.set_name.ljust(15))
+                buf.append(piece1.armour_set_variant.value.ascii_postfix)
                 buf = " ".join(buf)
                 print(f"KEPT: {buf}")
                 #######################################
@@ -414,9 +401,8 @@ def prune_easyiterate_armour_db(original_easyiterate_armour_db, skill_subset=Non
                 #######################################
                 buf = []
                 buf.append(gear_slot.name.ljust(6))
-                buf.append(piece1.set_name.ljust(15))
-                #buf.append(piece1.discrim.name.ljust(12))
-                buf.append(piece1.variant.value.ascii_postfix)
+                buf.append(piece1.armour_set.set_name.ljust(15))
+                buf.append(piece1.armour_set_variant.value.ascii_postfix)
                 buf = " ".join(buf)
                 print(f"                                               PRUNED: {buf}")
                 #######################################
@@ -602,14 +588,11 @@ def _armour_combination_iter(original_easyiterate_armour_db):
         total_set_bonuses = defaultdict(lambda : 0) # Don't use this after we update total_skills.
 
         # We fill the totals in this loop.
-        for (gear_slot, piece_summary) in combination.items():
-            armour_set = armour_db[(piece_summary.set_name, piece_summary.discrim)]
-            set_bonus = armour_set.set_bonus
-            piece = armour_set.variants[piece_summary.variant][gear_slot]
-
-            assert isinstance(armour_set, ArmourSetInfo)
-            assert isinstance(set_bonus, SetBonus) or (set_bonus is None)
+        for (gear_slot, piece) in combination.items():
             assert isinstance(piece, ArmourPieceInfo)
+
+            set_bonus = piece.armour_set.set_bonus
+            assert isinstance(set_bonus, SetBonus) or (set_bonus is None)
 
             for (skill, level) in piece.skills.items():
                 total_skills[skill] += level
@@ -662,7 +645,7 @@ def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill
     # I have a very good feeling this can be improved on later if needed. Just keeping things simple for now.
     for i, (combination_1, total_skills_1, total_slots_1) in enumerate(all_combinations):
         assert isinstance(combination_1, dict)
-        assert all(isinstance(combination_1[slot], ArmourEasyIterateInfo) for slot in ArmourSlot) # Important for identity
+        assert all(isinstance(combination_1[slot], ArmourPieceInfo) for slot in ArmourSlot) # Important for identity
         assert isinstance(total_skills_1, dict)
         assert isinstance(total_slots_1, Counter)
 
@@ -733,10 +716,8 @@ def calculate_armour_contribution(armour_dict):
     decoration_slots = []
 
     for slot in ArmourSlot:
-        set_name, discriminator, variant = armour_dict[slot]
-
-        armour_set = armour_db[(set_name, discriminator)]
-        piece = armour_set.variants[variant][slot]
+        piece = armour_dict[slot]
+        armour_set = piece.armour_set
 
         assert isinstance(piece.decoration_slots, tuple)
         assert all(isinstance(x, int) for x in piece.decoration_slots)

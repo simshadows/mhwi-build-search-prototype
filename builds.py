@@ -18,7 +18,8 @@ from database_armour      import (ArmourSlot,
                                  armour_db,
                                  calculate_armour_contribution)
 from database_decorations import calculate_decorations_skills_contribution
-from database_charms      import (charms_db,
+from database_charms      import (CharmInfo,
+                                 charms_db,
                                  #charms_indexed_by_skill,
                                  calculate_skills_dict_from_charm)
 from database_misc        import (POWERCHARM_ATTACK_POWER,
@@ -248,9 +249,9 @@ class Build:
             "_waist",
             "_legs",
 
-            "_charm_id", # TODO: We should just use the charm object.
+            "_charm",
 
-            "_weapon_id", # TODO: We should just use the weapon object.
+            "_weapon",
             "_weapon_augments_config",
             "_weapon_upgrades_config",
 
@@ -267,13 +268,13 @@ class Build:
     #           ArmourSlot.LEGS:  ("Yian Garuga",  ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
     #       }
     #
-    #       charm_id = "CHALLENGER_CHARM"
+    #       charm_id = charms_db["CHALLENGER_CHARM"]
     #
-    #       weapon_id = "ACID_SHREDDER_II"
+    #       weapon = weapon_db["ACID_SHREDDER_II"]
     #
     #       decos_list_or_dict = ???
     #
-    def __init__(self, armour_dict, charm_id, weapon_id, weapon_augments_config, weapon_upgrades_config, decos_list_or_dict):
+    def __init__(self, weapon, armour_dict, charm, weapon_augments_config, weapon_upgrades_config, decos_list_or_dict):
 
         self._head  = armour_dict.get(ArmourSlot.HEAD,  None)
         self._chest = armour_dict.get(ArmourSlot.CHEST, None)
@@ -281,13 +282,13 @@ class Build:
         self._waist = armour_dict.get(ArmourSlot.WAIST, None)
         self._legs  = armour_dict.get(ArmourSlot.LEGS,  None)
 
-        self._charm_id = charm_id
-        assert isinstance(self._charm_id, str) or (self._charm_id is None)
+        self._charm = charm
+        assert isinstance(self._charm, CharmInfo) or (self._charm is None)
 
-        self._weapon_id = weapon_id
+        self._weapon = weapon
         self._weapon_augments_config = copy(weapon_augments_config)
         self._weapon_upgrades_config = copy(weapon_upgrades_config)
-        assert isinstance(self._weapon_id, str)
+        #assert isinstance(self._weapon, namedtuple) # TODO: Make a proper assertion for this.
         assert isinstance(self._weapon_augments_config, list)
         assert isinstance(self._weapon_upgrades_config, list) or (self._weapon_upgrades_config is None)
 
@@ -297,18 +298,16 @@ class Build:
         return
 
     def calculate_performance(self, skill_states_dict):
-        weapon = weapon_db[self._weapon_id]
         armour_contribution = calculate_armour_contribution(self._get_armour_dict())
-        charm = charms_db[self._charm_id] if (self._charm_id is not None) else None
         decorations_counter = Counter(self._decos)
 
-        slots_available_counter = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
+        slots_available_counter = Counter(list(self._weapon.slots) + list(armour_contribution.decoration_slots))
 
         # For debugging, we can first determine if the decorations fit in the selected gear.
         # (We should be able to rely on inputs here.
         # Both slots_*_counter are in the format {slot_size: count}
         if __debug__:
-            tmp_slots_available_counter = copy(Counter(list(weapon.slots) + list(armour_contribution.decoration_slots)))
+            tmp_slots_available_counter = copy(Counter(list(self._weapon.slots) + list(armour_contribution.decoration_slots)))
             assert len(tmp_slots_available_counter) <= 4 # We only have slot sizes 1 to 4.
 
             slots_used_counter = Counter()
@@ -334,8 +333,8 @@ class Build:
         skills_dict = armour_contribution.skills
 
         # Charm skills
-        if charm is not None:
-            charm_skills_dict = calculate_skills_dict_from_charm(charm, charm.max_level)
+        if self._charm is not None:
+            charm_skills_dict = calculate_skills_dict_from_charm(self._charm, self._charm.max_level)
             for (skill, level) in charm_skills_dict.items():
                 skills_dict[skill] += level
 
@@ -351,7 +350,7 @@ class Build:
 
         skills_dict.update(skills_from_set_bonuses)
 
-        intermediate_results = lookup_from_skills(weapon, skills_dict, skill_states_dict, \
+        intermediate_results = lookup_from_skills(self._weapon, skills_dict, skill_states_dict, \
                                                     self._weapon_augments_config, self._weapon_upgrades_config)
 
         def transform_results_recursively(obj):
@@ -372,7 +371,7 @@ class Build:
         return transform_results_recursively(intermediate_results)
 
     def print(self):
-        print("      " + weapon_db[self._weapon_id].name)
+        print("      " + self._weapon.name)
 
         print()
         for (augment, level) in self._weapon_augments_config:
@@ -383,10 +382,10 @@ class Build:
 
         print()
 
-        def print_armour_piece(slot, slot_data):
-            a = armour_db[(slot_data[0], slot_data[1])].variants[slot_data[2]][slot]
-            armour_str = (slot.name.ljust(5) + ": " + slot_data[0] + " " + slot_data[2].value.ascii_postfix).ljust(25)
-            deco_str = " ".join(str(x) for x in a.decoration_slots) if (len(a.decoration_slots) > 0) else "(none)"
+        def print_armour_piece(slot, piece):
+            armour_str = (slot.name.ljust(5) + ": " + piece.armour_set.set_name + " " + \
+                                    piece.armour_set_variant.value.ascii_postfix).ljust(25)
+            deco_str = " ".join(str(x) for x in piece.decoration_slots) if (len(piece.decoration_slots) > 0) else "(none)"
             print(f"      {armour_str} slots: {deco_str}")
             return
 
@@ -397,7 +396,7 @@ class Build:
         print_armour_piece(ArmourSlot.LEGS,  self._legs)
         
         print()
-        print("      CHARM: " + charms_db[self._charm_id].name)
+        print("      CHARM: " + self._charm.name)
 
         print()
         for (deco, level) in self._decos.items():

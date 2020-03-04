@@ -7,8 +7,9 @@ Author:   contact@simshadows.com
 
 from collections import namedtuple
 
-from database_skills import Skill
 from utils import json_read
+
+from database_skills import Skill
 
 
 CHARMS_DATA_FILENAME = "database_charms.json"
@@ -17,6 +18,8 @@ CHARMS_DATA_FILENAME = "database_charms.json"
 CharmInfo = namedtuple(
     "CharmInfo",
     [
+        "id",        # string
+
         "name",      # string
         "max_level", # int
         "skills",    # [Skill]
@@ -47,6 +50,7 @@ def _obtain_charms_db():
         # TODO: Also put a condition that charm IDs must be capitalized with underscores.
 
         tup = CharmInfo(
+                id = charm_id,
                 name = charm_json_data["name"],
                 max_level = charm_json_data["max_level"],
                 skills = tuple(Skill[skill_id] for skill_id in charm_json_data["skills"])
@@ -77,9 +81,9 @@ def _obtain_charms_db():
 
         for skill in tup.skills:
             if skill in index_by_skill_intermediate:
-                index_by_skill_intermediate[skill].append(charm_id)
+                index_by_skill_intermediate[skill].append(tup)
             else:
-                index_by_skill_intermediate[skill] = [charm_id]
+                index_by_skill_intermediate[skill] = [tup]
 
     return charms_intermediate, index_by_skill_intermediate
 

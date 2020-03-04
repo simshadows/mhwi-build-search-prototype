@@ -9,8 +9,9 @@ from collections import namedtuple, defaultdict
 from enum import Enum, unique
 from itertools import product
 
-from database_skills import Skill
 from utils import json_read
+
+from database_skills import Skill
 
 
 DECORATIONS_DATA_FILENAME = "database_decorations.json"

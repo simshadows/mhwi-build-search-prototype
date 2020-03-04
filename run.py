@@ -17,7 +17,7 @@ from copy import copy
 from collections import namedtuple, defaultdict, Counter
 
 from unit_testing import run_tests
-from builds       import Build, lookup_from_skills
+from builds       import lookup_from_skills
 from search       import find_highest_efr_build
 
 from database_skills      import Skill

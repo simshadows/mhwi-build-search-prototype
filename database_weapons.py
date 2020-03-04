@@ -418,8 +418,9 @@ class WeaponClass(Enum):
 
 
 _common_fields = [
-    "name",
     "id",
+
+    "name",
     "rarity",
     "attack",
     "affinity",
