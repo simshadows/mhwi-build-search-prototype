@@ -131,7 +131,7 @@ def find_highest_efr_build():
     # STAGE 1: Basic Definitions #
     ##############################
 
-    desired_weapon = WeaponClass.GREATSWORD
+    desired_weapon_class = WeaponClass.GREATSWORD
 
     efr_skills = skills_with_implemented_features 
 
@@ -160,7 +160,7 @@ def find_highest_efr_build():
     # STAGE 2: Component Lists #
     ############################
 
-    weapon_ids = [weapon_id for (weapon_id, weapon_info) in weapon_db.items() if weapon_info.type is desired_weapon]
+    weapons = [weapon for (_, weapon) in weapon_db.items() if weapon.type is desired_weapon_class]
 
     pruned_armour_db = prune_easyiterate_armour_db(skillsonly_pruned_armour, skill_subset=efr_skills)
     pruned_armour_combos = generate_and_prune_armour_combinations(pruned_armour_db, skill_subset=efr_skills, \
@@ -227,9 +227,7 @@ def find_highest_efr_build():
                 including_charm_skills[skill] += charm.max_level
             # Now, we also have charm skills included.
 
-            for weapon_id in weapon_ids:
-                weapon = weapon_db[weapon_id]
-
+            for weapon in weapons:
                 for weapon_augments_config in WeaponAugmentTracker.get_instance(weapon).get_maximized_configs():
 
                     deco_slots = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
