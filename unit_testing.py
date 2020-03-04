@@ -11,8 +11,8 @@ from copy import copy
 #from math import floor
 from collections import namedtuple, defaultdict, Counter
 
-from query_and_search import lookup_from_skills, lookup_from_gear
-
+from builds_and_saving    import (Build,
+                                 lookup_from_skills)
 from database_skills      import (Skill,
                                  clipped_skills_defaultdict,
                                  calculate_set_bonus_skills,
@@ -199,14 +199,16 @@ def _run_tests_lookup():
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [494.11, 515.59])
 
     def check_efr(expected_efr):
-        results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, \
-                                            weapon_augments_config, weapon_upgrades_config)
+        build = Build(armour_dict, charm_id, weapon_name, weapon_augments_config, weapon_upgrades_config, \
+                                            decorations_list)
+        results = build.calculate_performance(skill_states_dict)
         if round(results.efr) != round(expected_efr):
             raise ValueError(f"EFR value mismatch. Expected {expected_efr}. Got {results.efr}.")
 
     def check_skill(expected_skill, expected_level):
-        results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, \
-                                            weapon_augments_config, weapon_upgrades_config)
+        build = Build(armour_dict, charm_id, weapon_name, weapon_augments_config, weapon_upgrades_config, \
+                                            decorations_list)
+        results = build.calculate_performance(skill_states_dict)
         if Skill[expected_skill] not in results.skills:
             raise ValueError(f"Skill {expected_skill} not present.")
         returned_level = results.skills[Skill[expected_skill]]
@@ -328,8 +330,9 @@ def _run_tests_lookup():
         }
 
     print("Testing to see if one indeterminate stateful skill get iterated.")
-    results = lookup_from_gear(weapon_name, armour_dict, charm_id, decorations_list, skill_states_dict, \
-                                            weapon_augments_config, weapon_upgrades_config)
+    build = Build(armour_dict, charm_id, weapon_name, weapon_augments_config, weapon_upgrades_config, \
+                                        decorations_list)
+    results = build.calculate_performance(skill_states_dict)
     if len(results) != 3:
         raise ValueError("Results should've returned a list of 3 items (since Weakness Exploit is the only stateful skill).")
 

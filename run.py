@@ -16,10 +16,9 @@ from copy import copy
 #from math import floor
 from collections import namedtuple, defaultdict, Counter
 
-from unit_testing     import run_tests
-from query_and_search import (lookup_from_skills,
-                             lookup_from_gear,
-                             find_highest_efr_build)
+from unit_testing      import run_tests
+from builds_and_saving import Build, lookup_from_skills
+from query_and_search  import find_highest_efr_build
 
 from database_skills      import Skill
 from database_weapons     import weapon_db, IBWeaponAugmentType
