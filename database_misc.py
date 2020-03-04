@@ -1,3 +1,5 @@
+# -*- coding: ascii -*-
+
 """
 Filename: database_misc.py
 Author:   contact@simshadows.com

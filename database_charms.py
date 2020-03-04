@@ -1,3 +1,5 @@
+# -*- coding: ascii -*-
+
 """
 Filename: database_charms.py
 Author:   contact@simshadows.com

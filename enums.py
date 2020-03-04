@@ -1,3 +1,5 @@
+# -*- coding: ascii -*-
+
 """
 Filename: enums.py
 Author:   contact@simshadows.com

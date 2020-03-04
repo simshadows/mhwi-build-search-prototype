@@ -1,3 +1,5 @@
+# -*- coding: ascii -*-
+
 """
 Filename: database_decorations.py
 Author:   contact@simshadows.com

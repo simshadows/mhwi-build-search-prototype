@@ -1,3 +1,5 @@
+# -*- coding: ascii -*-
+
 """
 Filename: database_skills.py
 Author:   contact@simshadows.com

@@ -1,3 +1,5 @@
+# -*- coding: ascii -*-
+
 """
 Filename: utils.py
 Author:   contact@simshadows.com

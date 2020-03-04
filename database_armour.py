@@ -1,3 +1,5 @@
+# -*- coding: ascii -*-
+
 """
 Filename: database_armour.py
 Author:   contact@simshadows.com

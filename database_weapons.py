@@ -1,3 +1,5 @@
+# -*- coding: ascii -*-
+
 """
 Filename: database_weapons.py
 Author:   contact@simshadows.com

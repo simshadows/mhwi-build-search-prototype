@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: ascii -*-
 
 """
@@ -15,6 +14,7 @@ import multiprocessing as mp
 
 from collections import namedtuple, defaultdict, Counter
 
+from builds_and_saving    import Build
 from database_skills      import (RAW_BLUNDER_MULTIPLIER,
                                  Skill,
                                  skills_with_implemented_features,
@@ -522,39 +522,9 @@ def find_highest_efr_build():
     # STAGE 3: Search! #
     ####################
 
-    def print_current_build():
-        print()
-        print(f"{best_efr} EFR @ {associated_affinity} affinity")
-
-        print()
-        print("      " + weapon_db[weapon_id].name)
-
-        print()
-        for (augment, level) in weapon_augments_config:
-            print(f"      {augment.name} {level}")
-        if weapon_upgrade_config is not None:
-            for (stage, upgrade) in enumerate(weapon_upgrade_config):
-                print(f"      Custom Upgrade: {upgrade.name} {stage+1}")
-
-        print()
-        for (k, v) in curr_armour.items():
-            a = armour_db[(v[0], v[1])].variants[v[2]][k]
-            armour_str = (k.name.ljust(5) + ": " + v[0] + " " + v[2].value.ascii_postfix).ljust(25)
-            deco_str = " ".join(str(x) for x in a.decoration_slots) if (len(a.decoration_slots) > 0) else "(none)"
-
-            print(f"      {armour_str} slots: {deco_str}")
-
-        print()
-        print("      CHARM: " + charms_db[charm_id].name)
-
-        print()
-        for (deco, level) in deco_dict.items():
-            print(f"      x{level} {deco.value.name}")
-
-        print()
-        return
-
     best_efr = 0
+    associated_affinity = None
+    associated_build = None
 
     start_real_time = time.time()
 
@@ -613,7 +583,14 @@ def find_highest_efr_build():
                             if results.efr > best_efr:
                                 best_efr = results.efr
                                 associated_affinity = results.affinity
-                                print_current_build()
+                                associated_build = Build(curr_armour, charm_id, weapon_id, \
+                                                            weapon_augments_config, weapon_upgrade_config, \
+                                                            deco_dict)
+                                print()
+                                print(f"{best_efr} EFR @ {associated_affinity} affinity")
+                                print()
+                                associated_build.print()
+                                print()
         progress()
 
     end_real_time = time.time()
