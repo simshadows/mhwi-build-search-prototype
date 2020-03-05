@@ -16,7 +16,8 @@ from collections import namedtuple, defaultdict, Counter
 
 from builds import (Build,
                    lookup_from_skills)
-from utils  import update_and_print_progress
+from utils  import (update_and_print_progress,
+                   grouper)
 
 from database_skills      import (Skill,
                                  skills_with_implemented_features,
@@ -26,7 +27,8 @@ from database_weapons     import (WeaponClass,
                                  WeaponAugmentTracker,
                                  WeaponUpgradeTracker,
                                  print_weapon_config)
-from database_armour      import (armour_db,
+from database_armour      import (ArmourSlot,
+                                 armour_db,
                                  skillsonly_pruned_armour,
                                  prune_easyiterate_armour_db,
                                  generate_and_prune_armour_combinations,
@@ -38,6 +40,14 @@ from database_decorations import (Decoration,
                                  get_pruned_deco_set,
                                  calculate_decorations_skills_contribution)
 
+
+NUM_WORKERS = 32
+
+FULL_SKILL_STATES = {
+    Skill.AGITATOR: 1,
+    Skill.PEAK_PERFORMANCE: 1,
+    Skill.WEAKNESS_EXPLOIT: 2,
+}
 
 
 def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_skills, skill_subset=None):
@@ -143,7 +153,44 @@ def _generate_weapon_combinations(weapon_list, skills_for_ceiling_efr, skill_sta
 
 def find_highest_efr_build():
 
-    total_start_real_time = time.time()
+    start_real_time = time.time()
+
+    with mp.Pool(NUM_WORKERS) as p:
+        best_builds_serialized = p.map(_find_highest_efr_build_worker, list(range(NUM_WORKERS)))
+
+    best_efr = 0
+    best_build = None
+    for serialized_build in best_builds_serialized:
+        build = Build.deserialize(serialized_build)
+        results = build.calculate_performance(FULL_SKILL_STATES)
+        if results.efr > best_efr:
+            best_efr = results.efr
+            best_build = build
+
+    end_real_time = time.time()
+
+    results = best_build.calculate_performance(FULL_SKILL_STATES)
+
+    print()
+    print("Final build:")
+    print()
+    print(f"{results.efr} EFR @ {results.affinity} affinity")
+    print()
+    best_build.print()
+    print()
+
+    total_real_time_minutes = int((end_real_time - start_real_time) // 60)
+    total_real_time_seconds = int((end_real_time - start_real_time) % 60)
+
+    print()
+    print(f"Total execution time (in real time): {total_real_time_minutes:02}:{total_real_time_seconds:02}")
+    print(f"({end_real_time - start_real_time} seconds)")
+    print()
+
+    return
+
+
+def _find_highest_efr_build_worker(worker_number):
 
     ##############################
     # STAGE 1: Basic Definitions #
@@ -152,12 +199,6 @@ def find_highest_efr_build():
     desired_weapon_class = WeaponClass.GREATSWORD
 
     efr_skills = skills_with_implemented_features 
-
-    full_skill_states = {
-        Skill.AGITATOR: 1,
-        Skill.PEAK_PERFORMANCE: 1,
-        Skill.WEAKNESS_EXPLOIT: 2,
-    }
 
     required_set_bonus_skills = { # IMPORTANT: We're not checking yet if these skills are actually attainable via. set bonus.
         Skill.MASTERS_TOUCH,
@@ -172,6 +213,7 @@ def find_highest_efr_build():
         Decoration.TENDERIZER,
         Decoration.ELEMENTLESS,
         Decoration.EXPERT,
+
         #Decoration.CRITICAL,
         ##Decoration.CHALLENGER,
         #Decoration.CHALLENGER_X2,
@@ -191,6 +233,20 @@ def find_highest_efr_build():
     pruned_armour_db = prune_easyiterate_armour_db(skillsonly_pruned_armour, skill_subset=efr_skills)
     pruned_armour_combos = generate_and_prune_armour_combinations(pruned_armour_db, skill_subset=efr_skills, \
                                                                     required_set_bonus_skills=required_set_bonus_skills)
+    def sort_key_fn(x):
+        head = x[ArmourSlot.HEAD]
+        chest = x[ArmourSlot.CHEST]
+        arms = x[ArmourSlot.ARMS]
+        waist = x[ArmourSlot.WAIST]
+        legs = x[ArmourSlot.LEGS]
+
+        buf = head.armour_set.set_name + head.armour_set.discriminator.name + head.armour_set_variant.name \
+                + chest.armour_set.set_name + chest.armour_set.discriminator.name + chest.armour_set_variant.name \
+                + arms.armour_set.set_name + arms.armour_set.discriminator.name + arms.armour_set_variant.name \
+                + waist.armour_set.set_name + waist.armour_set.discriminator.name + waist.armour_set_variant.name \
+                + legs.armour_set.set_name + legs.armour_set.discriminator.name + legs.armour_set_variant.name
+        return buf
+    pruned_armour_combos.sort(key=sort_key_fn)
 
 
     charms = set()
@@ -206,16 +262,23 @@ def find_highest_efr_build():
     #decorations = list(get_pruned_deco_set(decoration_skills, bonus_skills=[Skill.FOCUS]))
     decorations = decorations_test_subset
 
-    #print("Sorting weapon configurations...") # Actually, it's not necessary to sort yet.
+    print("Sorting weapon configurations...") # Actually, it's not necessary to sort yet.
     all_skills_max_except_free_elem = {skill: skill.value.limit for skill in efr_skills}
-    all_weapon_configurations = list(_generate_weapon_combinations(weapons, all_skills_max_except_free_elem, full_skill_states))
-    #all_weapon_configurations.sort(key=lambda x : x[3])
-    #assert all_weapon_configurations[0][3] <= all_weapon_configurations[-1][3]
-    #print("... done.")
+    all_weapon_configurations = list(_generate_weapon_combinations(weapons, all_skills_max_except_free_elem, FULL_SKILL_STATES))
+    all_weapon_configurations.sort(key=lambda x : x[3], reverse=True)
+    assert all_weapon_configurations[0][3] >= all_weapon_configurations[-1][3]
+    print("... done.")
 
     debugging_num_initial_weapon_configs = len(all_weapon_configurations)
 
-    print("Lowest ceiling EFR: " + str(all_weapon_configurations[0][3]))
+    print("Lowest ceiling EFR: " + str(all_weapon_configurations[-1][3]))
+
+    sublist_ideal_len = int(ceil(len(pruned_armour_combos) / NUM_WORKERS))
+    all_armour_combos_sublists = list(grouper(pruned_armour_combos, sublist_ideal_len))
+    assert sum(len(x) for x in all_armour_combos_sublists) >= len(pruned_armour_combos)
+    armour_combos_sublist = all_armour_combos_sublists[worker_number]
+
+    print(f"worker {worker_number}, len {len(armour_combos_sublist)} out of {len(pruned_armour_combos)}")
 
     ####################
     # STAGE 3: Search! #
@@ -227,7 +290,7 @@ def find_highest_efr_build():
 
     start_real_time = time.time()
 
-    total_progress_segments = len(pruned_armour_combos)
+    total_progress_segments = len(armour_combos_sublist)
     progress_segment_size = 1 / total_progress_segments
     curr_progress_segment = 0
 
@@ -250,7 +313,10 @@ def find_highest_efr_build():
         nonlocal start_real_time
         curr_progress_segment = update_and_print_progress("SEARCH", curr_progress_segment, total_progress_segments, start_real_time)
 
-    for curr_armour in pruned_armour_combos:
+    for curr_armour in armour_combos_sublist:
+
+        if curr_armour is None: # This is because the list splitting function fills with Nones so the lists are equal size.
+            continue
 
         armour_contribution = calculate_armour_contribution(curr_armour)
         armour_set_bonus_skills = calculate_set_bonus_skills(armour_contribution.set_bonuses)
@@ -284,7 +350,7 @@ def find_highest_efr_build():
                         including_deco_skills[skill] += level
                         # Now, we also have decoration skills included.
                     
-                    results = lookup_from_skills(weapon, including_deco_skills, full_skill_states, \
+                    results = lookup_from_skills(weapon, including_deco_skills, FULL_SKILL_STATES, \
                                                     weapon_augments_tracker, weapon_upgrades_tracker)
                     assert results is not list
 
@@ -304,33 +370,19 @@ def find_highest_efr_build():
                 regenerate_weapon_list()
 
             #progress()
-        progress()
+        if worker_number == 0: # TODO: Make it so all processes signal progress.
+            progress()
 
-    end_real_time = time.time()
+    if worker_number == 0: # TODO: Make it so all processes signal progress.
+        end_real_time = time.time()
 
-    print()
-    print("Final build:")
-    print()
-    print(f"{best_efr} EFR @ {associated_affinity} affinity")
-    print()
-    associated_build.print()
-    print()
+        search_real_time_minutes = int((end_real_time - start_real_time) // 60)
+        search_real_time_seconds = int((end_real_time - start_real_time) % 60)
 
-    search_real_time_minutes = int((end_real_time - start_real_time) // 60)
-    search_real_time_seconds = int((end_real_time - start_real_time) % 60)
+        print()
+        print(f"Search execution time (in real time): {search_real_time_minutes:02}:{search_real_time_seconds:02}")
+        print(f"({end_real_time - start_real_time} seconds)")
+        print()
 
-    print()
-    print(f"Search execution time (in real time): {search_real_time_minutes:02}:{search_real_time_seconds:02}")
-    print(f"({end_real_time - start_real_time} seconds)")
-    print()
-
-    total_real_time_minutes = int((end_real_time - total_start_real_time) // 60)
-    total_real_time_seconds = int((end_real_time - total_start_real_time) % 60)
-
-    print()
-    print(f"Total execution time (in real time): {total_real_time_minutes:02}:{total_real_time_seconds:02}")
-    print(f"({end_real_time - total_start_real_time} seconds)")
-    print()
-
-    return
+    return associated_build.serialize()
 

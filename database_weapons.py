@@ -233,16 +233,7 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
         return new
 
     def get_config(self):
-        augments = {IBWeaponAugmentType[k]: v for (k, v) in self._augments.items()}
-
-        data = {
-                "rarity": self._rarity,
-                "aug_level": self._aug_level,
-                "augments": augments,
-            }
-        serial_data = json_dumps(data)
-        assert isinstance(serial_data, str)
-        return serial_data
+        return list(self._augments.items())
 
     def get_serialized_config(self):
         augments = {k.name: v for (k, v) in self._augments.items()}

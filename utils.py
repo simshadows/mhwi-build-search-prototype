@@ -10,6 +10,7 @@ Contains general utility stuff.
 #import os
 import time
 import json
+from itertools import zip_longest
 
 #_CWD = os.getcwd()
 _ENCODING = "utf-8"
@@ -58,3 +59,9 @@ def update_and_print_progress(msg, curr_progress_segment, total_progress_segment
 
     return curr_progress_segment
 
+# Recipe from Python 3.8 Itertools documentation.
+def grouper(iterable, n, fillvalue=None):
+    "Collect data into fixed-length chunks or blocks"
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)

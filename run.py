@@ -50,7 +50,7 @@ def print_debugging_statistics():
 
 def search_command():
     print("Carrying out a pre-defined search.")
-    results = find_highest_efr_build()
+    find_highest_efr_build()
     return
 
 
