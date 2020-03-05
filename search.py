@@ -172,6 +172,14 @@ def find_highest_efr_build():
         Decoration.TENDERIZER,
         Decoration.ELEMENTLESS,
         Decoration.EXPERT,
+        #Decoration.CRITICAL,
+        ##Decoration.CHALLENGER,
+        #Decoration.CHALLENGER_X2,
+        #Decoration.HANDICRAFT,
+        ##Decoration.HANDICRAFT_X2,
+        ##Decoration.ATTACK,
+        ##Decoration.ATTACK_X2,
+        ##Decoration.FLAWLESS,
     ]
 
     ############################

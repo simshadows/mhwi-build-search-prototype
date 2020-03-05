@@ -45,6 +45,7 @@ def run_tests():
 
     _run_tests_lookup()
     _run_tests_armour_pruning()
+    _run_tests_serializing()
 
     print("\nUnit tests are all passed.")
     print("\n==============================\n")
@@ -504,6 +505,68 @@ def _run_tests_armour_pruning():
     test_not_supercedes_in_reverse("LEGS", "Yian Garuga", "MASTER_RANK", "MR_BETA_PLUS", "Yian Garuga", "MASTER_RANK", \
                                     "MR_ALPHA_PLUS", False, skill_subset={Skill.CRITICAL_EYE,})
 
+    return True
+
+
+def _run_tests_serializing():
+    print()
+    print("Testing serializing and deserializing of build data.")
+
+    weapon = weapon_db["ACID_SHREDDER_II"]
+
+    armour_dict = {
+            ArmourSlot.HEAD:  ("Velkhana", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_ALPHA_PLUS),
+            ArmourSlot.CHEST: ("Velkhana", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+            ArmourSlot.ARMS:  ("Teostra",  ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+            ArmourSlot.WAIST: ("Velkhana", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+            ArmourSlot.LEGS:  ("Velkhana", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+        }
+    armour_dict = {k: armour_db[(v[0], v[1])].variants[v[2]][k] for (k, v) in armour_dict.items()}
+
+    charm = charms_db["CHALLENGER_CHARM"]
+
+    weapon_augments_config = [
+            (IBWeaponAugmentType.ATTACK_INCREASE  , 1),
+            (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+        ]
+
+    weapon_upgrades_config = ([IBCWeaponUpgradeType.AFFINITY] * 4) + ([IBCWeaponUpgradeType.ATTACK] * 2)
+
+    weapon_augments_tracker = WeaponAugmentTracker.get_instance(weapon)
+    weapon_augments_tracker.update_with_config(weapon_augments_config)
+    weapon_upgrades_tracker = WeaponUpgradeTracker.get_instance(weapon)
+    weapon_upgrades_tracker.update_with_config(weapon_upgrades_config)
+
+    decos = [Decoration.ELEMENTLESS] + [Decoration.COMPOUND_TENDERIZER_VITALITY] + [Decoration.ATTACK]
+
+    skill_states_dict = {
+            Skill.WEAKNESS_EXPLOIT: 2,
+            Skill.AGITATOR:         1,
+        }
+
+    original_build_obj = Build(weapon, armour_dict, charm, weapon_augments_tracker, weapon_upgrades_tracker, decos)
+
+    original_results = original_build_obj.calculate_performance(skill_states_dict)
+
+    if round(original_results.efr, 2) != round(468.14, 2):
+        raise ValueError(f"Test failed. Got {original_results.efr} EFR.")
+    if original_results.affinity != 51:
+        raise ValueError(f"Test failed. Got {original_results.affinity} affinity.")
+
+    serialized_data = original_build_obj.serialize()
+
+    if not isinstance(serialized_data, str):
+        raise ValueError("Expected a string.")
+
+    new_build_obj = Build.deserialize(serialized_data)
+
+    new_results = new_build_obj.calculate_performance(skill_states_dict)
+
+    if round(new_results.efr, 2) != round(468.14, 2):
+        raise ValueError(f"Test failed. Got {original_results.efr} EFR.")
+    if new_results.affinity != 51:
+        raise ValueError(f"Test failed. Got {original_results.affinity} affinity.")
+    
     return True
 
 

@@ -8,16 +8,19 @@ This file contains build data structures, functions to operate on them, and how 
 a build to file (and serialize/deserialize to text).
 """
 
-import sys, time
+import sys, time, json
 from math import ceil
 from copy import copy
 
 from collections import namedtuple, defaultdict, Counter
 
-from database_armour      import (ArmourSlot,
+from database_armour      import (ArmourDiscriminator,
+                                 ArmourVariant,
+                                 ArmourSlot,
                                  armour_db,
                                  calculate_armour_contribution)
-from database_decorations import calculate_decorations_skills_contribution
+from database_decorations import (calculate_decorations_skills_contribution,
+                                 Decoration)
 from database_charms      import (CharmInfo,
                                  charms_db,
                                  #charms_indexed_by_skill,
@@ -238,7 +241,7 @@ def lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_t
 class Build:
     
     __slots__ = [
-            "_head", # These are all in easyiterate format.
+            "_head",
             "_chest",
             "_arms",
             "_waist",
@@ -398,4 +401,43 @@ class Build:
                 ArmourSlot.WAIST: self._waist,
                 ArmourSlot.LEGS:  self._legs,
             }
+
+    def serialize(self):
+        armour_keys = {k.name: [v.armour_set.set_name, v.armour_set.discriminator.name, v.armour_set_variant.name]
+                      for (k, v) in self._get_armour_dict().items()}
+        charm_id = self._charm.id
+        weapon_id = self._weapon.id
+        weapon_augments_serialized = self._weapon_augments_tracker.get_serialized_config()
+        weapon_upgrades_serialized = self._weapon_upgrades_tracker.get_serialized_config()
+        decos = {k.name: v for (k, v) in Counter(self._decos).items()}
+
+        data = {
+                "armour": armour_keys,
+                "charm": charm_id,
+                "weapon": weapon_id,
+                "weapon_augments": weapon_augments_serialized,
+                "weapon_upgrades": weapon_upgrades_serialized,
+                "decorations": decos,
+            }
+        serial_data = json.dumps(data) # This will fail if we mess something up.
+        assert isinstance(serial_data, str)
+        return serial_data
+
+    @classmethod
+    def deserialize(self, serial_data):
+        assert isinstance(serial_data, str)
+        data = json.loads(serial_data)
+        
+        armour_dict = {ArmourSlot[k]: armour_db[(v[0], ArmourDiscriminator[v[1]])].variants[ArmourVariant[v[2]]][ArmourSlot[k]]
+                      for (k, v) in data["armour"].items()}
+        charm = charms_db[data["charm"]]
+        weapon = weapon_db[data["weapon"]]
+        weapon_augments_tracker = WeaponAugmentTracker.get_instance(weapon)
+        weapon_augments_tracker.update_with_serialized_config(data["weapon_augments"])
+        weapon_upgrades_tracker = WeaponUpgradeTracker.get_instance(weapon)
+        weapon_upgrades_tracker.update_with_serialized_config(data["weapon_upgrades"])
+        decos_dict = {Decoration[k]: v for (k, v) in data["decorations"].items()}
+
+        obj = Build(weapon, armour_dict, charm, weapon_augments_tracker, weapon_upgrades_tracker, decos_dict)
+        return obj
 

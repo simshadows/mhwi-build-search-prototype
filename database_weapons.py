@@ -7,6 +7,7 @@ Author:   contact@simshadows.com
 This file provides the MHWI build optimizer script's weapons database.
 """
 
+import json
 from abc import ABC, abstractmethod
 from collections import namedtuple
 from itertools import accumulate
@@ -57,6 +58,11 @@ class WeaponAugmentTracker(ABC):
     def get_config(self):
         raise NotImplementedError
 
+    # Similar to get_config(), but this returns an arbitrary string that the class can read to restore to the same augments.
+    @abstractmethod
+    def get_serialized_config(self):
+        raise NotImplementedError
+
     # Gives back a WeaponAugmentsContribution namedtuple with all the values the current
     # set of augments contributes to the build.
     @abstractmethod
@@ -74,14 +80,24 @@ class WeaponAugmentTracker(ABC):
     def update_with_config(self, selected_config):
         raise NotImplementedError
 
+    # Similar to update_with_config(), but you get a string returned by get_serialized_config().
+    @abstractmethod
+    def update_with_serialized_config(self, serialized_config):
+        raise NotImplementedError
+
 
 class NoWeaponAugments(WeaponAugmentTracker):
+
+    MAGIC_WORD = "NoWeaponAugments"
 
     def copy(self):
         return self # It shouldn't matter at all
 
     def get_config(self):
         return []
+
+    def get_serialized_config(self):
+        return self.MAGIC_WORD
 
     def calculate_contribution(self):
         ret = WeaponAugmentsContribution (
@@ -96,6 +112,10 @@ class NoWeaponAugments(WeaponAugmentTracker):
 
     def update_with_config(self, selected_config):
         raise RuntimeError("Can't update the augments of a weapon that can't be augmented.")
+
+    def update_with_serialized_config(self, serialized_config):
+        assert serialized_config == self.MAGIC_WORD
+        return
 
 
 class IBWeaponAugmentType(Enum):
@@ -213,7 +233,28 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
         return new
 
     def get_config(self):
-        return [(x1, x2) for (x1, x2) in self._augments.items()]
+        augments = {IBWeaponAugmentType[k]: v for (k, v) in self._augments.items()}
+
+        data = {
+                "rarity": self._rarity,
+                "aug_level": self._aug_level,
+                "augments": augments,
+            }
+        serial_data = json_dumps(data)
+        assert isinstance(serial_data, str)
+        return serial_data
+
+    def get_serialized_config(self):
+        augments = {k.name: v for (k, v) in self._augments.items()}
+
+        data = {
+                "rarity": self._rarity,
+                "aug_level": self._aug_level,
+                "augments": augments,
+            }
+        serialized_data = json.dumps(data)
+        assert isinstance(serialized_data, str)
+        return serialized_data
 
     def calculate_contribution(self):
         attack_level = self._augments.get(IBWeaponAugmentType.ATTACK_INCREASE, 0)
@@ -242,6 +283,20 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
 
         assert len(self._augments) == len(selected_config) # Quick check if we have any duplicates.
         assert self._state_is_valid() # If our config breaks anything, it should be caught here
+        return
+
+    def update_with_serialized_config(self, serialized_config):
+        assert isinstance(serialized_config, str)
+
+        data = json.loads(serialized_config)
+        
+        # We check that we're updating the right tracker.
+        assert self._rarity == data["rarity"]
+        assert self._aug_level == data["aug_level"]
+
+        self._augments = {IBWeaponAugmentType[k]: v for (k, v) in data["augments"].items()}
+        
+        assert self._state_is_valid()
         return
 
     def _state_is_valid(self):
@@ -300,6 +355,11 @@ class WeaponUpgradeTracker(ABC):
 
     # Similar to WeaponAugmentTracker
     @abstractmethod
+    def get_serialized_config(self):
+        raise NotImplementedError
+
+    # Similar to WeaponAugmentTracker
+    @abstractmethod
     def calculate_contribution(self):
         raise NotImplementedError
 
@@ -313,14 +373,24 @@ class WeaponUpgradeTracker(ABC):
     def update_with_config(self, selected_config):
         raise NotImplementedError
 
+    # Similar to WeaponAugmentTracker
+    @abstractmethod
+    def update_with_serialized_config(self, serialized_config):
+        raise NotImplementedError
+
 
 class NoWeaponUpgrades(WeaponUpgradeTracker):
+
+    MAGIC_WORD = "NoWeaponUpgrades"
 
     def copy(self):
         return self # It shouldn't matter at all
 
     def get_config(self):
         return []
+
+    def get_serialized_config(self):
+        return self.MAGIC_WORD
 
     def calculate_contribution(self):
         ret = WeaponUpgradesContribution (
@@ -336,6 +406,9 @@ class NoWeaponUpgrades(WeaponUpgradeTracker):
         if selected_config is not None:
             raise RuntimeError("Can't update the upgrades of a weapon that can't be upgraded.")
         return
+
+    def update_with_serialized_config(self, serialized_config):
+        assert serialized_config == self.MAGIC_WORD
 
 
 class IBCWeaponUpgradeType(Enum):
@@ -379,6 +452,13 @@ class IBCWeaponUpgradeTracker(WeaponUpgradeTracker):
     def get_config(self):
         return copy(self._upgrades)
 
+    def get_serialized_config(self):
+        upgrades_strs = [(x.name if (x is not None) else None) for x in self._upgrades]
+
+        serialized_data = json.dumps(upgrades_strs)
+        assert isinstance(serialized_data, str)
+        return serialized_data
+
     def calculate_contribution(self):
         # IMPORTANT: We're actually mostly just relying on this function for debugging.
         #            If this function doesn't raise an exception, then we're good.
@@ -408,6 +488,18 @@ class IBCWeaponUpgradeTracker(WeaponUpgradeTracker):
         else:
             assert isinstance(selected_config, list)
             self._upgrades = selected_config
+        assert self._state_is_valid()
+        return
+
+    def update_with_serialized_config(self, serialized_config):
+        assert isinstance(serialized_config, str)
+
+        upgrades_strs = json.loads(serialized_config)
+        
+        assert isinstance(upgrades_strs, list)
+
+        self._upgrades = [(IBCWeaponUpgradeType[x] if (x is not None) else None) for x in upgrades_strs]
+        
         assert self._state_is_valid()
         return
 
