@@ -130,11 +130,15 @@ def _generate_weapon_combinations(weapon_list, skills_for_ceiling_efr, skill_sta
     assert isinstance(skill_states_dict, dict)
     for weapon in weapon_list:
         for weapon_augments_config in WeaponAugmentTracker.get_instance(weapon).get_maximized_configs():
+            weapon_augments_tracker = WeaponAugmentTracker.get_instance(weapon)
+            weapon_augments_tracker.update_with_config(weapon_augments_config)
             for weapon_upgrade_config in WeaponUpgradeTracker.get_instance(weapon).get_maximized_configs():
+                weapon_upgrades_tracker = WeaponUpgradeTracker.get_instance(weapon)
+                weapon_upgrades_tracker.update_with_config(weapon_upgrade_config)
                 results = lookup_from_skills(weapon, skills_for_ceiling_efr, skill_states_dict, \
-                                                    weapon_augments_config, weapon_upgrade_config)
+                                                    weapon_augments_tracker, weapon_upgrades_tracker)
                 ceiling_efr = results.efr
-                yield (weapon, weapon_augments_config, weapon_upgrade_config, ceiling_efr)
+                yield (weapon, weapon_augments_tracker, weapon_upgrades_tracker, ceiling_efr)
 
 
 def find_highest_efr_build():
@@ -258,7 +262,7 @@ def find_highest_efr_build():
 
             do_regenerate_weapon_list = False
 
-            for (weapon, weapon_augments_config, weapon_upgrade_config, weapon_ceil_efr) in all_weapon_configurations:
+            for (weapon, weapon_augments_tracker, weapon_upgrades_tracker, weapon_ceil_efr) in all_weapon_configurations:
 
                 deco_slots = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
                 deco_dicts = _generate_deco_dicts(deco_slots, decorations, including_charm_skills, skill_subset=efr_skills)
@@ -273,14 +277,14 @@ def find_highest_efr_build():
                         # Now, we also have decoration skills included.
                     
                     results = lookup_from_skills(weapon, including_deco_skills, full_skill_states, \
-                                                    weapon_augments_config, weapon_upgrade_config)
+                                                    weapon_augments_tracker, weapon_upgrades_tracker)
                     assert results is not list
 
                     if results.efr > best_efr:
                         best_efr = results.efr
                         associated_affinity = results.affinity
-                        associated_build = Build(weapon, curr_armour, charm, weapon_augments_config, \
-                                                    weapon_upgrade_config, deco_dict)
+                        associated_build = Build(weapon, curr_armour, charm, weapon_augments_tracker, \
+                                                    weapon_upgrades_tracker, deco_dict)
                         do_regenerate_weapon_list = True
                         print()
                         print(f"{best_efr} EFR @ {associated_affinity} affinity")

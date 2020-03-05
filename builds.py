@@ -143,12 +143,12 @@ LookupFromSkillsValues = namedtuple(
 # This function is recursive.
 # For each condition missing from skill_conditions_dict,
 # it will call itself again for each possible state of the skill.
-def lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_config, weapon_upgrade_config):
+def lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_tracker, weapon_upgrades_tracker):
     #assert isinstance(weapon, namedtuple) # idk how to implement this assertion. # TODO: This.
     assert isinstance(skills_dict, dict)
     assert isinstance(skill_states_dict, dict)
-    assert isinstance(weapon_augments_config, list)
-    assert isinstance(weapon_upgrade_config, list) or (weapon_upgrade_config is None)
+    assert isinstance(weapon_augments_tracker, WeaponAugmentTracker)
+    assert isinstance(weapon_upgrades_tracker, WeaponUpgradeTracker)
 
     skills_dict = clipped_skills_defaultdict(skills_dict)
 
@@ -190,16 +190,10 @@ def lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_c
             new_skill_states_dict = skill_states_dict.copy()
             new_skill_states_dict[skill_to_iterate] = level
             ret.append(lookup_from_skills(weapon, skills_dict, new_skill_states_dict, \
-                                                weapon_augments_config, weapon_upgrade_config))
+                                                weapon_augments_tracker, weapon_upgrades_tracker))
 
     else:
         # We terminate recursion here.
-
-        weapon_augments = WeaponAugmentTracker.get_instance(weapon)
-        weapon_augments.update_with_config(weapon_augments_config)
-
-        weapon_upgrades = WeaponUpgradeTracker.get_instance(weapon)
-        weapon_upgrades.update_with_config(weapon_upgrade_config)
 
         maximum_sharpness_values = weapon.maximum_sharpness
         from_skills = calculate_skills_contribution(
@@ -208,8 +202,8 @@ def lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_c
                 maximum_sharpness_values,
                 weapon.is_raw
             )
-        from_augments = weapon_augments.calculate_contribution()
-        from_weapon_upgrades = weapon_upgrades.calculate_contribution()
+        from_augments = weapon_augments_tracker.calculate_contribution()
+        from_weapon_upgrades = weapon_upgrades_tracker.calculate_contribution()
 
         handicraft_level = from_skills.handicraft_level
         sharpness_values, highest_sharpness_level = _actual_sharpness_level_values(maximum_sharpness_values, handicraft_level)
@@ -253,8 +247,8 @@ class Build:
             "_charm",
 
             "_weapon",
-            "_weapon_augments_config",
-            "_weapon_upgrades_config",
+            "_weapon_augments_tracker",
+            "_weapon_upgrades_tracker",
 
             "_decos",
         ]
@@ -275,7 +269,7 @@ class Build:
     #
     #       decos_list_or_dict = ???
     #
-    def __init__(self, weapon, armour_dict, charm, weapon_augments_config, weapon_upgrades_config, decos_list_or_dict):
+    def __init__(self, weapon, armour_dict, charm, weapon_augments_tracker, weapon_upgrades_tracker, decos_list_or_dict):
 
         self._head  = armour_dict.get(ArmourSlot.HEAD,  None)
         self._chest = armour_dict.get(ArmourSlot.CHEST, None)
@@ -287,11 +281,11 @@ class Build:
         assert isinstance(self._charm, CharmInfo) or (self._charm is None)
 
         self._weapon = weapon
-        self._weapon_augments_config = copy(weapon_augments_config)
-        self._weapon_upgrades_config = copy(weapon_upgrades_config)
+        self._weapon_augments_tracker = weapon_augments_tracker.copy()
+        self._weapon_upgrades_tracker = weapon_upgrades_tracker.copy()
         #assert isinstance(self._weapon, namedtuple) # TODO: Make a proper assertion for this.
-        assert isinstance(self._weapon_augments_config, list)
-        assert isinstance(self._weapon_upgrades_config, list) or (self._weapon_upgrades_config is None)
+        assert isinstance(self._weapon_augments_tracker, WeaponAugmentTracker)
+        assert isinstance(self._weapon_upgrades_tracker, WeaponUpgradeTracker)
 
         self._decos = copy(decos_list_or_dict)
         assert isinstance(self._decos, dict) or isinstance(self._decos, list)
@@ -352,7 +346,7 @@ class Build:
         skills_dict.update(skills_from_set_bonuses)
 
         intermediate_results = lookup_from_skills(self._weapon, skills_dict, skill_states_dict, \
-                                                    self._weapon_augments_config, self._weapon_upgrades_config)
+                                                    self._weapon_augments_tracker, self._weapon_upgrades_tracker)
 
         def transform_results_recursively(obj):
             if isinstance(obj, list):
@@ -372,7 +366,7 @@ class Build:
         return transform_results_recursively(intermediate_results)
 
     def print(self):
-        print_weapon_config("      ", self._weapon, self._weapon_augments_config, self._weapon_upgrades_config)
+        print_weapon_config("      ", self._weapon, self._weapon_augments_tracker, self._weapon_upgrades_tracker)
         print()
 
         def print_armour_piece(slot, piece):

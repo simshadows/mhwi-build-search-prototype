@@ -49,6 +49,14 @@ class WeaponAugmentTracker(ABC):
     def copy(self):
         raise NotImplementedError
 
+    # Outputs some arbitrary structure.
+    #
+    # This function is only really intended for diagnostic purposes for now, but will be given more important roles
+    # later. I'll properly define the structure then.
+    @abstractmethod
+    def get_config(self):
+        raise NotImplementedError
+
     # Gives back a WeaponAugmentsContribution namedtuple with all the values the current
     # set of augments contributes to the build.
     @abstractmethod
@@ -71,6 +79,9 @@ class NoWeaponAugments(WeaponAugmentTracker):
 
     def copy(self):
         return self # It shouldn't matter at all
+
+    def get_config(self):
+        return []
 
     def calculate_contribution(self):
         ret = WeaponAugmentsContribution (
@@ -201,6 +212,9 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
         assert new._state_is_valid()
         return new
 
+    def get_config(self):
+        return [(x1, x2) for (x1, x2) in self._augments.items()]
+
     def calculate_contribution(self):
         attack_level = self._augments.get(IBWeaponAugmentType.ATTACK_INCREASE, 0)
         affinity_level = self._augments.get(IBWeaponAugmentType.AFFINITY_INCREASE, 0)
@@ -281,6 +295,11 @@ class WeaponUpgradeTracker(ABC):
 
     # Similar to WeaponAugmentTracker
     @abstractmethod
+    def get_config(self):
+        raise NotImplementedError
+
+    # Similar to WeaponAugmentTracker
+    @abstractmethod
     def calculate_contribution(self):
         raise NotImplementedError
 
@@ -299,6 +318,9 @@ class NoWeaponUpgrades(WeaponUpgradeTracker):
 
     def copy(self):
         return self # It shouldn't matter at all
+
+    def get_config(self):
+        return []
 
     def calculate_contribution(self):
         ret = WeaponUpgradesContribution (
@@ -353,6 +375,9 @@ class IBCWeaponUpgradeTracker(WeaponUpgradeTracker):
         new._upgrades = copy(self._upgrades)
         assert new._state_is_valid()
         return new
+
+    def get_config(self):
+        return copy(self._upgrades)
 
     def calculate_contribution(self):
         # IMPORTANT: We're actually mostly just relying on this function for debugging.
@@ -579,15 +604,14 @@ def _obtain_weapon_db():
 weapon_db = _obtain_weapon_db()
 
 
-def print_weapon_config(linebegin, weapon, weapon_augments_config, weapon_upgrades_config):
+def print_weapon_config(linebegin, weapon, weapon_augments_tracker, weapon_upgrades_tracker):
     print(linebegin + weapon.name)
 
     print()
-    for (augment, level) in weapon_augments_config:
+    for (augment, level) in weapon_augments_tracker.get_config():
         print(f"{linebegin}{augment.name} {level}")
-    if weapon_upgrades_config is not None:
-        for (stage, upgrade) in enumerate(weapon_upgrades_config):
-            print(f"{linebegin}Custom Upgrade: {upgrade.name} {stage+1}")
+    for (stage, upgrade) in enumerate(weapon_upgrades_tracker.get_config()):
+        print(f"{linebegin}Custom Upgrade: {upgrade.name} {stage+1}")
     return
 
 

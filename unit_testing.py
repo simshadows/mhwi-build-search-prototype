@@ -19,8 +19,10 @@ from database_skills      import (Skill,
                                  calculate_skills_contribution)
 from database_weapons     import (WeaponClass,
                                  weapon_db,
+                                 WeaponAugmentTracker,
                                  IBWeaponAugmentType,
                                  WeaponAugmentationScheme,
+                                 WeaponUpgradeTracker,
                                  IBCWeaponUpgradeType,
                                  WeaponUpgradeScheme)
 from database_armour      import (ArmourDiscriminator,
@@ -68,7 +70,11 @@ def _run_tests_lookup():
 
         for level in range(max_level + 1):
             skills_dict[skill] = level
-            vals = lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_config, weapon_upgrades_config)
+            weapon_augments_tracker = WeaponAugmentTracker.get_instance(weapon)
+            weapon_augments_tracker.update_with_config(weapon_augments_config)
+            weapon_upgrades_tracker = WeaponUpgradeTracker.get_instance(weapon)
+            weapon_upgrades_tracker.update_with_config(weapon_upgrades_config)
+            vals = lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_tracker, weapon_upgrades_tracker)
             if round(vals.efr) != round(expected_efrs[level]):
                 raise ValueError(f"EFR value mismatch for skill level {level}. Got EFR = {vals.efr}.")
         return
@@ -200,7 +206,11 @@ def _run_tests_lookup():
 
     def check_efr(expected_efr):
         transformed_armour_dict = {k: armour_db[(v[0], v[1])].variants[v[2]][k] for (k, v) in armour_dict.items()}
-        build = Build(weapon, transformed_armour_dict, charm, weapon_augments_config, weapon_upgrades_config, \
+        weapon_augments_tracker = WeaponAugmentTracker.get_instance(weapon)
+        weapon_augments_tracker.update_with_config(weapon_augments_config)
+        weapon_upgrades_tracker = WeaponUpgradeTracker.get_instance(weapon)
+        weapon_upgrades_tracker.update_with_config(weapon_upgrades_config)
+        build = Build(weapon, transformed_armour_dict, charm, weapon_augments_tracker, weapon_upgrades_tracker, \
                                             decorations_list)
         results = build.calculate_performance(skill_states_dict)
         if round(results.efr) != round(expected_efr):
@@ -208,7 +218,11 @@ def _run_tests_lookup():
 
     def check_skill(expected_skill, expected_level):
         transformed_armour_dict = {k: armour_db[(v[0], v[1])].variants[v[2]][k] for (k, v) in armour_dict.items()}
-        build = Build(weapon, transformed_armour_dict, charm, weapon_augments_config, weapon_upgrades_config, \
+        weapon_augments_tracker = WeaponAugmentTracker.get_instance(weapon)
+        weapon_augments_tracker.update_with_config(weapon_augments_config)
+        weapon_upgrades_tracker = WeaponUpgradeTracker.get_instance(weapon)
+        weapon_upgrades_tracker.update_with_config(weapon_upgrades_config)
+        build = Build(weapon, transformed_armour_dict, charm, weapon_augments_tracker, weapon_upgrades_tracker, \
                                             decorations_list)
         results = build.calculate_performance(skill_states_dict)
         if Skill[expected_skill] not in results.skills:
@@ -333,7 +347,11 @@ def _run_tests_lookup():
 
     print("Testing to see if one indeterminate stateful skill get iterated.")
     transformed_armour_dict = {k: armour_db[(v[0], v[1])].variants[v[2]][k] for (k, v) in armour_dict.items()}
-    build = Build(weapon, transformed_armour_dict, charm, weapon_augments_config, weapon_upgrades_config, \
+    weapon_augments_tracker = WeaponAugmentTracker.get_instance(weapon)
+    weapon_augments_tracker.update_with_config(weapon_augments_config)
+    weapon_upgrades_tracker = WeaponUpgradeTracker.get_instance(weapon)
+    weapon_upgrades_tracker.update_with_config(weapon_upgrades_config)
+    build = Build(weapon, transformed_armour_dict, charm, weapon_augments_tracker, weapon_upgrades_tracker, \
                                         decorations_list)
     results = build.calculate_performance(skill_states_dict)
     if len(results) != 3:
