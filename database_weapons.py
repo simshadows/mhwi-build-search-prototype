@@ -578,3 +578,16 @@ def _obtain_weapon_db():
 
 weapon_db = _obtain_weapon_db()
 
+
+def print_weapon_config(linebegin, weapon, weapon_augments_config, weapon_upgrades_config):
+    print(linebegin + weapon.name)
+
+    print()
+    for (augment, level) in weapon_augments_config:
+        print(f"{linebegin}{augment.name} {level}")
+    if weapon_upgrades_config is not None:
+        for (stage, upgrade) in enumerate(weapon_upgrades_config):
+            print(f"{linebegin}Custom Upgrade: {upgrade.name} {stage+1}")
+    return
+
+

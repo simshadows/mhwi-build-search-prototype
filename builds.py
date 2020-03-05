@@ -30,7 +30,8 @@ from database_skills      import (RAW_BLUNDER_MULTIPLIER,
                                  calculate_skills_contribution)
 from database_weapons     import (weapon_db,
                                  WeaponAugmentTracker,
-                                 WeaponUpgradeTracker)
+                                 WeaponUpgradeTracker,
+                                 print_weapon_config)
 
 
 # Corresponds to each level from red through to purple, in increasing-modifier order.
@@ -371,15 +372,7 @@ class Build:
         return transform_results_recursively(intermediate_results)
 
     def print(self):
-        print("      " + self._weapon.name)
-
-        print()
-        for (augment, level) in self._weapon_augments_config:
-            print(f"      {augment.name} {level}")
-        if self._weapon_upgrades_config is not None:
-            for (stage, upgrade) in enumerate(self._weapon_upgrades_config):
-                print(f"      Custom Upgrade: {upgrade.name} {stage+1}")
-
+        print_weapon_config("      ", self._weapon, self._weapon_augments_config, self._weapon_upgrades_config)
         print()
 
         def print_armour_piece(slot, piece):

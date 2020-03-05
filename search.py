@@ -24,7 +24,8 @@ from database_skills      import (Skill,
 from database_weapons     import (WeaponClass,
                                  weapon_db,
                                  WeaponAugmentTracker,
-                                 WeaponUpgradeTracker)
+                                 WeaponUpgradeTracker,
+                                 print_weapon_config)
 from database_armour      import (armour_db,
                                  skillsonly_pruned_armour,
                                  prune_easyiterate_armour_db,
@@ -123,6 +124,19 @@ def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_s
     return [x[0] for x in intermediate]
 
 
+def _generate_weapon_combinations(weapon_list, skills_for_ceiling_efr, skill_states_dict):
+    assert isinstance(weapon_list, list)
+    assert isinstance(skills_for_ceiling_efr, dict)
+    assert isinstance(skill_states_dict, dict)
+    for weapon in weapon_list:
+        for weapon_augments_config in WeaponAugmentTracker.get_instance(weapon).get_maximized_configs():
+            for weapon_upgrade_config in WeaponUpgradeTracker.get_instance(weapon).get_maximized_configs():
+                results = lookup_from_skills(weapon, skills_for_ceiling_efr, skill_states_dict, \
+                                                    weapon_augments_config, weapon_upgrade_config)
+                ceiling_efr = results.efr
+                yield (weapon, weapon_augments_config, weapon_upgrade_config, ceiling_efr)
+
+
 def find_highest_efr_build():
 
     total_start_real_time = time.time()
@@ -180,14 +194,16 @@ def find_highest_efr_build():
     #decorations = list(get_pruned_deco_set(decoration_skills, bonus_skills=[Skill.FOCUS]))
     decorations = decorations_test_subset
 
-    # Not currently used.
-    #decos_dict = {
-    #        1: [deco for deco in decorations if deco.value.slot_size == 1],
-    #        2: [deco for deco in decorations if deco.value.slot_size == 2],
-    #        3: [deco for deco in decorations if deco.value.slot_size == 3],
-    #        4: [deco for deco in decorations if deco.value.slot_size == 4],
-    #    }
-    #assert len(decos_dict[1]) + len(decos_dict[2]) + len(decos_dict[3]) + len(decos_dict[4]) == len(decorations)
+    #print("Sorting weapon configurations...") # Actually, it's not necessary to sort yet.
+    all_skills_max_except_free_elem = {skill: skill.value.limit for skill in efr_skills}
+    all_weapon_configurations = list(_generate_weapon_combinations(weapons, all_skills_max_except_free_elem, full_skill_states))
+    #all_weapon_configurations.sort(key=lambda x : x[3])
+    #assert all_weapon_configurations[0][3] <= all_weapon_configurations[-1][3]
+    #print("... done.")
+
+    debugging_num_initial_weapon_configs = len(all_weapon_configurations)
+
+    print("Lowest ceiling EFR: " + str(all_weapon_configurations[0][3]))
 
     ####################
     # STAGE 3: Search! #
@@ -202,6 +218,19 @@ def find_highest_efr_build():
     total_progress_segments = len(pruned_armour_combos)
     progress_segment_size = 1 / total_progress_segments
     curr_progress_segment = 0
+
+    def regenerate_weapon_list():
+        nonlocal all_weapon_configurations
+        new_weapon_configuration_list = []
+        for weapon_configuration in all_weapon_configurations:
+            if weapon_configuration[3] > best_efr: # Check if the ceiling EFR is over the best EFR
+                new_weapon_configuration_list.append(weapon_configuration)
+        all_weapon_configurations = new_weapon_configuration_list
+        print()
+        print(f"New number of weapon configurations: {len(all_weapon_configurations)} " + \
+                    f"out of {debugging_num_initial_weapon_configs}")
+        print()
+        return
 
     def progress():
         nonlocal curr_progress_segment
@@ -227,37 +256,42 @@ def find_highest_efr_build():
                 including_charm_skills[skill] += charm.max_level
             # Now, we also have charm skills included.
 
-            for weapon in weapons:
-                for weapon_augments_config in WeaponAugmentTracker.get_instance(weapon).get_maximized_configs():
+            do_regenerate_weapon_list = False
 
-                    deco_slots = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
-                    deco_dicts = _generate_deco_dicts(deco_slots, decorations, including_charm_skills, skill_subset=efr_skills)
-                    assert len(deco_dicts) > 0
-                    # Every possible decoration that can go in.
+            for (weapon, weapon_augments_config, weapon_upgrade_config, weapon_ceil_efr) in all_weapon_configurations:
 
-                    for weapon_upgrade_config in WeaponUpgradeTracker.get_instance(weapon).get_maximized_configs():
+                deco_slots = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
+                deco_dicts = _generate_deco_dicts(deco_slots, decorations, including_charm_skills, skill_subset=efr_skills)
+                assert len(deco_dicts) > 0
+                # Every possible decoration that can go in.
 
-                        for deco_dict in deco_dicts:
+                for deco_dict in deco_dicts:
 
-                            including_deco_skills = copy(including_charm_skills)
-                            for (skill, level) in calculate_decorations_skills_contribution(deco_dict).items():
-                                including_deco_skills[skill] += level
-                                # Now, we also have decoration skills included.
-                            
-                            results = lookup_from_skills(weapon, including_deco_skills, full_skill_states, \
-                                                            weapon_augments_config, weapon_upgrade_config)
-                            assert results is not list
+                    including_deco_skills = copy(including_charm_skills)
+                    for (skill, level) in calculate_decorations_skills_contribution(deco_dict).items():
+                        including_deco_skills[skill] += level
+                        # Now, we also have decoration skills included.
+                    
+                    results = lookup_from_skills(weapon, including_deco_skills, full_skill_states, \
+                                                    weapon_augments_config, weapon_upgrade_config)
+                    assert results is not list
 
-                            if results.efr > best_efr:
-                                best_efr = results.efr
-                                associated_affinity = results.affinity
-                                associated_build = Build(weapon, curr_armour, charm, weapon_augments_config, \
-                                                            weapon_upgrade_config, deco_dict)
-                                print()
-                                print(f"{best_efr} EFR @ {associated_affinity} affinity")
-                                print()
-                                associated_build.print()
-                                print()
+                    if results.efr > best_efr:
+                        best_efr = results.efr
+                        associated_affinity = results.affinity
+                        associated_build = Build(weapon, curr_armour, charm, weapon_augments_config, \
+                                                    weapon_upgrade_config, deco_dict)
+                        do_regenerate_weapon_list = True
+                        print()
+                        print(f"{best_efr} EFR @ {associated_affinity} affinity")
+                        print()
+                        associated_build.print()
+                        print()
+
+            if do_regenerate_weapon_list:
+                regenerate_weapon_list()
+
+            #progress()
         progress()
 
     end_real_time = time.time()
