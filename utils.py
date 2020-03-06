@@ -10,10 +10,15 @@ Contains general utility stuff.
 #import os
 import time
 import json
+from enum import Enum, auto
+from math import floor, ceil
 from itertools import zip_longest
 
 #_CWD = os.getcwd()
 _ENCODING = "utf-8"
+
+class _InternalToken(Enum):
+    NULL_REFERENCE = auto()
 
 # Probably will be useful, e.g. when I implement caching.
 #def mkdir_recursive(relfilepath):
@@ -65,3 +70,17 @@ def grouper(iterable, n, fillvalue=None):
     # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
     args = [iter(iterable)] * n
     return zip_longest(*args, fillvalue=fillvalue)
+
+# A predictable shuffle function, as long as the list length remains constant.
+def interleaving_shuffle(list_obj, max_partitions=8):
+    assert isinstance(list_obj, list)
+    num_partitions = min(int(floor(len(list_obj) / 32)), max_partitions)
+    partition_size = int(ceil(len(list_obj) / num_partitions))
+    partitions = list(grouper(list_obj, partition_size, fillvalue=_InternalToken.NULL_REFERENCE))
+    for i in range(partition_size):
+        for partition in partitions:
+            obj = partition[i]
+            if obj is not _InternalToken.NULL_REFERENCE:
+                yield partition[i]
+    return
+
