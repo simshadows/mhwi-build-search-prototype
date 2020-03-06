@@ -166,17 +166,52 @@ def find_highest_efr_build():
 
         grandtotal_progress_segments = None
         curr_progress_segment = 0
+        workers_complete = {i: False for i in range(NUM_WORKERS)}
+
+        current_best_efr = 0
+        current_best_build = None
+        current_best_affinity = None
 
         while True:
             try:
                 msg = queue_children_to_parent.get(block=True, timeout=1)
-                if msg[0] == "PROGRESS":
+                if msg[1] == "PROGRESS":
                     if grandtotal_progress_segments is None:
-                        grandtotal_progress_segments = msg[3]
-                    assert msg[3] == grandtotal_progress_segments
-                    assert msg[1] == 1
+                        grandtotal_progress_segments = msg[4]
+                    assert msg[4] == grandtotal_progress_segments
+                    assert msg[2] == 1
                     curr_progress_segment = update_and_print_progress("SEARCH", curr_progress_segment, \
                                                                         grandtotal_progress_segments, start_time)
+                elif msg[1] == "BUILD":
+                    serial_data = msg[2]
+                    intermediate_build = Build.deserialize(serial_data)
+                    intermediate_result = intermediate_build.calculate_performance(FULL_SKILL_STATES)
+
+                    intermediate_efr = intermediate_result.efr
+                    intermediate_affinity = intermediate_result.affinity
+                    if current_best_efr < intermediate_efr:
+                        current_best_efr = intermediate_efr
+                        current_best_affinity = intermediate_affinity
+
+                        current_best_build = intermediate_build
+
+                        print()
+                        print(f"{current_best_efr} EFR @ {current_best_affinity} affinity")
+                        print()
+                        current_best_build.print()
+                        print()
+                elif msg[1] == "WORKER_COMPLETE":
+                    worker_number = msg[0]
+                    workers_complete[worker_number] = True
+                    if all(status for (_, status) in workers_complete.items()):
+                        print()
+                        print(f"Worker #{worker_number} finished. All workers have now concluded.")
+                        print()
+                    else:
+                        buf = ", ".join(str(i) for (i, status) in workers_complete.items() if (not status))
+                        print()
+                        print(f"Worker #{worker_number} finished. Still waiting on: {buf}")
+                        print()
                 else:
                     raise ValueError("Unknown message: " + str(msg))
             except Empty:
@@ -223,9 +258,20 @@ def _find_highest_efr_build_worker(args):
     worker_number = args[0]
     queue_to_parent = args[1]
 
+    worker_string = f"[WORKER #{worker_number}] "
+
     def send_progress_ping():
-        msg = ["PROGRESS", 1, total_progress_segments, grandtotal_progress_segments, curr_progress_segment]
+        msg = [worker_number, "PROGRESS", 1, total_progress_segments, grandtotal_progress_segments, curr_progress_segment]
         queue_to_parent.put(msg)
+        return
+
+    def send_complete_ping():
+        queue_to_parent.put([worker_number, "WORKER_COMPLETE"])
+        return
+
+    def send_found_build(build_obj):
+        assert isinstance(build_obj, Build)
+        queue_to_parent.put([worker_number, "BUILD", build_obj.serialize()])
         return
 
     print_progress = (worker_number == 0)
@@ -302,12 +348,10 @@ def _find_highest_efr_build_worker(args):
     #decorations = list(get_pruned_deco_set(decoration_skills, bonus_skills=[Skill.FOCUS]))
     decorations = decorations_test_subset
 
-    print("Sorting weapon configurations...") # Actually, it's not necessary to sort yet.
     all_skills_max_except_free_elem = {skill: skill.value.limit for skill in efr_skills}
     all_weapon_configurations = list(_generate_weapon_combinations(weapons, all_skills_max_except_free_elem, FULL_SKILL_STATES))
     all_weapon_configurations.sort(key=lambda x : x[3], reverse=True)
     assert all_weapon_configurations[0][3] >= all_weapon_configurations[-1][3]
-    print("... done.")
 
     debugging_num_initial_weapon_configs = len(all_weapon_configurations)
 
@@ -340,8 +384,8 @@ def _find_highest_efr_build_worker(args):
                 new_weapon_configuration_list.append(weapon_configuration)
         all_weapon_configurations = new_weapon_configuration_list
         print()
-        print(f"New number of weapon configurations: {len(all_weapon_configurations)} " + \
-                    f"out of {debugging_num_initial_weapon_configs}")
+        print(worker_string + f"New number of weapon configurations: {len(all_weapon_configurations)} " + \
+                                    f"out of {debugging_num_initial_weapon_configs}")
         print()
         return
 
@@ -391,18 +435,16 @@ def _find_highest_efr_build_worker(args):
                         associated_affinity = results.affinity
                         associated_build = Build(weapon, curr_armour, charm, weapon_augments_tracker, \
                                                     weapon_upgrades_tracker, deco_dict)
+                        send_found_build(associated_build)
                         do_regenerate_weapon_list = True
-                        print()
-                        print(f"{best_efr} EFR @ {associated_affinity} affinity")
-                        print()
-                        associated_build.print()
-                        print()
 
             if do_regenerate_weapon_list:
                 regenerate_weapon_list()
 
         curr_progress_segment += 1
         send_progress_ping()
+
+    send_complete_ping()
 
     return associated_build.serialize()
 
