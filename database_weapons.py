@@ -164,6 +164,7 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
     # {rarity: [config]}
     _MAXIMIZED_CONFIGS = { # TODO: Consider automating this definition.
             10: [
+                # Start without slots
                 [
                     (IBWeaponAugmentType.ATTACK_INCREASE, 4),
                 ],
@@ -182,10 +183,38 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
                 [
                     (IBWeaponAugmentType.AFFINITY_INCREASE, 4),
                 ],
+                # Add one slot upgrade
+                [
+                    (IBWeaponAugmentType.ATTACK_INCREASE,   2),
+                    (IBWeaponAugmentType.SLOT_UPGRADE,      1),
+                ],
+                [
+                    (IBWeaponAugmentType.ATTACK_INCREASE,   1),
+                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+                    (IBWeaponAugmentType.SLOT_UPGRADE,      1),
+                ],
+                [
+                    (IBWeaponAugmentType.AFFINITY_INCREASE, 3),
+                    (IBWeaponAugmentType.SLOT_UPGRADE,      1),
+                ],
+                # Add two or three slot upgrades
+                [
+                    (IBWeaponAugmentType.ATTACK_INCREASE,   1),
+                    (IBWeaponAugmentType.SLOT_UPGRADE,      2),
+                ],
+                [
+                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+                    (IBWeaponAugmentType.SLOT_UPGRADE,      3),
+                ],
+                # All slot upgrades
+                [
+                    (IBWeaponAugmentType.SLOT_UPGRADE,      4),
+                ],
             ],
             11: [
+                # Start without slots
                 [
-                    (IBWeaponAugmentType.ATTACK_INCREASE, 2),
+                    (IBWeaponAugmentType.ATTACK_INCREASE,   2),
                 ],
                 [
                     (IBWeaponAugmentType.ATTACK_INCREASE  , 1),
@@ -194,8 +223,22 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
                 [
                     (IBWeaponAugmentType.AFFINITY_INCREASE, 3),
                 ],
+                # Add one slot upgrade
+                [
+                    (IBWeaponAugmentType.ATTACK_INCREASE,   1),
+                    (IBWeaponAugmentType.SLOT_UPGRADE,      1),
+                ],
+                [
+                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+                    (IBWeaponAugmentType.SLOT_UPGRADE,      1),
+                ],
+                # All slot upgrades
+                [
+                    (IBWeaponAugmentType.SLOT_UPGRADE,      2),
+                ],
             ],
             12: [
+                # Start without slots
                 [
                     (IBWeaponAugmentType.ATTACK_INCREASE, 2),
                 ],
@@ -206,6 +249,12 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
                 [
                     (IBWeaponAugmentType.AFFINITY_INCREASE, 2),
                 ],
+                # Add one slot upgrade
+                [
+                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+                    (IBWeaponAugmentType.SLOT_UPGRADE,      1),
+                ],
+                # That's about all you can do.
             ],
         }
 
