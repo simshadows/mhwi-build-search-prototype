@@ -10,7 +10,9 @@ This file contains various queries and search algorithms.
 import sys, time
 from math import ceil
 from copy import copy
+#from enum import Enum, auto
 import multiprocessing as mp
+from queue import Empty
 
 from collections import namedtuple, defaultdict, Counter
 
@@ -153,12 +155,33 @@ def _generate_weapon_combinations(weapon_list, skills_for_ceiling_efr, skill_sta
 
 def find_highest_efr_build():
 
-    start_real_time = time.time()
+    start_time = time.time()
 
     with mp.Pool(NUM_WORKERS) as p:
-        async_result = p.map_async(_find_highest_efr_build_worker, list(range(NUM_WORKERS)))
-        
-        #print("tadpole")
+        manager = mp.Manager()
+        queue_children_to_parent = manager.Queue()
+
+        children_args = [(i, queue_children_to_parent) for i in range(NUM_WORKERS)]
+        async_result = p.map_async(_find_highest_efr_build_worker, children_args)
+
+        grandtotal_progress_segments = None
+        curr_progress_segment = 0
+
+        while True:
+            try:
+                msg = queue_children_to_parent.get(block=True, timeout=1)
+                if msg[0] == "PROGRESS":
+                    if grandtotal_progress_segments is None:
+                        grandtotal_progress_segments = msg[3]
+                    assert msg[3] == grandtotal_progress_segments
+                    assert msg[1] == 1
+                    curr_progress_segment = update_and_print_progress("SEARCH", curr_progress_segment, \
+                                                                        grandtotal_progress_segments, start_time)
+                else:
+                    raise ValueError("Unknown message: " + str(msg))
+            except Empty:
+                if async_result.ready():
+                    break
         
         best_builds_serialized = async_result.get()
 
@@ -183,18 +206,27 @@ def find_highest_efr_build():
     best_build.print()
     print()
 
-    total_real_time_minutes = int((end_real_time - start_real_time) // 60)
-    total_real_time_seconds = int((end_real_time - start_real_time) % 60)
+    end_time = time.time()
+
+    search_time_min = int((end_time - start_time) // 60)
+    search_time_sec = int((end_time - start_time) % 60)
 
     print()
-    print(f"Total execution time (in real time): {total_real_time_minutes:02}:{total_real_time_seconds:02}")
-    print(f"({end_real_time - start_real_time} seconds)")
+    print(f"Total execution time (in real time): {search_time_min:02}:{search_time_sec:02}")
+    print(f"({end_time - start_time} seconds)")
     print()
 
     return
 
 
-def _find_highest_efr_build_worker(worker_number):
+def _find_highest_efr_build_worker(args):
+    worker_number = args[0]
+    queue_to_parent = args[1]
+
+    def send_progress_ping():
+        msg = ["PROGRESS", 1, total_progress_segments, grandtotal_progress_segments, curr_progress_segment]
+        queue_to_parent.put(msg)
+        return
 
     print_progress = (worker_number == 0)
 
@@ -296,10 +328,8 @@ def _find_highest_efr_build_worker(worker_number):
     associated_affinity = None
     associated_build = None
 
-    start_real_time = time.time()
-
+    grandtotal_progress_segments = len(pruned_armour_combos)
     total_progress_segments = len(armour_combos_sublist)
-    progress_segment_size = 1 / total_progress_segments
     curr_progress_segment = 0
 
     def regenerate_weapon_list():
@@ -314,12 +344,6 @@ def _find_highest_efr_build_worker(worker_number):
                     f"out of {debugging_num_initial_weapon_configs}")
         print()
         return
-
-    def progress():
-        nonlocal curr_progress_segment
-        nonlocal total_progress_segments
-        nonlocal start_real_time
-        curr_progress_segment = update_and_print_progress("SEARCH", curr_progress_segment, total_progress_segments, start_real_time)
 
     for curr_armour in armour_combos_sublist:
 
@@ -377,20 +401,8 @@ def _find_highest_efr_build_worker(worker_number):
             if do_regenerate_weapon_list:
                 regenerate_weapon_list()
 
-            #progress()
-        if print_progress: # TODO: Make it so all processes signal progress.
-            progress()
-
-    if print_progress: # TODO: Make it so all processes signal progress.
-        end_real_time = time.time()
-
-        search_real_time_minutes = int((end_real_time - start_real_time) // 60)
-        search_real_time_seconds = int((end_real_time - start_real_time) % 60)
-
-        print()
-        print(f"Search execution time (in real time): {search_real_time_minutes:02}:{search_real_time_seconds:02}")
-        print(f"({end_real_time - start_real_time} seconds)")
-        print()
+        curr_progress_segment += 1
+        send_progress_ping()
 
     return associated_build.serialize()
 
