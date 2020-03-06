@@ -344,12 +344,13 @@ def _armour_piece_supercedes(p1, p1_set_bonus, p2, p2_set_bonus, p1_is_preferred
     return False
 
 
-def prune_easyiterate_armour_db(original_easyiterate_armour_db, skill_subset=None):
+def prune_easyiterate_armour_db(original_easyiterate_armour_db, skill_subset=None, print_progress=True):
 
-    print()
-    print()
-    print("======= Armour Pruning =======")
-    print()
+    if print_progress:
+        print()
+        print()
+        print("======= Armour Pruning =======")
+        print()
 
     intermediate = {}
     for (gear_slot, piece_list) in original_easyiterate_armour_db.items():
@@ -389,39 +390,39 @@ def prune_easyiterate_armour_db(original_easyiterate_armour_db, skill_subset=Non
 
             if piece1_is_never_superceded:
                 best_pieces.append(piece1)
-                #######################################
-                buf = []
-                buf.append(gear_slot.name.ljust(6))
-                buf.append(piece1.armour_set.set_name.ljust(15))
-                buf.append(piece1.armour_set_variant.value.ascii_postfix)
-                buf = " ".join(buf)
-                print(f"KEPT: {buf}")
-                #######################################
+                if print_progress:
+                    buf = []
+                    buf.append(gear_slot.name.ljust(6))
+                    buf.append(piece1.armour_set.set_name.ljust(15))
+                    buf.append(piece1.armour_set_variant.value.ascii_postfix)
+                    buf = " ".join(buf)
+                    print(f"KEPT: {buf}")
             else:
-                #######################################
-                buf = []
-                buf.append(gear_slot.name.ljust(6))
-                buf.append(piece1.armour_set.set_name.ljust(15))
-                buf.append(piece1.armour_set_variant.value.ascii_postfix)
-                buf = " ".join(buf)
-                print(f"                                               PRUNED: {buf}")
-                #######################################
+                if print_progress:
+                    buf = []
+                    buf.append(gear_slot.name.ljust(6))
+                    buf.append(piece1.armour_set.set_name.ljust(15))
+                    buf.append(piece1.armour_set_variant.value.ascii_postfix)
+                    buf = " ".join(buf)
+                    print(f"                                               PRUNED: {buf}")
 
-        print()
-        print("=============================")
-        print()
+        if print_progress:
+            print()
+            print("=============================")
+            print()
 
         intermediate[gear_slot] = best_pieces
 
     total_kept = sum(len(x) for (_, x) in intermediate.items())
     total_original = sum(len(x) for (_, x) in original_easyiterate_armour_db.items())
 
-    print("kept: " + str(total_kept))
-    print("pruned: " + str(total_original - total_kept))
-    print()
-    print("=============================")
-    print()
-    print()
+    if print_progress:
+        print("kept: " + str(total_kept))
+        print("pruned: " + str(total_original - total_kept))
+        print()
+        print("=============================")
+        print()
+        print()
 
     return intermediate
 
@@ -615,13 +616,15 @@ def _armour_combination_iter(original_easyiterate_armour_db):
 # Applies the same pruning rule as _armour_piece_supercedes(), but over an entire armour set instead!
 #
 # Returns a list of dictionaries of {ArmourSlot: ArmourEasyIterateInfo}
-def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill_subset=None, required_set_bonus_skills=set()):
+def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill_subset=None, \
+                                            required_set_bonus_skills=set(), print_progress=True):
     assert isinstance(required_set_bonus_skills, set)
 
-    print()
-    print()
-    print("===== Armour Set Pruning =====")
-    print()
+    if print_progress:
+        print()
+        print()
+        print("===== Armour Set Pruning =====")
+        print()
 
     all_combinations = [x for x in _armour_combination_iter(original_easyiterate_armour_db)
                                    if all(skill in x[1] for skill in required_set_bonus_skills)]
@@ -673,18 +676,20 @@ def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill
         if not prune_combination_1:
             best_combinations.append(combination_1)
 
-        curr_progress_segment += 1
-        if curr_progress_segment % 99 == 0:
-            progress()
+        if print_progress:
+            curr_progress_segment += 1
+            if curr_progress_segment % 99 == 0:
+                progress()
 
 
-    print()
-    print("original # of head/chest/arms/waist/legs combinations: " + str(len(all_combinations)))
-    print("combinations kept: " + str(len(best_combinations)))
-    print()
-    print("=============================")
-    print()
-    print()
+    if print_progress:
+        print()
+        print("original # of head/chest/arms/waist/legs combinations: " + str(len(all_combinations)))
+        print("combinations kept: " + str(len(best_combinations)))
+        print()
+        print("=============================")
+        print()
+        print()
 
     return best_combinations
 

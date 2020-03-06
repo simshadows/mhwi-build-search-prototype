@@ -156,7 +156,11 @@ def find_highest_efr_build():
     start_real_time = time.time()
 
     with mp.Pool(NUM_WORKERS) as p:
-        best_builds_serialized = p.map(_find_highest_efr_build_worker, list(range(NUM_WORKERS)))
+        async_result = p.map_async(_find_highest_efr_build_worker, list(range(NUM_WORKERS)))
+        
+        #print("tadpole")
+        
+        best_builds_serialized = async_result.get()
 
     best_efr = 0
     best_build = None
@@ -191,6 +195,8 @@ def find_highest_efr_build():
 
 
 def _find_highest_efr_build_worker(worker_number):
+
+    print_progress = (worker_number == 0)
 
     ##############################
     # STAGE 1: Basic Definitions #
@@ -230,9 +236,11 @@ def _find_highest_efr_build_worker(worker_number):
 
     weapons = [weapon for (_, weapon) in weapon_db.items() if weapon.type is desired_weapon_class]
 
-    pruned_armour_db = prune_easyiterate_armour_db(skillsonly_pruned_armour, skill_subset=efr_skills)
+    pruned_armour_db = prune_easyiterate_armour_db(skillsonly_pruned_armour, skill_subset=efr_skills, \
+                                                                    print_progress=print_progress)
     pruned_armour_combos = generate_and_prune_armour_combinations(pruned_armour_db, skill_subset=efr_skills, \
-                                                                    required_set_bonus_skills=required_set_bonus_skills)
+                                                                    required_set_bonus_skills=required_set_bonus_skills,
+                                                                    print_progress=print_progress)
     def sort_key_fn(x):
         head = x[ArmourSlot.HEAD]
         chest = x[ArmourSlot.CHEST]
@@ -370,10 +378,10 @@ def _find_highest_efr_build_worker(worker_number):
                 regenerate_weapon_list()
 
             #progress()
-        if worker_number == 0: # TODO: Make it so all processes signal progress.
+        if print_progress: # TODO: Make it so all processes signal progress.
             progress()
 
-    if worker_number == 0: # TODO: Make it so all processes signal progress.
+    if print_progress: # TODO: Make it so all processes signal progress.
         end_real_time = time.time()
 
         search_real_time_minutes = int((end_real_time - start_real_time) // 60)
