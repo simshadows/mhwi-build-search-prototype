@@ -44,6 +44,7 @@ from database_decorations import (Decoration,
 
 
 NUM_WORKERS = 32
+NUM_BATCHES = 256
 
 FULL_SKILL_STATES = {
     Skill.AGITATOR: 1,
@@ -163,10 +164,16 @@ def find_highest_efr_build():
         # all_pipes is a list of 2-tuples. With duplex=False, each tuple is (read_only, write_only).
 
         queue_children_to_parent = manager.Queue()
+        job_queue = manager.Queue() # This one is a parent-to-children job queue to instruct children which batches to work on
         pipes_parent_to_children = [x for (_, x) in all_pipes] # Parent keeps the write-only half.
 
+        # We fill up the queue with all batch numbers. Children just grab these values.
+        for batch in range(NUM_BATCHES + NUM_WORKERS): # If a worker finds we've exceeded the batches, it exits.
+            job_queue.put(batch)
+        assert not job_queue.full()
+
         pipes_for_children = [x for (x, _) in all_pipes] # Children get the read-only end.
-        children_args = [(i, queue_children_to_parent, pipes_for_children[i]) for i in range(NUM_WORKERS)]
+        children_args = [(i, queue_children_to_parent, job_queue, pipes_for_children[i]) for i in range(NUM_WORKERS)]
         async_result = p.map_async(_find_highest_efr_build_worker, children_args)
 
         def broadcast_new_best_efr(efr_value):
@@ -269,7 +276,8 @@ def find_highest_efr_build():
 def _find_highest_efr_build_worker(args):
     worker_number = args[0]
     queue_to_parent = args[1]
-    pipe_from_parent = args[2]
+    job_queue = args[2]
+    pipe_from_parent = args[3]
 
     worker_string = f"[WORKER #{worker_number}] "
 
@@ -370,12 +378,9 @@ def _find_highest_efr_build_worker(args):
 
     print("Lowest ceiling EFR: " + str(all_weapon_configurations[-1][3]))
 
-    sublist_ideal_len = int(ceil(len(pruned_armour_combos) / NUM_WORKERS))
+    sublist_ideal_len = int(ceil(len(pruned_armour_combos) / NUM_BATCHES))
     all_armour_combos_sublists = list(grouper(pruned_armour_combos, sublist_ideal_len))
     assert sum(len(x) for x in all_armour_combos_sublists) >= len(pruned_armour_combos)
-    armour_combos_sublist = all_armour_combos_sublists[worker_number]
-
-    print(f"worker {worker_number}, len {len(armour_combos_sublist)} out of {len(pruned_armour_combos)}")
 
     ####################
     # STAGE 3: Search! #
@@ -386,8 +391,6 @@ def _find_highest_efr_build_worker(args):
     associated_build = None
 
     grandtotal_progress_segments = len(pruned_armour_combos)
-    total_progress_segments = len(armour_combos_sublist)
-    curr_progress_segment = 0
 
     def check_parent_for_new_best_efr_and_update():
         nonlocal best_efr
@@ -412,62 +415,74 @@ def _find_highest_efr_build_worker(args):
                                     f"out of {debugging_num_initial_weapon_configs}")
         return
 
-    for curr_armour in armour_combos_sublist:
+    while True:
+        # We get a job from the queue.
+        new_batch_index = job_queue.get(block=True)
+        if new_batch_index >= len(all_armour_combos_sublists):
+            break
+        print(worker_string + f"New batch number: {new_batch_index} of 0-{len(all_armour_combos_sublists)-1}")
 
-        if curr_armour is None: # This is because the list splitting function fills with Nones so the lists are equal size.
-            continue
+        armour_combos_sublist = all_armour_combos_sublists[new_batch_index]
 
-        armour_contribution = calculate_armour_contribution(curr_armour)
-        armour_set_bonus_skills = calculate_set_bonus_skills(armour_contribution.set_bonuses)
+        total_progress_segments = len(armour_combos_sublist)
+        curr_progress_segment = 0
 
-        all_armour_skills = defaultdict(lambda : 0)
-        all_armour_skills.update(armour_contribution.skills)
-        all_armour_skills.update(armour_set_bonus_skills)
-        assert len(set(armour_contribution.skills) & set(armour_set_bonus_skills)) == 0 # No intersection.
-        # Now, we have all armour skills and set bonus skills
+        for curr_armour in armour_combos_sublist:
 
-        for charm in charms:
+            if curr_armour is None: # This is because the list splitting function fills with Nones so the lists are equal size.
+                continue
 
-            including_charm_skills = copy(all_armour_skills)
-            for skill in calculate_skills_dict_from_charm(charm, charm.max_level):
-                including_charm_skills[skill] += charm.max_level
-            # Now, we also have charm skills included.
+            armour_contribution = calculate_armour_contribution(curr_armour)
+            armour_set_bonus_skills = calculate_set_bonus_skills(armour_contribution.set_bonuses)
 
-            do_regenerate_weapon_list = False
+            all_armour_skills = defaultdict(lambda : 0)
+            all_armour_skills.update(armour_contribution.skills)
+            all_armour_skills.update(armour_set_bonus_skills)
+            assert len(set(armour_contribution.skills) & set(armour_set_bonus_skills)) == 0 # No intersection.
+            # Now, we have all armour skills and set bonus skills
 
-            for (weapon, weapon_augments_tracker, weapon_upgrades_tracker, weapon_ceil_efr) in all_weapon_configurations:
+            for charm in charms:
 
-                deco_slots = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
-                deco_dicts = _generate_deco_dicts(deco_slots, decorations, including_charm_skills, skill_subset=efr_skills)
-                assert len(deco_dicts) > 0
-                # Every possible decoration that can go in.
+                including_charm_skills = copy(all_armour_skills)
+                for skill in calculate_skills_dict_from_charm(charm, charm.max_level):
+                    including_charm_skills[skill] += charm.max_level
+                # Now, we also have charm skills included.
 
-                for deco_dict in deco_dicts:
+                do_regenerate_weapon_list = False
 
-                    including_deco_skills = copy(including_charm_skills)
-                    for (skill, level) in calculate_decorations_skills_contribution(deco_dict).items():
-                        including_deco_skills[skill] += level
-                        # Now, we also have decoration skills included.
-                    
-                    results = lookup_from_skills(weapon, including_deco_skills, FULL_SKILL_STATES, \
-                                                    weapon_augments_tracker, weapon_upgrades_tracker)
-                    assert results is not list
+                for (weapon, weapon_augments_tracker, weapon_upgrades_tracker, weapon_ceil_efr) in all_weapon_configurations:
 
-                    if results.efr > best_efr:
-                        best_efr = results.efr
-                        associated_affinity = results.affinity
-                        associated_build = Build(weapon, curr_armour, charm, weapon_augments_tracker, \
-                                                    weapon_upgrades_tracker, deco_dict)
-                        send_found_build(associated_build)
-                        do_regenerate_weapon_list = True
+                    deco_slots = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
+                    deco_dicts = _generate_deco_dicts(deco_slots, decorations, including_charm_skills, skill_subset=efr_skills)
+                    assert len(deco_dicts) > 0
+                    # Every possible decoration that can go in.
 
-            best_efr_is_updated = check_parent_for_new_best_efr_and_update()
+                    for deco_dict in deco_dicts:
 
-            if best_efr_is_updated or do_regenerate_weapon_list:
-                regenerate_weapon_list()
+                        including_deco_skills = copy(including_charm_skills)
+                        for (skill, level) in calculate_decorations_skills_contribution(deco_dict).items():
+                            including_deco_skills[skill] += level
+                            # Now, we also have decoration skills included.
+                        
+                        results = lookup_from_skills(weapon, including_deco_skills, FULL_SKILL_STATES, \
+                                                        weapon_augments_tracker, weapon_upgrades_tracker)
+                        assert results is not list
 
-        curr_progress_segment += 1
-        send_progress_ping()
+                        if results.efr > best_efr:
+                            best_efr = results.efr
+                            associated_affinity = results.affinity
+                            associated_build = Build(weapon, curr_armour, charm, weapon_augments_tracker, \
+                                                        weapon_upgrades_tracker, deco_dict)
+                            send_found_build(associated_build)
+                            do_regenerate_weapon_list = True
+
+                best_efr_is_updated = check_parent_for_new_best_efr_and_update()
+
+                if best_efr_is_updated or do_regenerate_weapon_list:
+                    regenerate_weapon_list()
+
+            curr_progress_segment += 1
+            send_progress_ping()
 
     send_complete_ping()
 
