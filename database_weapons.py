@@ -71,8 +71,10 @@ class WeaponAugmentTracker(ABC):
 
     # Gives back a list of arbitrary things describing all the possible maximum configurations.
     # You can pass one of these things to update_with_config.
+    #
+    # health_regen_minimum is the minimum level we need it to be.
     @abstractmethod
-    def get_maximized_configs(self):
+    def get_maximized_configs(self, health_regen_minimum=0):
         raise NotImplementedError
 
     # Set the config to the selected config.
@@ -107,8 +109,11 @@ class NoWeaponAugments(WeaponAugmentTracker):
             )
         return ret
 
-    def get_maximized_configs(self):
-        return []
+    def get_maximized_configs(self, health_regen_minimum=0):
+        if health_regen_minimum > 0:
+            return []
+        else:
+            return None # Not possible to add health regen.
 
     def update_with_config(self, selected_config):
         raise RuntimeError("Can't update the augments of a weapon that can't be augmented.")
@@ -162,7 +167,7 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
     IB_AFFINITY_AUGMENT_PERCENTAGES_CUMULATIVE = tuple(accumulate(IB_AFFINITY_AUGMENT_VALUES_PERCENTAGES))
 
     # {rarity: [config]}
-    _MAXIMIZED_CONFIGS = { # TODO: Consider automating this definition.
+    _MAXIMIZED_CONFIGS_NOHEALTHREGEN = { # TODO: Consider automating this definition.
             10: [
                 # Start without slots
                 [
@@ -258,6 +263,65 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
             ],
         }
 
+    _MAXIMIZED_CONFIGS_WITHHEALTHREGEN = { # TODO: Consider automating this definition.
+            10: [
+                # Start without slots
+                [
+                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
+                    (IBWeaponAugmentType.ATTACK_INCREASE,   2),
+                ],
+                [
+                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
+                    (IBWeaponAugmentType.ATTACK_INCREASE,   1),
+                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+                ],
+                [
+                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
+                    (IBWeaponAugmentType.AFFINITY_INCREASE, 3),
+                ],
+                # Add one slot upgrade
+                [
+                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
+                    (IBWeaponAugmentType.SLOT_UPGRADE,      1),
+                    (IBWeaponAugmentType.ATTACK_INCREASE,   1),
+                ],
+                [
+                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
+                    (IBWeaponAugmentType.SLOT_UPGRADE,      1),
+                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+                ],
+                # Max out slot upgrade
+                [
+                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
+                    (IBWeaponAugmentType.SLOT_UPGRADE,      2),
+                ],
+            ],
+            11: [
+                # Start without slots
+                [
+                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
+                    (IBWeaponAugmentType.ATTACK_INCREASE,   1),
+                ],
+                [
+                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
+                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+                ],
+                # Add a slot upgrade
+                [
+                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
+                    (IBWeaponAugmentType.SLOT_UPGRADE,      1),
+                ],
+                # Can't add more slot upgrades.
+            ],
+            12: [
+                # There's literally nothing else you can do
+                [
+                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
+                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+                ],
+            ],
+        }
+
     def __init__(self, rarity, auto_maximize=True):
         assert isinstance(rarity, int)
         assert isinstance(auto_maximize, bool)
@@ -311,8 +375,13 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
             )
         return ret
 
-    def get_maximized_configs(self):
-        return self._MAXIMIZED_CONFIGS[self._rarity]
+    def get_maximized_configs(self, health_regen_minimum=0):
+        if health_regen_minimum == 0:
+            return self._MAXIMIZED_CONFIGS_NOHEALTHREGEN[self._rarity]
+        elif health_regen_minimum == 1:
+            return self._MAXIMIZED_CONFIGS_WITHHEALTHREGEN[self._rarity]
+        else:
+            raise NotImplementedError("Other levels are not implemented yet.")
 
     def update_with_config(self, selected_config):
         assert isinstance(selected_config, list) # May accept dicts later.

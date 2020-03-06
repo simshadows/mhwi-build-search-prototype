@@ -138,21 +138,22 @@ def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_s
     return [x[0] for x in intermediate]
 
 
-def _generate_weapon_combinations(weapon_list, skills_for_ceiling_efr, skill_states_dict):
+def _generate_weapon_combinations(weapon_list, skills_for_ceiling_efr, skill_states_dict, health_regen_minimum=0):
     assert isinstance(weapon_list, list)
     assert isinstance(skills_for_ceiling_efr, dict)
     assert isinstance(skill_states_dict, dict)
     for weapon in weapon_list:
-        for weapon_augments_config in WeaponAugmentTracker.get_instance(weapon).get_maximized_configs():
-            weapon_augments_tracker = WeaponAugmentTracker.get_instance(weapon)
-            weapon_augments_tracker.update_with_config(weapon_augments_config)
+        bare_augments_tracker = WeaponAugmentTracker.get_instance(weapon)
+        for augments_config in bare_augments_tracker.get_maximized_configs(health_regen_minimum=health_regen_minimum):
+            augments_tracker = WeaponAugmentTracker.get_instance(weapon)
+            augments_tracker.update_with_config(augments_config)
             for weapon_upgrade_config in WeaponUpgradeTracker.get_instance(weapon).get_maximized_configs():
                 weapon_upgrades_tracker = WeaponUpgradeTracker.get_instance(weapon)
                 weapon_upgrades_tracker.update_with_config(weapon_upgrade_config)
                 results = lookup_from_skills(weapon, skills_for_ceiling_efr, skill_states_dict, \
-                                                    weapon_augments_tracker, weapon_upgrades_tracker)
+                                                    augments_tracker, weapon_upgrades_tracker)
                 ceiling_efr = results.efr
-                yield (weapon, weapon_augments_tracker, weapon_upgrades_tracker, ceiling_efr)
+                yield (weapon, augments_tracker, weapon_upgrades_tracker, ceiling_efr)
 
 
 def find_highest_efr_build():
@@ -308,6 +309,8 @@ def _find_highest_efr_build_worker(args):
 
     desired_weapon_class = WeaponClass.GREATSWORD
 
+    minimum_health_regen_augment = 1
+
     required_skills = {
         Skill.FOCUS: 3,
     }
@@ -329,6 +332,7 @@ def _find_highest_efr_build_worker(args):
         Decoration.EXPERT,
         Decoration.CRITICAL,
         Decoration.CHARGER,
+
         #Decoration.CHALLENGER_X2,
         #Decoration.HANDICRAFT,
 
@@ -359,9 +363,9 @@ def _find_highest_efr_build_worker(args):
 
         buf = head.armour_set.set_name + head.armour_set.discriminator.name + head.armour_set_variant.name \
                 + chest.armour_set.set_name + chest.armour_set.discriminator.name + chest.armour_set_variant.name \
-                + arms.armour_set.set_name + arms.armour_set.discriminator.name + arms.armour_set_variant.name \
+                + arms.armour_set.set_name  + arms.armour_set.discriminator.name  + arms.armour_set_variant.name  \
                 + waist.armour_set.set_name + waist.armour_set.discriminator.name + waist.armour_set_variant.name \
-                + legs.armour_set.set_name + legs.armour_set.discriminator.name + legs.armour_set_variant.name
+                + legs.armour_set.set_name  + legs.armour_set.discriminator.name  + legs.armour_set_variant.name
         return buf
     pruned_armour_combos.sort(key=sort_key_fn)
 
@@ -380,7 +384,8 @@ def _find_highest_efr_build_worker(args):
     decorations = decorations_test_subset
 
     all_skills_max_except_free_elem = {skill: skill.value.limit for skill in skill_subset}
-    all_weapon_configurations = list(_generate_weapon_combinations(weapons, all_skills_max_except_free_elem, FULL_SKILL_STATES))
+    all_weapon_configurations = list(_generate_weapon_combinations(weapons, all_skills_max_except_free_elem, \
+                                        FULL_SKILL_STATES, health_regen_minimum=minimum_health_regen_augment))
     all_weapon_configurations.sort(key=lambda x : x[3], reverse=True)
     assert all_weapon_configurations[0][3] >= all_weapon_configurations[-1][3]
 
