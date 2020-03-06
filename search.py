@@ -219,10 +219,10 @@ def _find_highest_efr_build_worker(worker_number):
         Decoration.TENDERIZER,
         Decoration.ELEMENTLESS,
         Decoration.EXPERT,
+        Decoration.CRITICAL,
+        Decoration.CHALLENGER_X2,
 
-        #Decoration.CRITICAL,
         ##Decoration.CHALLENGER,
-        #Decoration.CHALLENGER_X2,
         #Decoration.HANDICRAFT,
         ##Decoration.HANDICRAFT_X2,
         ##Decoration.ATTACK,
