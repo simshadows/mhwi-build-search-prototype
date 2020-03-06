@@ -86,7 +86,7 @@ SkillInfo = namedtuple(
         True, # zeroth_state_can_be_blank   Most stateful skills are binary.
               #                            
         "",   # info                        I don't care to write about *ALL* skills yet.
-        None, # info                        Most skills don't have previous names.
+        None, # previous_name               Most skills don't have previous names.
     ],
 )
 

@@ -308,11 +308,11 @@ def _find_highest_efr_build_worker(args):
 
     desired_weapon_class = WeaponClass.GREATSWORD
 
-    efr_skills = skills_with_implemented_features 
-
     required_skills = {
         Skill.FOCUS: 3,
     }
+
+    skill_subset = skills_with_implemented_features | {skill for (skill, _) in required_skills.items()}
 
     required_set_bonus_skills = { # IMPORTANT: We're not checking yet if these skills are actually attainable via. set bonus.
         Skill.MASTERS_TOUCH,
@@ -328,10 +328,11 @@ def _find_highest_efr_build_worker(args):
         Decoration.TENDERIZER,
         Decoration.EXPERT,
         Decoration.CRITICAL,
-        Decoration.CHALLENGER_X2,
+        Decoration.CHARGER,
+        #Decoration.CHALLENGER_X2,
+        #Decoration.HANDICRAFT,
 
         ##Decoration.CHALLENGER,
-        #Decoration.HANDICRAFT,
         ##Decoration.HANDICRAFT_X2,
         ##Decoration.ATTACK,
         ##Decoration.ATTACK_X2,
@@ -344,9 +345,9 @@ def _find_highest_efr_build_worker(args):
 
     weapons = [weapon for (_, weapon) in weapon_db.items() if weapon.type is desired_weapon_class]
 
-    pruned_armour_db = prune_easyiterate_armour_db(skillsonly_pruned_armour, skill_subset=efr_skills, \
+    pruned_armour_db = prune_easyiterate_armour_db(skillsonly_pruned_armour, skill_subset=skill_subset, \
                                                                     print_progress=print_progress)
-    pruned_armour_combos = generate_and_prune_armour_combinations(pruned_armour_db, skill_subset=efr_skills, \
+    pruned_armour_combos = generate_and_prune_armour_combinations(pruned_armour_db, skill_subset=skill_subset, \
                                                                     required_set_bonus_skills=required_set_bonus_skills,
                                                                     print_progress=print_progress)
     def sort_key_fn(x):
@@ -366,7 +367,7 @@ def _find_highest_efr_build_worker(args):
 
 
     charms = set()
-    for skill in efr_skills:
+    for skill in skill_subset:
         if skill in charms_indexed_by_skill:
             for charm in charms_indexed_by_skill[skill]:
                 charms.add(charm)
@@ -378,7 +379,7 @@ def _find_highest_efr_build_worker(args):
     #decorations = list(get_pruned_deco_set(decoration_skills, bonus_skills=[Skill.FOCUS]))
     decorations = decorations_test_subset
 
-    all_skills_max_except_free_elem = {skill: skill.value.limit for skill in efr_skills}
+    all_skills_max_except_free_elem = {skill: skill.value.limit for skill in skill_subset}
     all_weapon_configurations = list(_generate_weapon_combinations(weapons, all_skills_max_except_free_elem, FULL_SKILL_STATES))
     all_weapon_configurations.sort(key=lambda x : x[3], reverse=True)
     assert all_weapon_configurations[0][3] >= all_weapon_configurations[-1][3]
@@ -463,8 +464,8 @@ def _find_highest_efr_build_worker(args):
 
                     deco_slots = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
                     deco_dicts = _generate_deco_dicts(deco_slots, decorations, including_charm_skills, \
-                                                        #skill_subset=efr_skills, required_skills=required_skills)
-                                                        skill_subset=efr_skills)
+                                                        #skill_subset=skill_subset, required_skills=required_skills)
+                                                        skill_subset=skill_subset)
                     assert len(deco_dicts) > 0
                     # Every possible decoration that can go in.
 

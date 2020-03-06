@@ -26,7 +26,7 @@ This project is written for Python 3.8.
 
 1) I'll need to be confident that the armour pruning doesn't throw away armour pieces that are still useful. This will need continued testing.
 
-2) I'll also need to be confident that the armour pruning doesn't throw away armour *sets* that are still useful. This will need toncinued testing.
+2) I'll also need to be confident that the armour pruning doesn't throw away armour *sets* that are still useful. This will need continued testing.
 
 3) Free Element will need to be taken into account since adding it can actually reduce a build's EFR by disabling Non-elemental Boost. My pruning algorithms currently don't take this into account, so it is possible for a gear piece with Free Element to cause another gear piece without Free Element to be pruned, even if it may be better for pure-raw builds.
 
