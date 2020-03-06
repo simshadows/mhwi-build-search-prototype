@@ -159,10 +159,20 @@ def find_highest_efr_build():
 
     with mp.Pool(NUM_WORKERS) as p:
         manager = mp.Manager()
-        queue_children_to_parent = manager.Queue()
+        all_pipes = [mp.Pipe(duplex=False) for _ in range(NUM_WORKERS)]
+        # all_pipes is a list of 2-tuples. With duplex=False, each tuple is (read_only, write_only).
 
-        children_args = [(i, queue_children_to_parent) for i in range(NUM_WORKERS)]
+        queue_children_to_parent = manager.Queue()
+        pipes_parent_to_children = [x for (_, x) in all_pipes] # Parent keeps the write-only half.
+
+        pipes_for_children = [x for (x, _) in all_pipes] # Children get the read-only end.
+        children_args = [(i, queue_children_to_parent, pipes_for_children[i]) for i in range(NUM_WORKERS)]
         async_result = p.map_async(_find_highest_efr_build_worker, children_args)
+
+        def broadcast_new_best_efr(efr_value):
+            for pipe in pipes_parent_to_children:
+                pipe.send(["NEW_EFR", efr_value])
+            return
 
         grandtotal_progress_segments = None
         curr_progress_segment = 0
@@ -194,6 +204,8 @@ def find_highest_efr_build():
                         current_best_affinity = intermediate_affinity
 
                         current_best_build = intermediate_build
+
+                        broadcast_new_best_efr(current_best_efr)
 
                         print()
                         print(f"{current_best_efr} EFR @ {current_best_affinity} affinity")
@@ -257,6 +269,7 @@ def find_highest_efr_build():
 def _find_highest_efr_build_worker(args):
     worker_number = args[0]
     queue_to_parent = args[1]
+    pipe_from_parent = args[2]
 
     worker_string = f"[WORKER #{worker_number}] "
 
@@ -376,6 +389,18 @@ def _find_highest_efr_build_worker(args):
     total_progress_segments = len(armour_combos_sublist)
     curr_progress_segment = 0
 
+    def check_parent_for_new_best_efr_and_update():
+        nonlocal best_efr
+        is_updated = False
+        while pipe_from_parent.poll(0):
+            msg = pipe_from_parent.recv()
+            assert msg[0] == "NEW_EFR"
+            intermediate_efr = msg[1]
+            if intermediate_efr > best_efr:
+                best_efr = intermediate_efr
+                is_updated = True
+        return is_updated
+
     def regenerate_weapon_list():
         nonlocal all_weapon_configurations
         new_weapon_configuration_list = []
@@ -383,10 +408,8 @@ def _find_highest_efr_build_worker(args):
             if weapon_configuration[3] > best_efr: # Check if the ceiling EFR is over the best EFR
                 new_weapon_configuration_list.append(weapon_configuration)
         all_weapon_configurations = new_weapon_configuration_list
-        print()
         print(worker_string + f"New number of weapon configurations: {len(all_weapon_configurations)} " + \
                                     f"out of {debugging_num_initial_weapon_configs}")
-        print()
         return
 
     for curr_armour in armour_combos_sublist:
@@ -438,7 +461,9 @@ def _find_highest_efr_build_worker(args):
                         send_found_build(associated_build)
                         do_regenerate_weapon_list = True
 
-            if do_regenerate_weapon_list:
+            best_efr_is_updated = check_parent_for_new_best_efr_and_update()
+
+            if best_efr_is_updated or do_regenerate_weapon_list:
                 regenerate_weapon_list()
 
         curr_progress_segment += 1
