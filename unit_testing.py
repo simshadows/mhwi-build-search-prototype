@@ -214,7 +214,7 @@ def _run_tests_lookup():
         build = Build(weapon, transformed_armour_dict, charm, weapon_augments_tracker, weapon_upgrades_tracker, \
                                             decorations_list)
         results = build.calculate_performance(skill_states_dict)
-        if round(results.efr) != round(expected_efr):
+        if round(results.efr, 2) != round(expected_efr, 2):
             raise ValueError(f"EFR value mismatch. Expected {expected_efr}. Got {results.efr}.")
 
     def check_skill(expected_skill, expected_level):
@@ -371,6 +371,8 @@ def _run_tests_lookup():
 
     skill_states_dict = {
             Skill.WEAKNESS_EXPLOIT: 2,
+            Skill.AGITATOR: 1,
+            Skill.PEAK_PERFORMANCE: 1,
         }
 
     weapon_augments_config = [
@@ -435,6 +437,75 @@ def _run_tests_lookup():
         ]
 
     check_efr(507.47)
+
+    decorations_list = [
+        Decoration.ELEMENTLESS,
+        Decoration.CRITICAL,
+        Decoration.FLAWLESS,
+        Decoration.FLAWLESS,
+        Decoration.ATTACK,
+        Decoration.ATTACK,
+        Decoration.CHALLENGER,
+        Decoration.CHALLENGER,
+    ]
+
+    check_efr(573.19)
+
+    decorations_list.append(Decoration.DEFENSE_X3)
+
+    if __debug__:
+        try:
+            check_efr(0)
+        except:
+            pass
+        else:
+            raise RuntimeError("Test failed. Expected an exception here.")
+
+    decorations_list = [
+        Decoration.ELEMENTLESS,
+        Decoration.CRITICAL,
+        Decoration.FLAWLESS,
+        Decoration.FLAWLESS,
+        Decoration.ATTACK,
+        Decoration.ATTACK,
+        Decoration.CHALLENGER,
+        Decoration.CHALLENGER,
+        Decoration.EXPERT, # Added this one compared to the last time
+    ]
+
+    weapon_augments_config = [
+            (IBWeaponAugmentType.AFFINITY_INCREASE, 2),
+            (IBWeaponAugmentType.SLOT_UPGRADE,      1),
+        ]
+
+    check_efr(562.16)
+
+    decorations_list = [
+        Decoration.ELEMENTLESS,
+        Decoration.CRITICAL,
+        Decoration.FLAWLESS,
+        Decoration.FLAWLESS,
+        Decoration.ATTACK,
+        Decoration.ATTACK,
+        Decoration.CHALLENGER,
+        Decoration.CHALLENGER,
+        Decoration.CHALLENGER, # Changed from Expert compared to the last time
+    ]
+
+    if __debug__:
+        try:
+            check_efr(0)
+        except:
+            pass
+        else:
+            raise RuntimeError("Test failed. Expected an exception here.")
+
+    weapon_augments_config = [
+            (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
+            (IBWeaponAugmentType.SLOT_UPGRADE,      2),
+        ]
+
+    check_efr(555.83)
 
     return True
 

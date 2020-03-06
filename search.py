@@ -301,14 +301,14 @@ def _find_highest_efr_build_worker(args):
         Skill.MASTERS_TOUCH,
     }
 
-    decoration_skills = {
-        Skill.CRITICAL_EYE,
-        Skill.WEAKNESS_EXPLOIT,
-    }
+    #decoration_skills = {
+    #    Skill.CRITICAL_EYE,
+    #    Skill.WEAKNESS_EXPLOIT,
+    #}
 
     decorations_test_subset = [
-        Decoration.TENDERIZER,
         Decoration.ELEMENTLESS,
+        Decoration.TENDERIZER,
         Decoration.EXPERT,
         Decoration.CRITICAL,
         Decoration.CHALLENGER_X2,

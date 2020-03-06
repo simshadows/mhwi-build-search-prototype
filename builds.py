@@ -305,7 +305,10 @@ class Build:
         # (We should be able to rely on inputs here.
         # Both slots_*_counter are in the format {slot_size: count}
         if __debug__:
+            weapon_augment_contribution = self._weapon_augments_tracker.calculate_contribution() # TODO: This is redundant.
             tmp_slots_available_counter = copy(Counter(list(self._weapon.slots) + list(armour_contribution.decoration_slots)))
+            if weapon_augment_contribution.extra_decoration_slot_level > 0:
+                tmp_slots_available_counter.update([weapon_augment_contribution.extra_decoration_slot_level])
             assert len(tmp_slots_available_counter) <= 4 # We only have slot sizes 1 to 4.
 
             slots_used_counter = Counter()
