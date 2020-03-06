@@ -53,10 +53,11 @@ FULL_SKILL_STATES = {
 }
 
 
-def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_skills, skill_subset=None):
+def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_skills, skill_subset=None, required_skills={}):
     assert isinstance(slots_available_counter, dict)
     assert isinstance(all_possible_decos, list)
     assert isinstance(existing_skills, dict)
+    assert isinstance(required_skills, dict)
     # assert all(x in slots_available_counter for x in [1, 2, 3, 4]) # This isn't enforced anymore.
     # assert all(x in all_possible_decos for x in [1, 2, 3, 4]) # This isn't enforced anymore.
     assert len(slots_available_counter) <= 4
@@ -242,23 +243,27 @@ def find_highest_efr_build():
     best_efr = 0
     best_build = None
     for serialized_build in best_builds_serialized:
+        if serialized_build is None:
+            continue
         build = Build.deserialize(serialized_build)
         results = build.calculate_performance(FULL_SKILL_STATES)
         if results.efr > best_efr:
             best_efr = results.efr
             best_build = build
 
-    end_real_time = time.time()
-
-    results = best_build.calculate_performance(FULL_SKILL_STATES)
-
-    print()
-    print("Final build:")
-    print()
-    print(f"{results.efr} EFR @ {results.affinity} affinity")
-    print()
-    best_build.print()
-    print()
+    if best_build is None:
+        print()
+        print("No build was found within the constraints.")
+        print()
+    else:
+        results = best_build.calculate_performance(FULL_SKILL_STATES)
+        print()
+        print("Final build:")
+        print()
+        print(f"{results.efr} EFR @ {results.affinity} affinity")
+        print()
+        best_build.print()
+        print()
 
     end_time = time.time()
 
@@ -304,6 +309,10 @@ def _find_highest_efr_build_worker(args):
     desired_weapon_class = WeaponClass.GREATSWORD
 
     efr_skills = skills_with_implemented_features 
+
+    required_skills = {
+        Skill.FOCUS: 3,
+    }
 
     required_set_bonus_skills = { # IMPORTANT: We're not checking yet if these skills are actually attainable via. set bonus.
         Skill.MASTERS_TOUCH,
@@ -453,7 +462,9 @@ def _find_highest_efr_build_worker(args):
                 for (weapon, weapon_augments_tracker, weapon_upgrades_tracker, weapon_ceil_efr) in all_weapon_configurations:
 
                     deco_slots = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
-                    deco_dicts = _generate_deco_dicts(deco_slots, decorations, including_charm_skills, skill_subset=efr_skills)
+                    deco_dicts = _generate_deco_dicts(deco_slots, decorations, including_charm_skills, \
+                                                        #skill_subset=efr_skills, required_skills=required_skills)
+                                                        skill_subset=efr_skills)
                     assert len(deco_dicts) > 0
                     # Every possible decoration that can go in.
 
@@ -463,6 +474,14 @@ def _find_highest_efr_build_worker(args):
                         for (skill, level) in calculate_decorations_skills_contribution(deco_dict).items():
                             including_deco_skills[skill] += level
                             # Now, we also have decoration skills included.
+
+                        skip_deco_dict = False
+                        for (skill, minimum_level) in required_skills.items():
+                            if including_deco_skills.get(skill, 0) < minimum_level:
+                                skip_deco_dict = True
+                                break
+                        if skip_deco_dict:
+                            continue
                         
                         results = lookup_from_skills(weapon, including_deco_skills, FULL_SKILL_STATES, \
                                                         weapon_augments_tracker, weapon_upgrades_tracker)
@@ -486,5 +505,8 @@ def _find_highest_efr_build_worker(args):
 
     send_complete_ping()
 
-    return associated_build.serialize()
+    if associated_build is not None:
+        return associated_build.serialize()
+    else:
+        return None
 
