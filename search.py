@@ -395,11 +395,11 @@ def _find_highest_efr_build_worker(args):
         Decoration.HANDICRAFT,
         Decoration.EXPERT,
         Decoration.EXPERT_X2,
+        Decoration.ATTACK,
 
-        ##Decoration.HANDICRAFT_X2,
-        ##Decoration.ATTACK,
-        ##Decoration.ATTACK_X2,
-        ##Decoration.FLAWLESS,
+        #Decoration.ATTACK_X2,
+        #Decoration.HANDICRAFT_X2,
+        #Decoration.FLAWLESS,
     ]
 
     ############################
