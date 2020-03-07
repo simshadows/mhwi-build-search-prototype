@@ -19,7 +19,8 @@ from collections import namedtuple, defaultdict, Counter
 from builds import (Build,
                    lookup_from_skills)
 from utils  import (update_and_print_progress,
-                   grouper)
+                   grouper,
+                   interleaving_shuffle)
 
 from database_skills      import (Skill,
                                  skills_with_implemented_features,
@@ -45,6 +46,7 @@ from database_decorations import (Decoration,
 
 NUM_WORKERS = 32
 NUM_BATCHES = 256
+SHUFFLE_MAX_PARTITIONS = 8
 
 FULL_SKILL_STATES = {
     Skill.AGITATOR: 1,
@@ -430,6 +432,8 @@ def _find_highest_efr_build_worker(args):
     sublist_ideal_len = int(ceil(len(pruned_armour_combos) / NUM_BATCHES))
     all_armour_combos_sublists = list(grouper(pruned_armour_combos, sublist_ideal_len))
     assert sum(len(x) for x in all_armour_combos_sublists) >= len(pruned_armour_combos)
+    all_armour_combos_sublists = list(interleaving_shuffle(all_armour_combos_sublists, max_partitions=SHUFFLE_MAX_PARTITIONS))
+
 
     ####################
     # STAGE 3: Search! #
