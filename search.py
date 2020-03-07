@@ -67,73 +67,104 @@ def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_s
     initial_slots_available_list = list(sorted(slots_available_counter.elements()))
     assert initial_slots_available_list[0] <= initial_slots_available_list[-1] # Quick sanity check on order.
 
+    # We split the deco list into decos with any of the required skills, and deco list without required skills.
+    decos_with_required_skills = set()
+    decos_without_required_skills = set()
+    for deco in all_possible_decos:
+        if any((skill in required_skills) for (skill, _) in deco.value.skills_dict.items()):
+            decos_with_required_skills.add(deco)
+        else:
+            decos_without_required_skills.add(deco)
+    assert len(decos_with_required_skills) + len(decos_without_required_skills) == len(all_possible_decos)
+
     intermediate = [({}, initial_slots_available_list)]
 
-    for deco in all_possible_decos:
-        #print(deco.value.name)
-        next_intermediate = []
-        deco_size = deco.value.slot_size
-        deco_limit = 0
-        for (skill, levels_granted_by_deco) in deco.value.skills_dict.items():
-            if (skill_subset is not None) and (skill not in skill_subset):
+    def process_decos(deco_set, required_skills):
+        nonlocal intermediate
+        assert isinstance(deco_set, set)
+
+        if len(deco_set) == 0:
+            return
+
+        for deco in deco_set:
+            next_intermediate = []
+            deco_size = deco.value.slot_size
+            deco_limit = 0
+            for (skill, levels_granted_by_deco) in deco.value.skills_dict.items():
+                if (skill_subset is not None) and (skill not in skill_subset):
+                    continue
+                levels_to_go = skill.value.limit - existing_skills.get(skill, 0)
+                # TODO: skip calculations if levels_to_go <= 0?
+                # TODO: Consider using floor instead of ceiling. This is because we can assume
+                # lower-size jewels will be tested instead of size-4 jewels (which are the only
+                # jewels that have multiple levels).
+                deco_limit_for_this_skill = ceil(levels_to_go / levels_granted_by_deco)
+                if deco_limit_for_this_skill > deco_limit:
+                    deco_limit = deco_limit_for_this_skill
+
+            if deco_limit == 0:
                 continue
-            levels_to_go = skill.value.limit - existing_skills.get(skill, 0)
-            # TODO: skip calculations if levels_to_go <= 0?
-            # TODO: Consider using floor instead of ceiling. This is because we can assume
-            # lower-size jewels will be tested instead of size-4 jewels (which are the only
-            # jewels that have multiple levels).
-            deco_limit_for_this_skill = ceil(levels_to_go / levels_granted_by_deco)
-            if deco_limit_for_this_skill > deco_limit:
-                deco_limit = deco_limit_for_this_skill
 
-        if deco_limit == 0:
-            continue
-
-        # TODO: This algorithm is probably nowhere near as efficient as it could be.
-        #       Try to rewrite it with a better algorithm :)
-        for (trial_deco_dict, trial_slots_available) in intermediate:
-            assert deco not in trial_deco_dict
-            assert isinstance(trial_deco_dict, dict)
-
-            trial_deco_dict = copy(trial_deco_dict)
-            trial_slots_available = copy(trial_slots_available) # TODO: Consider not copying. Don't need to.
-
-            # First we "add zero"
-
-            next_intermediate.append((copy(trial_deco_dict), copy(trial_slots_available)))
-
-            # Now, we add the deco incrementally.
-
-            for num_to_add in range(deco_limit + 1):
-
-                trial_deco_dict2 = copy(trial_deco_dict)
-                trial_slots_available2 = copy(trial_slots_available)
-
+            # TODO: This algorithm is probably nowhere near as efficient as it could be.
+            #       Try to rewrite it with a better algorithm :)
+            for (trial_deco_dict, trial_slots_available) in intermediate:
+                assert deco not in trial_deco_dict
                 assert isinstance(trial_deco_dict, dict)
 
-                trial_deco_dict2[deco] = num_to_add
+                trial_deco_dict = copy(trial_deco_dict)
+                trial_slots_available = copy(trial_slots_available) # TODO: Consider not copying. Don't need to.
 
-                new_trial_slots_available = []
-                while (num_to_add > 0) and (len(trial_slots_available2) > 0):
-                    candidate_slot_size = trial_slots_available2.pop(0)
-                    if candidate_slot_size >= deco_size:
-                        num_to_add -= 1
-                    else:
-                        new_trial_slots_available.append(candidate_slot_size)
+                # First we "add zero"
 
-                if num_to_add == 0:
-                    new_trial_slots_available += trial_slots_available2
-                    assert len(new_trial_slots_available) == len(trial_slots_available) - trial_deco_dict2[deco]
-                    next_intermediate.append((trial_deco_dict2, new_trial_slots_available))
+                next_intermediate.append((copy(trial_deco_dict), copy(trial_slots_available)))
 
-        assert len(next_intermediate) > 0
-        intermediate = next_intermediate
+                # Now, we add the deco incrementally.
 
-        #print("          deco limit = " + str(deco_limit))
-        #print("                    deco combos: " + str(len(intermediate)))
+                for num_to_add in range(deco_limit + 1):
 
-        #if len(intermediate) < 300:
-        #    print("\n".join(" ".join(y.name + " " + str(z) for (y,z) in x[0].items()) for x in intermediate))
+                    trial_deco_dict2 = copy(trial_deco_dict)
+                    trial_slots_available2 = copy(trial_slots_available)
+
+                    assert isinstance(trial_deco_dict, dict)
+
+                    trial_deco_dict2[deco] = num_to_add
+
+                    new_trial_slots_available = []
+                    while (num_to_add > 0) and (len(trial_slots_available2) > 0):
+                        candidate_slot_size = trial_slots_available2.pop(0)
+                        if candidate_slot_size >= deco_size:
+                            num_to_add -= 1
+                        else:
+                            new_trial_slots_available.append(candidate_slot_size)
+
+                    if num_to_add == 0:
+                        new_trial_slots_available += trial_slots_available2
+                        assert len(new_trial_slots_available) == len(trial_slots_available) - trial_deco_dict2[deco]
+                        next_intermediate.append((trial_deco_dict2, new_trial_slots_available))
+
+            assert len(next_intermediate) > 0
+            intermediate = next_intermediate
+        
+        # If we're processing with required skills, we'll need to filter out results
+        if required_skills is not None:
+            next_intermediate = []
+            for tup in intermediate:
+                assert len(tup) == 2
+                trial_deco_dict = tup[0]
+
+                trial_skills = calculate_decorations_skills_contribution(trial_deco_dict)
+                assert isinstance(trial_skills, defaultdict)
+                for (skill, level) in existing_skills.items():
+                    trial_skills[skill] += level
+
+                for skill, required_level in required_skills.items():
+                    if trial_skills[skill] >= required_level:
+                        next_intermediate.append(tup)
+            intermediate = next_intermediate
+        return
+
+    process_decos(decos_with_required_skills, required_skills)
+    process_decos(decos_without_required_skills, None)
 
     ret = [x[0] for x in intermediate if (len(x[1]) == 0)]
     if len(ret) == 0:
@@ -473,8 +504,7 @@ def _find_highest_efr_build_worker(args):
 
                     deco_slots = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
                     deco_dicts = _generate_deco_dicts(deco_slots, decorations, including_charm_skills, \
-                                                        #skill_subset=skill_subset, required_skills=required_skills)
-                                                        skill_subset=skill_subset)
+                                                        skill_subset=skill_subset, required_skills=required_skills)
                     assert len(deco_dicts) > 0
                     # Every possible decoration that can go in.
 
@@ -484,14 +514,6 @@ def _find_highest_efr_build_worker(args):
                         for (skill, level) in calculate_decorations_skills_contribution(deco_dict).items():
                             including_deco_skills[skill] += level
                             # Now, we also have decoration skills included.
-
-                        skip_deco_dict = False
-                        for (skill, minimum_level) in required_skills.items():
-                            if including_deco_skills.get(skill, 0) < minimum_level:
-                                skip_deco_dict = True
-                                break
-                        if skip_deco_dict:
-                            continue
                         
                         results = lookup_from_skills(weapon, including_deco_skills, FULL_SKILL_STATES, \
                                                         weapon_augments_tracker, weapon_upgrades_tracker)
