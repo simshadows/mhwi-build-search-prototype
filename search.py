@@ -135,7 +135,11 @@ def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_s
         #if len(intermediate) < 300:
         #    print("\n".join(" ".join(y.name + " " + str(z) for (y,z) in x[0].items()) for x in intermediate))
 
-    return [x[0] for x in intermediate]
+    ret = [x[0] for x in intermediate if (len(x[1]) == 0)]
+    if len(ret) == 0:
+        return [x[0] for x in intermediate] # We return everything since we can't utilize all slots anyway.
+    else:
+        return ret # We return the subset where all slots are consumed.
 
 
 def _generate_weapon_combinations(weapon_list, skills_for_ceiling_efr, skill_states_dict, health_regen_minimum=0):
