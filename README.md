@@ -44,6 +44,8 @@ Because the runtime is turning out to be pretty slow and Python's multithreaded 
 
 3) Free Element will need to be taken into account since adding it can actually reduce a build's EFR by disabling Non-elemental Boost. My pruning algorithms currently don't take this into account, so it is possible for a gear piece with Free Element to cause another gear piece without Free Element to be pruned, even if it may be better for pure-raw builds.
 
+4) I think the decoration combination pruning has a few bugs that cause it to over-prune. However, the over-pruning will *rarely affect real builds* as it's really only applicable for cases where you have too few decorations to actually put into the slots. However, I shoudl really fix the bugs anyway.
+
 ## Nerd Stuff (THIS IS OUTDATED)
 
 The current version of the search algorithm is brute force with pruning.
