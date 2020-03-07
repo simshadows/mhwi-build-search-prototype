@@ -366,11 +366,12 @@ def _find_highest_efr_build_worker(args):
     decorations_test_subset = [
         Decoration.ELEMENTLESS,
         Decoration.TENDERIZER,
-        Decoration.EXPERT,
         Decoration.CRITICAL,
         Decoration.CHARGER,
         Decoration.CHALLENGER_X2,
-        Decoration.HANDICRAFT,
+        #Decoration.HANDICRAFT,
+        Decoration.EXPERT,
+        Decoration.EXPERT_X2,
 
         ##Decoration.CHALLENGER,
         ##Decoration.HANDICRAFT_X2,
