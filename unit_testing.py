@@ -12,6 +12,7 @@ from collections import namedtuple, defaultdict, Counter
 
 from builds import (Build,
                    lookup_from_skills)
+from search import _generate_deco_dicts
 
 from database_skills      import (Skill,
                                  clipped_skills_defaultdict,
@@ -46,6 +47,7 @@ def run_tests():
     _run_tests_lookup()
     _run_tests_armour_pruning()
     _run_tests_serializing()
+    _run_tests_deco_dict_generation()
 
     print("\nUnit tests are all passed.")
     print("\n==============================\n")
@@ -637,6 +639,213 @@ def _run_tests_serializing():
         raise ValueError(f"Test failed. Got {original_results.efr} EFR.")
     if new_results.affinity != 51:
         raise ValueError(f"Test failed. Got {original_results.affinity} affinity.")
+    
+    return True
+
+
+def _run_tests_deco_dict_generation():
+    print()
+    print("Testing decoration dictionary generation.")
+
+    slots_available_counter = {
+            1: 1,
+        }
+
+    all_possible_decos = [
+            Decoration.EXPERT,
+        ]
+
+    existing_skills = {
+            # Empty
+        }
+
+    skill_subset = {
+            Skill.CRITICAL_EYE,
+        }
+
+    required_skills = {
+            # Empty
+        }
+
+    def generate_result():
+        nonlocal slots_available_counter
+        nonlocal existing_skills
+        slots_available_counter = Counter(slots_available_counter)
+        new_existing_skills = defaultdict(lambda : 0)
+        new_existing_skills.update(existing_skills)
+        result = _generate_deco_dicts(slots_available_counter, all_possible_decos, new_existing_skills, \
+                                        skill_subset=skill_subset, required_skills=required_skills)
+        print()
+        print("\n".join(", ".join(f"{deco.name} {level}" for deco, level in deco_combo.items()) for deco_combo in result))
+        return result
+
+    def check_length(n):
+        result = generate_result()
+        if len(result) != n:
+            raise ValueError(f"Unexpected list length. Expected {n}. Got {len(result)}.")
+
+    check_length(1)
+
+    slots_available_counter[1] = 2
+    check_length(1)
+
+    slots_available_counter[1] = 7
+    check_length(1)
+
+    skill_subset = {
+            Skill.CRITICAL_EYE,
+            Skill.ATTACK_BOOST,
+        }
+
+    all_possible_decos = [
+            Decoration.EXPERT,
+            Decoration.ATTACK,
+        ]
+    # Should see:
+    #     Expert x7
+    #     Expert x6 + Attack x1
+    #     Expert x5 + Attack x2
+    #     Expert x4 + Attack x3
+    #     Expert x3 + Attack x4
+    #     Expert x2 + Attack x5
+    #     Expert x1 + Attack x6
+    #     Attack x7
+    # So this is a total of 8 full possibilities.
+    check_length(8)
+
+
+    slots_available_counter = {
+            1: 3,
+            2: 2,
+            4: 1,
+        }
+
+    all_possible_decos = [
+            Decoration.ATTACK,
+            Decoration.CHARGER,
+            Decoration.CHALLENGER,
+            Decoration.CHALLENGER_X2,
+        ]
+
+    existing_skills = {
+            Skill.CRITICAL_EYE: 4,
+            Skill.PEAK_PERFORMANCE: 3,
+            Skill.FOCUS: 2,
+            Skill.HANDICRAFT: 2,
+            Skill.BLAST_ATTACK: 2
+        }
+
+    skill_subset = {
+            Skill.AGITATOR,
+            Skill.ATTACK_BOOST,
+            Skill.CRITICAL_BOOST,
+            Skill.CRITICAL_EYE,
+            Skill.NON_ELEMENTAL_BOOST,
+            Skill.HANDICRAFT,
+            Skill.PEAK_PERFORMANCE,
+            Skill.WEAKNESS_EXPLOIT,
+
+            Skill.FOCUS,
+        }
+
+    required_skills = {
+            Skill.FOCUS: 3,
+        }
+
+    # We already have 2 Focus, so we require one Charger decoration.
+    #
+    # slots_available_counter = {
+    #         1: 3,
+    #         2: 1,
+    #         4: 1,
+    #     }
+    #
+    # all_possible_decos = [
+    #         Decoration.ATTACK,
+    #         Decoration.CHALLENGER,
+    #         Decoration.CHALLENGER_X2,
+    #     ]
+    #
+    # First add ATTACK:
+    #
+    #   1      1      1      2      4
+    # 1 ATTACK
+    # 2 ATTACK ATTACK
+    # 3 ATTACK ATTACK ATTACK
+    # 4 ATTACK ATTACK ATTACK ATTACK
+    # 5 ATTACK ATTACK ATTACK ATTACK ATTACK
+    #
+    # Now, we add CHALLENGER
+    #
+    #   1      1      1      2          4
+    # 1 ATTACK ---(PRUNE)
+    # 2 ATTACK ATTACK ---(PRUNE)
+    # 3 ATTACK ATTACK ATTACK
+    # 4 ATTACK ATTACK ATTACK CHALLENGER
+    # 5 ATTACK ATTACK ATTACK CHALLENGER CHALLENGER
+    # 6 ATTACK ATTACK ATTACK ATTACK     
+    # 7 ATTACK ATTACK ATTACK ATTACK     CHALLENGER
+    # 8 ATTACK ATTACK ATTACK ATTACK     ATTACK
+    #
+    # Now, we add CHALLENGER_X2
+    #
+    #   1      1      1      2          4
+    # 1 ATTACK ATTACK ATTACK ---(PRUNE)
+    # 2 ATTACK ATTACK ATTACK CHALLENGER CHALLENGER_X2
+    # 3 ATTACK ATTACK ATTACK CHALLENGER CHALLENGER
+    # 4 ATTACK ATTACK ATTACK ATTACK     CHALLENGER_X2
+    # 5 ATTACK ATTACK ATTACK ATTACK     CHALLENGER
+    # 6 ATTACK ATTACK ATTACK ATTACK     ATTACK
+    #
+
+    check_length(5)
+
+
+    slots_available_counter = {
+            1: 4,
+            2: 4,
+            3: 1,
+            4: 3,
+        }
+
+    all_possible_decos = [
+            Decoration.ELEMENTLESS,
+            Decoration.TENDERIZER,
+            Decoration.EXPERT,
+            Decoration.CRITICAL,
+            Decoration.CHARGER,
+            Decoration.CHALLENGER_X2,
+            Decoration.CHALLENGER,
+        ]
+
+    existing_skills = {
+            Skill.CRITICAL_EYE: 4,
+            Skill.PEAK_PERFORMANCE: 3,
+            Skill.FOCUS: 2,
+            Skill.HANDICRAFT: 2,
+            Skill.BLAST_ATTACK: 2
+        }
+
+    skill_subset = {
+            Skill.AGITATOR,
+            Skill.ATTACK_BOOST,
+            Skill.CRITICAL_BOOST,
+            Skill.CRITICAL_EYE,
+            Skill.NON_ELEMENTAL_BOOST,
+            Skill.HANDICRAFT,
+            Skill.PEAK_PERFORMANCE,
+            Skill.WEAKNESS_EXPLOIT,
+
+            Skill.FOCUS,
+        }
+
+    required_skills = {
+            Skill.FOCUS: 3,
+        }
+
+    # I didn't actually try to find this answer theoretically.
+    # I'm just seeing if the algorithm will stay consistent :)
+    check_length(1152)
     
     return True
 

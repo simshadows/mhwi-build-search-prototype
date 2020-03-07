@@ -4,6 +4,18 @@
 
 This project is written for Python 3.8.
 
+## How Do I Use It?
+
+I'm not intending to give it a good user interface yet, but if you *really* insist, then:
+
+1) Install at least Python 3.8.
+
+2) Open a terminal window in the repository and execute `$ python3.8 -O run.py search`.
+
+3) Enjoy. You literally have nothing else to do other than watch the terminal input because this program has no user interface.
+
+However, the code has 32 hardcoded as the number of worker threads. Just go in and change this to however many CPU threads exist in your computer. It should be the line `NUM_WORKERS = 32` somewhere on the top of `search.py`.
+
 ## Planned Development Roadmap
 
 1) Make a simple EFR optimizer for GS and SnS. I want this script to automatically create entire builds with as little manual tweaking as possible (except for updating the database, or stating build constraints).
@@ -22,6 +34,8 @@ This project is written for Python 3.8.
 
 8) Create a framework that can be used to help build other build optimization tools.
 
+Because the runtime is turning out to be pretty slow and Python's multithreaded coordination is really messy, **I'm also planning on rewriting this in faster languages, like *C++* or *Haskell*.** I suppose this Python program could be considered more of a prototype, and a proof of concept that the combinatorial complexity can indeed be cut down to give somewhat decent runtimes, even on a slow implementation like CPython!
+
 ## TODOs
 
 1) I'll need to be confident that the armour pruning doesn't throw away armour pieces that are still useful. This will need continued testing.
@@ -30,7 +44,7 @@ This project is written for Python 3.8.
 
 3) Free Element will need to be taken into account since adding it can actually reduce a build's EFR by disabling Non-elemental Boost. My pruning algorithms currently don't take this into account, so it is possible for a gear piece with Free Element to cause another gear piece without Free Element to be pruned, even if it may be better for pure-raw builds.
 
-## Nerd Stuff
+## Nerd Stuff (THIS IS OUTDATED)
 
 The current version of the search algorithm is brute force with pruning.
 
