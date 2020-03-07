@@ -336,8 +336,8 @@ def _find_highest_efr_build_worker(args):
         Decoration.EXPERT,
         Decoration.CRITICAL,
         Decoration.CHARGER,
+        Decoration.CHALLENGER_X2,
 
-        #Decoration.CHALLENGER_X2,
         #Decoration.HANDICRAFT,
 
         ##Decoration.CHALLENGER,
