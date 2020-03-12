@@ -382,7 +382,7 @@ def _find_highest_efr_build_worker(args):
     required_skills = {
         Skill.FOCUS: 3, # We want charging to be comfy. Makes greatsword easier to play.
         Skill.CRITICAL_BOOST: 3, # Raw greatsword practically requires this.
-        #Skill.WEAKNESS_EXPLOIT: 1, # We're *EXTREMELY UNLIKELY* to find a build under WEX 3, but I'll be safe with this.
+        Skill.WEAKNESS_EXPLOIT: 1, # *EXTREMELY UNLIKELY* to find a build under WEX 3 in raw greatsword, but I'll play safe.
     }
 
     skill_subset = skills_with_implemented_features | {skill for (skill, _) in required_skills.items()}
