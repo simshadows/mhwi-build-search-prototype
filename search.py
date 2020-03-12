@@ -20,7 +20,8 @@ from builds import (Build,
                    lookup_from_skills)
 from utils  import (update_and_print_progress,
                    grouper,
-                   interleaving_shuffle)
+                   interleaving_shuffle,
+                   dict_enumkey_intval_str)
 
 from database_skills      import (Skill,
                                  skills_with_implemented_features,
@@ -83,6 +84,7 @@ def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_s
 
     def process_decos(deco_set, required_skills):
         nonlocal intermediate
+
         assert isinstance(deco_set, set)
 
         if len(deco_set) == 0:
@@ -162,7 +164,6 @@ def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_s
                     # Step 4: Add back to the intermediate list :)
                     next_intermediate.append((copy(trial_deco_dict), copy(trial_slots_available), copy(trial_skill_dict)))
 
-            assert len(next_intermediate) > 0
             intermediate = next_intermediate
         
         # If we're processing with required skills, we'll need to filter out results
@@ -184,11 +185,12 @@ def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_s
         return
 
     process_decos(decos_with_required_skills, required_skills)
-    process_decos(decos_without_required_skills, None)
 
-    #print()
-    #for tup in intermediate:
-    #    print(str(tup[1]) + " " + ", ".join(f"{deco.name} {level}" for deco, level in tup[0].items()))
+    # TODO: Should I be exiting early? My algorithm seems to handle these rare cases fine.
+    #if len(intermediate) == 0:
+    #    return []
+
+    process_decos(decos_without_required_skills, None)
     
     ret = [x[0] for x in intermediate if (len(x[1]) == 0)]
     if len(ret) == 0:
@@ -370,8 +372,16 @@ def _find_highest_efr_build_worker(args):
 
     minimum_health_regen_augment = 1
 
+    # Players can cheat and add some skills that we know from experience that we'll need to use in order
+    # to speed up the algorithm.
+    #
+    # For example, we know that regular greatsword builds will almost always have CRITICAL_BOOST level 3.
+    # (The story changes when we start wanting to make something like support greatsword, which might not benefit
+    # enough from Critical Boost compared to, say, a level of Agitator. The point here is, the player can make their
+    # own choices with what they expect in the build if they want the algorithm to run faster.)
     required_skills = {
-        Skill.FOCUS: 3,
+        Skill.FOCUS: 3, # We want charging to be comfy. Makes greatsword easier to play.
+        Skill.CRITICAL_BOOST: 3, # Raw greatsword practically requires this.
     }
 
     skill_subset = skills_with_implemented_features | {skill for (skill, _) in required_skills.items()}
@@ -531,8 +541,8 @@ def _find_highest_efr_build_worker(args):
                     deco_slots = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
                     deco_dicts = _generate_deco_dicts(deco_slots, decorations, including_charm_skills, \
                                                         skill_subset=skill_subset, required_skills=required_skills)
-                    assert len(deco_dicts) > 0
-                    # Every possible decoration that can go in.
+                    # deco_dicts may be an empty list if no decoration combination can fulfill skill requirements.
+                    # If so, the inner loop just doesn't execute.
 
                     for deco_dict in deco_dicts:
 

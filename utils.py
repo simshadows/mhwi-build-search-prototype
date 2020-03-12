@@ -85,3 +85,6 @@ def interleaving_shuffle(list_obj, max_partitions=8):
                 yield partition[i]
     return
 
+def dict_enumkey_intval_str(d):
+    return "\n".join(f"{k.name}: {v}" for (k, v) in d.items())
+
