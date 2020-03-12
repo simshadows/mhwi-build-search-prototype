@@ -46,8 +46,8 @@ from database_decorations import (Decoration,
 
 
 NUM_WORKERS = 32
-NUM_BATCHES = 256
-SHUFFLE_MAX_PARTITIONS = 8
+MAX_BATCHES = 2048
+SHUFFLE_MAX_PARTITIONS = 10
 
 FULL_SKILL_STATES = {
     Skill.AGITATOR: 1,
@@ -231,7 +231,7 @@ def find_highest_efr_build():
         pipes_parent_to_children = [x for (_, x) in all_pipes] # Parent keeps the write-only half.
 
         # We fill up the queue with all batch numbers. Children just grab these values.
-        for batch in range(NUM_BATCHES + NUM_WORKERS): # If a worker finds we've exceeded the batches, it exits.
+        for batch in range(MAX_BATCHES + NUM_WORKERS): # If a worker finds we've exceeded the batches, it exits.
             job_queue.put(batch)
         assert not job_queue.full()
 
@@ -382,6 +382,7 @@ def _find_highest_efr_build_worker(args):
     required_skills = {
         Skill.FOCUS: 3, # We want charging to be comfy. Makes greatsword easier to play.
         Skill.CRITICAL_BOOST: 3, # Raw greatsword practically requires this.
+        #Skill.WEAKNESS_EXPLOIT: 1, # We're *EXTREMELY UNLIKELY* to find a build under WEX 3, but I'll be safe with this.
     }
 
     skill_subset = skills_with_implemented_features | {skill for (skill, _) in required_skills.items()}
@@ -462,7 +463,7 @@ def _find_highest_efr_build_worker(args):
 
     print("Lowest ceiling EFR: " + str(all_weapon_configurations[-1][3]))
 
-    sublist_ideal_len = int(ceil(len(pruned_armour_combos) / NUM_BATCHES))
+    sublist_ideal_len = int(ceil(len(pruned_armour_combos) / MAX_BATCHES))
     all_armour_combos_sublists = list(grouper(pruned_armour_combos, sublist_ideal_len))
     assert sum(len(x) for x in all_armour_combos_sublists) >= len(pruned_armour_combos)
     all_armour_combos_sublists = list(interleaving_shuffle(all_armour_combos_sublists, max_partitions=SHUFFLE_MAX_PARTITIONS))
