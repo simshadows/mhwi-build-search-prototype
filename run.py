@@ -19,6 +19,8 @@ from collections import namedtuple, defaultdict, Counter
 from unit_testing import run_tests
 from builds       import lookup_from_skills
 from search       import find_highest_efr_build
+from serialize    import writejson_search_parameters
+from utils        import ENCODING
 
 from database_skills      import Skill
 from database_weapons     import (WeaponClass,
@@ -50,47 +52,15 @@ def print_debugging_statistics():
     return
 
 
-def search_command():
+def search_command(search_parameters_filename):
+    assert isinstance(search_parameters_filename, str)
+
     print("Carrying out a pre-defined search.")
 
-    search_parameters = {
-            "selected_weapon_class": WeaponClass.GREATSWORD,
-            "selected_skills"      : {
-                    Skill.FOCUS: 3, # We want charging to be comfy. Makes greatsword easier to play.
-                    Skill.CRITICAL_BOOST: 3, # Raw greatsword practically requires this.
-                    Skill.WEAKNESS_EXPLOIT: 1, # *EXTREMELY UNLIKELY* to find a build under WEX 3 in raw greatsword, but I'll play safe.
+    with open(search_parameters_filename, encoding=ENCODING, mode="r") as f:
+        search_parameters_jsonstr = f.read()
 
-                    Skill.AGITATOR: 0,
-                    Skill.ATTACK_BOOST: 0,
-                    Skill.CRITICAL_EYE: 0,
-                    Skill.NON_ELEMENTAL_BOOST: 0,
-                    Skill.HANDICRAFT: 0,
-                    Skill.PEAK_PERFORMANCE: 0,
-                },
-            "selected_set_bonuses" : {
-                    Skill.MASTERS_TOUCH,
-                },
-            "selected_decorations" : {
-                    Decoration.ELEMENTLESS,
-                    Decoration.TENDERIZER,
-                    Decoration.CRITICAL,
-                    Decoration.CHARGER,
-                    Decoration.CHALLENGER,
-                    Decoration.CHALLENGER_X2,
-                    Decoration.HANDICRAFT,
-                    Decoration.HANDICRAFT_X2,
-                    Decoration.EXPERT,
-                    Decoration.EXPERT_X2,
-                    Decoration.ATTACK,
-                    Decoration.ATTACK_X2,
-
-                    #Decoration.FLAWLESS,
-                },
-
-            "min_health_regen_level": 1,
-        }
-
-    find_highest_efr_build(search_parameters)
+    find_highest_efr_build(search_parameters_jsonstr)
     return
 
 
@@ -245,7 +215,8 @@ def run():
     # Determine whether to run in search or lookup mode.
     if len(sys.argv) > 1:
         if sys.argv[1].lower() == "search":
-            search_command()
+            search_parameters_filename = sys.argv[2]
+            search_command(search_parameters_filename)
         else:
             weapon_name = sys.argv[1]
             lookup_command(weapon_name)

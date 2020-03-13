@@ -38,7 +38,7 @@ def writejson_search_parameters(**kwargs):
 
     assert isinstance(min_health_regen_level, int) and (min_health_regen_level >= 0)
 
-    json_data = {
+    data = {
             "selected_weapon_class": selected_weapon_class.name,
             "selected_skills": {k.name: v for (k, v) in selected_skills.items()},
             "selected_set_bonuses": [x.name for x in selected_set_bonuses],
@@ -46,8 +46,7 @@ def writejson_search_parameters(**kwargs):
 
             "min_health_regen_augment_level": min_health_regen_level
         }
-    
-    return json_dumps_formatted(json_data)
+    return json_dumps_formatted(data)
 
 
 SearchParameters = namedtuple(

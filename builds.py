@@ -422,9 +422,7 @@ class Build:
                 "weapon_upgrades": weapon_upgrades_serialized,
                 "decorations": decos,
             }
-        serial_data = json.dumps(data) # This will fail if we mess something up.
-        assert isinstance(serial_data, str)
-        return serial_data
+        return json.dumps(data) # This will fail if we mess something up.
 
     @classmethod
     def deserialize(self, serial_data):

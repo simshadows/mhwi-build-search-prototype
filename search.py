@@ -18,8 +18,7 @@ from collections import defaultdict, Counter
 
 from builds    import (Build,
                       lookup_from_skills)
-from serialize import (writejson_search_parameters,
-                      readjson_search_parameters)
+from serialize import (readjson_search_parameters)
 from utils     import (update_and_print_progress,
                       grouper,
                       interleaving_shuffle,
@@ -219,9 +218,7 @@ def _generate_weapon_combinations(weapon_list, skills_for_ceiling_efr, skill_sta
                 yield (weapon, augments_tracker, weapon_upgrades_tracker, ceiling_efr)
 
 
-def find_highest_efr_build(search_parameters_dict):
-    assert isinstance(search_parameters_dict, dict)
-    search_parameters_serialized = writejson_search_parameters(**search_parameters_dict)
+def find_highest_efr_build(search_parameters_jsonstr):
 
     start_time = time.time()
 
@@ -240,7 +237,7 @@ def find_highest_efr_build(search_parameters_dict):
         assert not job_queue.full()
 
         pipes_for_children = [x for (x, _) in all_pipes] # Children get the read-only end.
-        children_args = [(i, queue_children_to_parent, job_queue, pipes_for_children[i], search_parameters_serialized)
+        children_args = [(i, queue_children_to_parent, job_queue, pipes_for_children[i], search_parameters_jsonstr)
                          for i in range(NUM_WORKERS)]
         async_result = p.map_async(_find_highest_efr_build_worker, children_args)
 

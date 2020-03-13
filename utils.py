@@ -15,7 +15,7 @@ from math import floor, ceil
 from itertools import zip_longest
 
 #_CWD = os.getcwd()
-_ENCODING = "utf-8"
+ENCODING = "utf-8"
 
 class _InternalToken(Enum):
     NULL_REFERENCE = auto()
@@ -31,7 +31,7 @@ class _InternalToken(Enum):
 #    return
 
 def json_read(relfilepath):
-    with open(relfilepath, encoding=_ENCODING, mode="r") as f:
+    with open(relfilepath, encoding=ENCODING, mode="r") as f:
         return json.loads(f.read())
 
 def json_dumps_formatted(data):
@@ -40,7 +40,7 @@ def json_dumps_formatted(data):
 # Also will probably be useful, e.g. when I implement caching.
 #def json_write(relfilepath, *, data=None):
 #    mkdir_recursive(relfilepath)
-#    with open(relfilepath, encoding=_ENCODING, mode="w") as f:
+#    with open(relfilepath, encoding=ENCODING, mode="w") as f:
 #        f.write(json.dumps(data, sort_keys=True, indent=4))
 #    return
 

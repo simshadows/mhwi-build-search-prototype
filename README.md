@@ -10,9 +10,9 @@ I'm not intending to give it a good user interface yet, but if you *really* insi
 
 1) Install at least Python 3.8.
 
-2) Open a terminal window in the repository and execute `$ python3.8 -O run.py search`.
+2) Open a terminal window in the repository and execute `$ python3.8 -O run.py search search_parameters.json`.
 
-3) Enjoy. You literally have nothing else to do other than watch the terminal input because this program has no user interface.
+3) Enjoy. You literally have nothing else to do other than watch the terminal output because this program has no user interface.
 
 However, the code has 32 hardcoded as the number of worker threads. Just go in and change this to however many CPU threads exist in your computer. It should be the line `NUM_WORKERS = 32` somewhere on the top of `search.py`.
 
