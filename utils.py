@@ -34,11 +34,14 @@ def json_read(relfilepath):
     with open(relfilepath, encoding=_ENCODING, mode="r") as f:
         return json.loads(f.read())
 
+def json_dumps_formatted(data):
+    return json.dumps(data, sort_keys=True, indent=4)
+
 # Also will probably be useful, e.g. when I implement caching.
 #def json_write(relfilepath, *, data=None):
 #    mkdir_recursive(relfilepath)
 #    with open(relfilepath, encoding=_ENCODING, mode="w") as f:
-#        f.write(json.dumps(data, sort_keys=True, indent=3))
+#        f.write(json.dumps(data, sort_keys=True, indent=4))
 #    return
 
 def update_and_print_progress(msg, curr_progress_segment, total_progress_segments, start_real_time_seconds):
@@ -84,6 +87,9 @@ def interleaving_shuffle(list_obj, max_partitions=8):
             if obj is not _InternalToken.NULL_REFERENCE:
                 yield partition[i]
     return
+
+def all_unique(iterable_obj):
+    return len(set(iterable_obj)) == len(iterable_obj)
 
 def dict_enumkey_intval_str(d):
     return "\n".join(f"{k.name}: {v}" for (k, v) in d.items())

@@ -14,14 +14,16 @@ from copy import copy
 import multiprocessing as mp
 from queue import Empty
 
-from collections import namedtuple, defaultdict, Counter
+from collections import defaultdict, Counter
 
-from builds import (Build,
-                   lookup_from_skills)
-from utils  import (update_and_print_progress,
-                   grouper,
-                   interleaving_shuffle,
-                   dict_enumkey_intval_str)
+from builds    import (Build,
+                      lookup_from_skills)
+from serialize import (writejson_search_parameters,
+                      readjson_search_parameters)
+from utils     import (update_and_print_progress,
+                      grouper,
+                      interleaving_shuffle,
+                      dict_enumkey_intval_str)
 
 from database_skills      import (Skill,
                                  skills_with_implemented_features,
@@ -217,7 +219,9 @@ def _generate_weapon_combinations(weapon_list, skills_for_ceiling_efr, skill_sta
                 yield (weapon, augments_tracker, weapon_upgrades_tracker, ceiling_efr)
 
 
-def find_highest_efr_build():
+def find_highest_efr_build(search_parameters_dict):
+    assert isinstance(search_parameters_dict, dict)
+    search_parameters_serialized = writejson_search_parameters(**search_parameters_dict)
 
     start_time = time.time()
 
@@ -236,7 +240,8 @@ def find_highest_efr_build():
         assert not job_queue.full()
 
         pipes_for_children = [x for (x, _) in all_pipes] # Children get the read-only end.
-        children_args = [(i, queue_children_to_parent, job_queue, pipes_for_children[i]) for i in range(NUM_WORKERS)]
+        children_args = [(i, queue_children_to_parent, job_queue, pipes_for_children[i], search_parameters_serialized)
+                         for i in range(NUM_WORKERS)]
         async_result = p.map_async(_find_highest_efr_build_worker, children_args)
 
         def broadcast_new_best_efr(efr_value):
@@ -341,10 +346,11 @@ def find_highest_efr_build():
 
 
 def _find_highest_efr_build_worker(args):
-    worker_number = args[0]
-    queue_to_parent = args[1]
-    job_queue = args[2]
+    worker_number    = args[0]
+    queue_to_parent  = args[1]
+    job_queue        = args[2]
     pipe_from_parent = args[3]
+    search_parameters_serialized = args[4]
 
     worker_string = f"[WORKER #{worker_number}] "
 
@@ -364,54 +370,23 @@ def _find_highest_efr_build_worker(args):
 
     print_progress = (worker_number == 0)
 
-    ##############################
-    # STAGE 1: Basic Definitions #
-    ##############################
+    ########################################
+    # STAGE 1: Determine Search Parameters #
+    ########################################
 
-    desired_weapon_class = WeaponClass.GREATSWORD
+    search_parameters = readjson_search_parameters(search_parameters_serialized)
 
-    minimum_health_regen_augment = 1
+    desired_weapon_class = search_parameters.selected_weapon_class
 
-    # Players can cheat and add some skills that we know from experience that we'll need to use in order
-    # to speed up the algorithm.
-    #
-    # For example, we know that regular greatsword builds will almost always have CRITICAL_BOOST level 3.
-    # (The story changes when we start wanting to make something like support greatsword, which might not benefit
-    # enough from Critical Boost compared to, say, a level of Agitator. The point here is, the player can make their
-    # own choices with what they expect in the build if they want the algorithm to run faster.)
-    required_skills = {
-        Skill.FOCUS: 3, # We want charging to be comfy. Makes greatsword easier to play.
-        Skill.CRITICAL_BOOST: 3, # Raw greatsword practically requires this.
-        Skill.WEAKNESS_EXPLOIT: 1, # *EXTREMELY UNLIKELY* to find a build under WEX 3 in raw greatsword, but I'll play safe.
-    }
+    minimum_health_regen_augment = search_parameters.min_health_regen_augment_level
 
-    skill_subset = skills_with_implemented_features | {skill for (skill, _) in required_skills.items()}
+    skills_with_minimum_levels = {k: v for (k, v) in search_parameters.selected_skills.items() if (v > 0)}
+    skill_subset = set(search_parameters.selected_skills) # Get all the keys
 
-    required_set_bonus_skills = { # IMPORTANT: We're not checking yet if these skills are actually attainable via. set bonus.
-        Skill.MASTERS_TOUCH,
-    }
+    required_set_bonus_skills = set(search_parameters.selected_set_bonuses) # Just making sure it's a set
+    # IMPORTANT: We're not checking yet if these skills are actually attainable via. set bonus.
 
-    #decoration_skills = {
-    #    Skill.CRITICAL_EYE,
-    #    Skill.WEAKNESS_EXPLOIT,
-    #}
-
-    decorations_test_subset = [
-        Decoration.ELEMENTLESS,
-        Decoration.TENDERIZER,
-        Decoration.CRITICAL,
-        Decoration.CHARGER,
-        Decoration.CHALLENGER,
-        Decoration.CHALLENGER_X2,
-        Decoration.HANDICRAFT,
-        Decoration.HANDICRAFT_X2,
-        Decoration.EXPERT,
-        Decoration.EXPERT_X2,
-        Decoration.ATTACK,
-        Decoration.ATTACK_X2,
-
-        #Decoration.FLAWLESS,
-    ]
+    decorations = list(search_parameters.selected_decorations)
 
     ############################
     # STAGE 2: Component Lists #
@@ -449,9 +424,6 @@ def _find_highest_efr_build_worker(args):
         charms = [None]
     else:
         charms = list(charms)
-
-    #decorations = list(get_pruned_deco_set(decoration_skills, bonus_skills=[Skill.FOCUS]))
-    decorations = decorations_test_subset
 
     all_skills_max_except_free_elem = {skill: skill.value.limit for skill in skill_subset}
     all_weapon_configurations = list(_generate_weapon_combinations(weapons, all_skills_max_except_free_elem, \
@@ -541,7 +513,7 @@ def _find_highest_efr_build_worker(args):
 
                     deco_slots = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
                     deco_dicts = _generate_deco_dicts(deco_slots, decorations, including_charm_skills, \
-                                                        skill_subset=skill_subset, required_skills=required_skills)
+                                                        skill_subset=skill_subset, required_skills=skills_with_minimum_levels)
                     # deco_dicts may be an empty list if no decoration combination can fulfill skill requirements.
                     # If so, the inner loop just doesn't execute.
 

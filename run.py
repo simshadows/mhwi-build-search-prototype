@@ -21,7 +21,9 @@ from builds       import lookup_from_skills
 from search       import find_highest_efr_build
 
 from database_skills      import Skill
-from database_weapons     import weapon_db, IBWeaponAugmentType
+from database_weapons     import (WeaponClass,
+                                 weapon_db,
+                                 IBWeaponAugmentType)
 from database_armour      import (ArmourDiscriminator,
                                  ArmourVariant,
                                  ArmourSlot,
@@ -50,7 +52,45 @@ def print_debugging_statistics():
 
 def search_command():
     print("Carrying out a pre-defined search.")
-    find_highest_efr_build()
+
+    search_parameters = {
+            "selected_weapon_class": WeaponClass.GREATSWORD,
+            "selected_skills"      : {
+                    Skill.FOCUS: 3, # We want charging to be comfy. Makes greatsword easier to play.
+                    Skill.CRITICAL_BOOST: 3, # Raw greatsword practically requires this.
+                    Skill.WEAKNESS_EXPLOIT: 1, # *EXTREMELY UNLIKELY* to find a build under WEX 3 in raw greatsword, but I'll play safe.
+
+                    Skill.AGITATOR: 0,
+                    Skill.ATTACK_BOOST: 0,
+                    Skill.CRITICAL_EYE: 0,
+                    Skill.NON_ELEMENTAL_BOOST: 0,
+                    Skill.HANDICRAFT: 0,
+                    Skill.PEAK_PERFORMANCE: 0,
+                },
+            "selected_set_bonuses" : {
+                    Skill.MASTERS_TOUCH,
+                },
+            "selected_decorations" : {
+                    Decoration.ELEMENTLESS,
+                    Decoration.TENDERIZER,
+                    Decoration.CRITICAL,
+                    Decoration.CHARGER,
+                    Decoration.CHALLENGER,
+                    Decoration.CHALLENGER_X2,
+                    Decoration.HANDICRAFT,
+                    Decoration.HANDICRAFT_X2,
+                    Decoration.EXPERT,
+                    Decoration.EXPERT_X2,
+                    Decoration.ATTACK,
+                    Decoration.ATTACK_X2,
+
+                    #Decoration.FLAWLESS,
+                },
+
+            "min_health_regen_level": 1,
+        }
+
+    find_highest_efr_build(search_parameters)
     return
 
 
