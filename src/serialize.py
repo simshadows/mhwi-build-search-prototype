@@ -31,6 +31,8 @@ def writejson_search_parameters(**kwargs):
 
     min_health_regen_level = kwargs["min_health_regen_level"]
 
+    skill_states           = kwargs["skill_states"]
+
     assert isinstance(selected_weapon_class, WeaponClass)
     assert all(isinstance(k, Skill) and isinstance(v, int) and (v >= 0) for (k, v) in selected_skills.items())
     assert all(isinstance(x, Skill) for x in selected_set_bonuses) and all_unique(selected_set_bonuses)
@@ -38,13 +40,17 @@ def writejson_search_parameters(**kwargs):
 
     assert isinstance(min_health_regen_level, int) and (min_health_regen_level >= 0)
 
+    assert all(isinstance(k, Skill) and isinstance(v, int) and (v >= 0) for (k, v) in skill_states.items())
+
     data = {
             "selected_weapon_class": selected_weapon_class.name,
             "selected_skills": {k.name: v for (k, v) in selected_skills.items()},
             "selected_set_bonuses": [x.name for x in selected_set_bonuses],
             "selected_decorations": [x.name for x in selected_decorations],
 
-            "min_health_regen_augment_level": min_health_regen_level
+            "min_health_regen_augment_level": min_health_regen_level,
+
+            "skill_states": {k.name: v for (k, v) in skill_states.items()}
         }
     return json_dumps_formatted(data)
 
@@ -57,7 +63,9 @@ SearchParameters = namedtuple(
         "selected_set_bonuses",
         "selected_decorations",
 
-        "min_health_regen_augment_level"
+        "min_health_regen_augment_level",
+
+        "skill_states",
     ]
 )
 def readjson_search_parameters(json_str):
@@ -71,6 +79,8 @@ def readjson_search_parameters(json_str):
 
     min_health_regen_json      = json_data["min_health_regen_augment_level"]
 
+    skill_states_json          = json_data["skill_states"]
+
     # Translate Data
 
     tup = SearchParameters(
@@ -80,6 +90,8 @@ def readjson_search_parameters(json_str):
             selected_decorations  = {Decoration[x] for x      in selected_decorations_json},
 
             min_health_regen_augment_level = min_health_regen_json,
+
+            skill_states = {Skill[k]: v for (k, v) in skill_states_json.items()},
         )
 
     # Data Validation
@@ -87,6 +99,8 @@ def readjson_search_parameters(json_str):
 
     if any((not isinstance(v, int)) or (v < 0) for (_, v) in tup.selected_skills.items()):
         raise ValueError("Selected skill levels must be integers above or equal to zero.")
+    elif any((not isinstance(v, int)) or (v < 0) or (v >= len(k.value.states)) for (k, v) in tup.skill_states.items()):
+        raise ValueError("Skill states must be integers above or equal to zero.")
 
     return tup
 

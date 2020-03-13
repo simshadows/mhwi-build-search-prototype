@@ -50,12 +50,6 @@ NUM_WORKERS = 32
 MAX_BATCHES = 2048
 SHUFFLE_MAX_PARTITIONS = 10
 
-FULL_SKILL_STATES = {
-    Skill.AGITATOR: 1,
-    Skill.PEAK_PERFORMANCE: 1,
-    Skill.WEAKNESS_EXPLOIT: 2,
-}
-
 
 def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_skills, skill_subset=None, required_skills={}):
     assert isinstance(slots_available_counter, Counter)
@@ -220,6 +214,8 @@ def _generate_weapon_combinations(weapon_list, skills_for_ceiling_efr, skill_sta
 
 def find_highest_efr_build(search_parameters_jsonstr):
 
+    search_parameters = readjson_search_parameters(search_parameters_jsonstr)
+
     start_time = time.time()
 
     with mp.Pool(NUM_WORKERS) as p:
@@ -267,7 +263,7 @@ def find_highest_efr_build(search_parameters_jsonstr):
                 elif msg[1] == "BUILD":
                     serial_data = msg[2]
                     intermediate_build = Build.deserialize(serial_data)
-                    intermediate_result = intermediate_build.calculate_performance(FULL_SKILL_STATES)
+                    intermediate_result = intermediate_build.calculate_performance(search_parameters.skill_states)
 
                     intermediate_efr = intermediate_result.efr
                     intermediate_affinity = intermediate_result.affinity
@@ -310,7 +306,7 @@ def find_highest_efr_build(search_parameters_jsonstr):
         if serialized_build is None:
             continue
         build = Build.deserialize(serialized_build)
-        results = build.calculate_performance(FULL_SKILL_STATES)
+        results = build.calculate_performance(search_parameters.skill_states)
         if results.efr > best_efr:
             best_efr = results.efr
             best_build = build
@@ -320,7 +316,7 @@ def find_highest_efr_build(search_parameters_jsonstr):
         print("No build was found within the constraints.")
         print()
     else:
-        results = best_build.calculate_performance(FULL_SKILL_STATES)
+        results = best_build.calculate_performance(search_parameters.skill_states)
         print()
         print("Final build:")
         print()
@@ -385,6 +381,8 @@ def _find_highest_efr_build_worker(args):
 
     decorations = list(search_parameters.selected_decorations)
 
+    skill_states = search_parameters.skill_states
+
     ############################
     # STAGE 2: Component Lists #
     ############################
@@ -424,7 +422,7 @@ def _find_highest_efr_build_worker(args):
 
     all_skills_max_except_free_elem = {skill: skill.value.limit for skill in skill_subset}
     all_weapon_configurations = list(_generate_weapon_combinations(weapons, all_skills_max_except_free_elem, \
-                                        FULL_SKILL_STATES, health_regen_minimum=minimum_health_regen_augment))
+                                        skill_states, health_regen_minimum=minimum_health_regen_augment))
     all_weapon_configurations.sort(key=lambda x : x[3], reverse=True)
     assert all_weapon_configurations[0][3] >= all_weapon_configurations[-1][3]
 
@@ -521,7 +519,7 @@ def _find_highest_efr_build_worker(args):
                             including_deco_skills[skill] += level
                             # Now, we also have decoration skills included.
                         
-                        results = lookup_from_skills(weapon, including_deco_skills, FULL_SKILL_STATES, \
+                        results = lookup_from_skills(weapon, including_deco_skills, skill_states, \
                                                         weapon_augments_tracker, weapon_upgrades_tracker)
                         assert results is not list
 
