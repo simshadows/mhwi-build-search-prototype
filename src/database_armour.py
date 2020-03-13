@@ -13,14 +13,14 @@ from collections import namedtuple, defaultdict, Counter
 from enum import Enum, auto
 from itertools import product
 
-from enums import Tier
-from utils import json_read, update_and_print_progress
+from .enums import Tier
+from .utils import json_read, update_and_print_progress
 
-from database_skills import Skill, SetBonus, calculate_set_bonus_skills
-from database_decorations import skill_to_simple_deco_size
+from .database_skills import Skill, SetBonus, calculate_set_bonus_skills
+from .database_decorations import skill_to_simple_deco_size
 
 
-ARMOUR_DATA_FILENAME = "database_armour.json"
+ARMOUR_DATA_FILENAME = "data/database_armour.json"
 
 
 ArmourDiscriminatorInfo = namedtuple("ArmourDiscriminatorInfo", ["tier"])

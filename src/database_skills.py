@@ -8,10 +8,10 @@ Author:   contact@simshadows.com
 from collections import namedtuple, defaultdict
 from enum import Enum, unique
 
-from utils import json_read
+from .utils import json_read
 
 
-SKILLS_DATA_FILENAME = "database_skills.json"
+SKILLS_DATA_FILENAME = "data/database_skills.json"
 
 
 ATTACK_BOOST_ATTACK_POWER        = (0, 3, 6, 9, 12, 15, 18, 21)

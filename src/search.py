@@ -16,34 +16,34 @@ from queue import Empty
 
 from collections import defaultdict, Counter
 
-from builds    import (Build,
-                      lookup_from_skills)
-from serialize import (readjson_search_parameters)
-from utils     import (update_and_print_progress,
-                      grouper,
-                      interleaving_shuffle,
-                      dict_enumkey_intval_str)
+from .builds    import (Build,
+                       lookup_from_skills)
+from .serialize import (readjson_search_parameters)
+from .utils     import (update_and_print_progress,
+                       grouper,
+                       interleaving_shuffle,
+                       dict_enumkey_intval_str)
 
-from database_skills      import (Skill,
-                                 skills_with_implemented_features,
-                                 calculate_set_bonus_skills)
-from database_weapons     import (WeaponClass,
-                                 weapon_db,
-                                 WeaponAugmentTracker,
-                                 WeaponUpgradeTracker,
-                                 print_weapon_config)
-from database_armour      import (ArmourSlot,
-                                 armour_db,
-                                 skillsonly_pruned_armour,
-                                 prune_easyiterate_armour_db,
-                                 generate_and_prune_armour_combinations,
-                                 calculate_armour_contribution)
-from database_charms      import (charms_db,
-                                 charms_indexed_by_skill,
-                                 calculate_skills_dict_from_charm)
-from database_decorations import (Decoration,
-                                 get_pruned_deco_set,
-                                 calculate_decorations_skills_contribution)
+from .database_skills      import (Skill,
+                                  skills_with_implemented_features,
+                                  calculate_set_bonus_skills)
+from .database_weapons     import (WeaponClass,
+                                  weapon_db,
+                                  WeaponAugmentTracker,
+                                  WeaponUpgradeTracker,
+                                  print_weapon_config)
+from .database_armour      import (ArmourSlot,
+                                  armour_db,
+                                  skillsonly_pruned_armour,
+                                  prune_easyiterate_armour_db,
+                                  generate_and_prune_armour_combinations,
+                                  calculate_armour_contribution)
+from .database_charms      import (charms_db,
+                                  charms_indexed_by_skill,
+                                  calculate_skills_dict_from_charm)
+from .database_decorations import (Decoration,
+                                  get_pruned_deco_set,
+                                  calculate_decorations_skills_contribution)
 
 
 NUM_WORKERS = 32

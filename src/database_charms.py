@@ -7,12 +7,12 @@ Author:   contact@simshadows.com
 
 from collections import namedtuple
 
-from utils import json_read
+from .utils import json_read
 
-from database_skills import Skill
+from .database_skills import Skill
 
 
-CHARMS_DATA_FILENAME = "database_charms.json"
+CHARMS_DATA_FILENAME = "data/database_charms.json"
 
 
 CharmInfo = namedtuple(

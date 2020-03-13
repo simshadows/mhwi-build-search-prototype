@@ -14,27 +14,27 @@ from copy import copy
 
 from collections import namedtuple, defaultdict, Counter
 
-from database_armour      import (ArmourDiscriminator,
-                                 ArmourVariant,
-                                 ArmourSlot,
-                                 armour_db,
-                                 calculate_armour_contribution)
-from database_decorations import (calculate_decorations_skills_contribution,
-                                 Decoration)
-from database_charms      import (CharmInfo,
-                                 charms_db,
-                                 #charms_indexed_by_skill,
-                                 calculate_skills_dict_from_charm)
-from database_misc        import (POWERCHARM_ATTACK_POWER,
+from .database_armour      import (ArmourDiscriminator,
+                                  ArmourVariant,
+                                  ArmourSlot,
+                                  armour_db,
+                                  calculate_armour_contribution)
+from .database_decorations import (calculate_decorations_skills_contribution,
+                                  Decoration)
+from .database_charms      import (CharmInfo,
+                                  charms_db,
+                                  #charms_indexed_by_skill,
+                                  calculate_skills_dict_from_charm)
+from .database_misc        import (POWERCHARM_ATTACK_POWER,
                                   POWERTALON_ATTACK_POWER)
-from database_skills      import (RAW_BLUNDER_MULTIPLIER,
-                                 clipped_skills_defaultdict,
-                                 calculate_set_bonus_skills,
-                                 calculate_skills_contribution)
-from database_weapons     import (weapon_db,
-                                 WeaponAugmentTracker,
-                                 WeaponUpgradeTracker,
-                                 print_weapon_config)
+from .database_skills      import (RAW_BLUNDER_MULTIPLIER,
+                                  clipped_skills_defaultdict,
+                                  calculate_set_bonus_skills,
+                                  calculate_skills_contribution)
+from .database_weapons     import (weapon_db,
+                                  WeaponAugmentTracker,
+                                  WeaponUpgradeTracker,
+                                  print_weapon_config)
 
 
 # Corresponds to each level from red through to purple, in increasing-modifier order.

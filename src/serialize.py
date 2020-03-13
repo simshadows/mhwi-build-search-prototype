@@ -15,11 +15,11 @@ This is with two exceptions:
 import json
 from collections import namedtuple
 
-from database_weapons     import WeaponClass
-from database_skills      import Skill
-from database_decorations import Decoration
+from .utils import all_unique, json_dumps_formatted
 
-from utils import all_unique, json_dumps_formatted
+from .database_weapons     import WeaponClass
+from .database_skills      import Skill
+from .database_decorations import Decoration
 
 
 def writejson_search_parameters(**kwargs):

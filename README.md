@@ -10,7 +10,7 @@ I'm not intending to give it a good user interface yet, but if you *really* insi
 
 1) Install at least Python 3.8.
 
-2) Open a terminal window in the repository and execute `$ python3.8 -O run.py search search_parameters.json`.
+2) Open a terminal window in the repository and execute `$ python3.8 -O mhwi_build_search.py search search_benchmark1.json`.
 
 3) Enjoy. You literally have nothing else to do other than watch the terminal output because this program has no user interface.
 

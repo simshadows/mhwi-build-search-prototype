@@ -9,12 +9,12 @@ from collections import namedtuple, defaultdict
 from enum import Enum, unique
 from itertools import product
 
-from utils import json_read
+from .utils import json_read
 
-from database_skills import Skill
+from .database_skills import Skill
 
 
-DECORATIONS_DATA_FILENAME = "database_decorations.json"
+DECORATIONS_DATA_FILENAME = "data/database_decorations.json"
 
 
 DecorationInfo = namedtuple(

@@ -14,10 +14,10 @@ from itertools import accumulate
 from enum import Enum, auto
 from copy import copy
 
-from utils import json_read
+from .utils import json_read
 
 
-WEAPONS_DATA_FILENAME = "database_weapons.json"
+WEAPONS_DATA_FILENAME = "data/database_weapons.json"
 
 
 # These work by first representing the full bar at maximum Handicraft in terms of number of

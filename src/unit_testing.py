@@ -10,35 +10,35 @@ from copy import copy
 
 from collections import namedtuple, defaultdict, Counter
 
-from builds import (Build,
-                   lookup_from_skills)
-from search import _generate_deco_dicts
+from .builds import (Build,
+                    lookup_from_skills)
+from .search import _generate_deco_dicts
 
-from database_skills      import (Skill,
-                                 clipped_skills_defaultdict,
-                                 calculate_set_bonus_skills,
-                                 calculate_skills_contribution)
-from database_weapons     import (WeaponClass,
-                                 weapon_db,
-                                 WeaponAugmentTracker,
-                                 IBWeaponAugmentType,
-                                 WeaponAugmentationScheme,
-                                 WeaponUpgradeTracker,
-                                 IBCWeaponUpgradeType,
-                                 WeaponUpgradeScheme)
-from database_armour      import (ArmourDiscriminator,
-                                 ArmourVariant,
-                                 ArmourSlot,
-                                 armour_db,
-                                 _armour_piece_supercedes, # For testing.
-                                 calculate_armour_contribution)
-from database_charms      import (charms_db,
-                                 charms_indexed_by_skill,
-                                 calculate_skills_dict_from_charm)
-from database_decorations import (Decoration,
-                                 calculate_decorations_skills_contribution)
-from database_misc        import (POWERCHARM_ATTACK_POWER,
-                                  POWERTALON_ATTACK_POWER)
+from .database_skills      import (Skill,
+                                  clipped_skills_defaultdict,
+                                  calculate_set_bonus_skills,
+                                  calculate_skills_contribution)
+from .database_weapons     import (WeaponClass,
+                                  weapon_db,
+                                  WeaponAugmentTracker,
+                                  IBWeaponAugmentType,
+                                  WeaponAugmentationScheme,
+                                  WeaponUpgradeTracker,
+                                  IBCWeaponUpgradeType,
+                                  WeaponUpgradeScheme)
+from .database_armour      import (ArmourDiscriminator,
+                                  ArmourVariant,
+                                  ArmourSlot,
+                                  armour_db,
+                                  _armour_piece_supercedes, # For testing.
+                                  calculate_armour_contribution)
+from .database_charms      import (charms_db,
+                                  charms_indexed_by_skill,
+                                  calculate_skills_dict_from_charm)
+from .database_decorations import (Decoration,
+                                  calculate_decorations_skills_contribution)
+from .database_misc        import (POWERCHARM_ATTACK_POWER,
+                                   POWERTALON_ATTACK_POWER)
 
 
 def run_tests():

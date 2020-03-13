@@ -2,7 +2,7 @@
 # -*- coding: ascii -*-
 
 """
-Filename: run.py
+Filename: mhwi_build_search.py
 Author:   contact@simshadows.com
 
 The entrypoint for my Monster Hunter World Iceborne build optimization tool!
@@ -16,23 +16,23 @@ from copy import copy
 #from math import floor
 from collections import namedtuple, defaultdict, Counter
 
-from unit_testing import run_tests
-from builds       import lookup_from_skills
-from search       import find_highest_efr_build
-from serialize    import writejson_search_parameters
-from utils        import ENCODING
+from src.unit_testing import run_tests
+from src.builds       import lookup_from_skills
+from src.search       import find_highest_efr_build
+from src.serialize    import writejson_search_parameters
+from src.utils        import ENCODING
 
-from database_skills      import Skill
-from database_weapons     import (WeaponClass,
-                                 weapon_db,
-                                 IBWeaponAugmentType)
-from database_armour      import (ArmourDiscriminator,
-                                 ArmourVariant,
-                                 ArmourSlot,
-                                 armour_db)
-from database_decorations import Decoration
-from database_misc        import (POWERCHARM_ATTACK_POWER,
-                                  POWERTALON_ATTACK_POWER)
+from src.database_skills      import Skill
+from src.database_weapons     import (WeaponClass,
+                                     weapon_db,
+                                     IBWeaponAugmentType)
+from src.database_armour      import (ArmourDiscriminator,
+                                     ArmourVariant,
+                                     ArmourSlot,
+                                     armour_db)
+from src.database_decorations import Decoration
+from src.database_misc        import (POWERCHARM_ATTACK_POWER,
+                                     POWERTALON_ATTACK_POWER)
 
 
 def print_debugging_statistics():
