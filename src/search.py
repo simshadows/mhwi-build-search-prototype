@@ -46,7 +46,6 @@ from .database_decorations import (Decoration,
                                   calculate_decorations_skills_contribution)
 
 
-NUM_WORKERS = 32
 MAX_BATCHES = 2048
 SHUFFLE_MAX_PARTITIONS = 10
 
@@ -215,12 +214,14 @@ def _generate_weapon_combinations(weapon_list, skills_for_ceiling_efr, skill_sta
 def find_highest_efr_build(search_parameters_jsonstr):
 
     search_parameters = readjson_search_parameters(search_parameters_jsonstr)
+    skill_states = search_parameters.skill_states
+    num_workers = search_parameters.num_worker_threads
 
     start_time = time.time()
 
-    with mp.Pool(NUM_WORKERS) as p:
+    with mp.Pool(num_workers) as p:
         manager = mp.Manager()
-        all_pipes = [mp.Pipe(duplex=False) for _ in range(NUM_WORKERS)]
+        all_pipes = [mp.Pipe(duplex=False) for _ in range(num_workers)]
         # all_pipes is a list of 2-tuples. With duplex=False, each tuple is (read_only, write_only).
 
         queue_children_to_parent = manager.Queue()
@@ -228,13 +229,13 @@ def find_highest_efr_build(search_parameters_jsonstr):
         pipes_parent_to_children = [x for (_, x) in all_pipes] # Parent keeps the write-only half.
 
         # We fill up the queue with all batch numbers. Children just grab these values.
-        for batch in range(MAX_BATCHES + NUM_WORKERS): # If a worker finds we've exceeded the batches, it exits.
+        for batch in range(MAX_BATCHES + num_workers): # If a worker finds we've exceeded the batches, it exits.
             job_queue.put(batch)
         assert not job_queue.full()
 
         pipes_for_children = [x for (x, _) in all_pipes] # Children get the read-only end.
         children_args = [(i, queue_children_to_parent, job_queue, pipes_for_children[i], search_parameters_jsonstr)
-                         for i in range(NUM_WORKERS)]
+                         for i in range(num_workers)]
         async_result = p.map_async(_find_highest_efr_build_worker, children_args)
 
         def broadcast_new_best_efr(efr_value):
@@ -244,7 +245,7 @@ def find_highest_efr_build(search_parameters_jsonstr):
 
         grandtotal_progress_segments = None
         curr_progress_segment = 0
-        workers_complete = {i: False for i in range(NUM_WORKERS)}
+        workers_complete = {i: False for i in range(num_workers)}
 
         current_best_efr = 0
         current_best_build = None
@@ -263,7 +264,7 @@ def find_highest_efr_build(search_parameters_jsonstr):
                 elif msg[1] == "BUILD":
                     serial_data = msg[2]
                     intermediate_build = Build.deserialize(serial_data)
-                    intermediate_result = intermediate_build.calculate_performance(search_parameters.skill_states)
+                    intermediate_result = intermediate_build.calculate_performance(skill_states)
 
                     intermediate_efr = intermediate_result.efr
                     intermediate_affinity = intermediate_result.affinity
@@ -306,7 +307,7 @@ def find_highest_efr_build(search_parameters_jsonstr):
         if serialized_build is None:
             continue
         build = Build.deserialize(serialized_build)
-        results = build.calculate_performance(search_parameters.skill_states)
+        results = build.calculate_performance(skill_states)
         if results.efr > best_efr:
             best_efr = results.efr
             best_build = build
@@ -316,7 +317,7 @@ def find_highest_efr_build(search_parameters_jsonstr):
         print("No build was found within the constraints.")
         print()
     else:
-        results = best_build.calculate_performance(search_parameters.skill_states)
+        results = best_build.calculate_performance(skill_states)
         print()
         print("Final build:")
         print()
