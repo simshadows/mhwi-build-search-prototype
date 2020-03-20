@@ -362,13 +362,12 @@ def _obtain_easyiterate_armour_db(original_armour_db):
     return dict(intermediate) # TODO: We should make it so we just start off with a regular dictionary from the start.
 
 
-def prune_easyiterate_armour_db(original_easyiterate_armour_db, skill_subset=None, print_progress=True):
+def prune_easyiterate_armour_db(original_easyiterate_armour_db, skill_subset=None):
 
-    if print_progress:
-        print()
-        print()
-        print("======= Armour Pruning =======")
-        print()
+    print()
+    print()
+    print("======= Armour Pruning =======")
+    print()
 
     intermediate = {}
     for (gear_slot, piece_list) in original_easyiterate_armour_db.items():
@@ -408,39 +407,35 @@ def prune_easyiterate_armour_db(original_easyiterate_armour_db, skill_subset=Non
 
             if piece1_is_never_superceded:
                 best_pieces.append(piece1)
-                if print_progress:
-                    buf = []
-                    buf.append(gear_slot.name.ljust(6))
-                    buf.append(piece1.armour_set.set_name.ljust(15))
-                    buf.append(piece1.armour_set_variant.value.ascii_postfix)
-                    buf = " ".join(buf)
-                    print(f"KEPT: {buf}")
+                buf = []
+                buf.append(gear_slot.name.ljust(6))
+                buf.append(piece1.armour_set.set_name.ljust(15))
+                buf.append(piece1.armour_set_variant.value.ascii_postfix)
+                buf = " ".join(buf)
+                print(f"KEPT: {buf}")
             else:
-                if print_progress:
-                    buf = []
-                    buf.append(gear_slot.name.ljust(6))
-                    buf.append(piece1.armour_set.set_name.ljust(15))
-                    buf.append(piece1.armour_set_variant.value.ascii_postfix)
-                    buf = " ".join(buf)
-                    print(f"                                               PRUNED: {buf}")
+                buf = []
+                buf.append(gear_slot.name.ljust(6))
+                buf.append(piece1.armour_set.set_name.ljust(15))
+                buf.append(piece1.armour_set_variant.value.ascii_postfix)
+                buf = " ".join(buf)
+                print(f"                                               PRUNED: {buf}")
 
-        if print_progress:
-            print()
-            print("=============================")
-            print()
+        print()
+        print("=============================")
+        print()
 
         intermediate[gear_slot] = best_pieces
 
     total_kept = sum(len(x) for (_, x) in intermediate.items())
     total_original = sum(len(x) for (_, x) in original_easyiterate_armour_db.items())
 
-    if print_progress:
-        print("kept: " + str(total_kept))
-        print("pruned: " + str(total_original - total_kept))
-        print()
-        print("=============================")
-        print()
-        print()
+    print("kept: " + str(total_kept))
+    print("pruned: " + str(total_original - total_kept))
+    print()
+    print("=============================")
+    print()
+    print()
 
     return intermediate
 
@@ -456,6 +451,45 @@ easyiterate_armour = _obtain_easyiterate_armour_db(armour_db)
 # Importantly, the data structure is the same as easyiterate_armour.
 # This will make this practically interchangable with easyiterate_armour if all you care about are skills.
 skillsonly_pruned_armour = prune_easyiterate_armour_db(easyiterate_armour) # We don't need this right now.
+
+
+_pruned_armour_combos_cache = [] # [(skill_subset, required_set_bonus_skills, pruned_armour_combos)]
+
+
+def get_pruned_armour_combos(skill_subset=None, required_set_bonus_skills=set()):
+    # Check cache first.
+    for (c_skill_subset, c_required_set_bonus_skills, c_armour_combo_list) in _pruned_armour_combos_cache:
+        if (c_skill_subset == skill_subset) and (c_required_set_bonus_skills == required_set_bonus_skills):
+            return c_armour_combo_list
+
+    # If it's not in the cache, then we have to generate it.
+    pruned_armour_db = prune_easyiterate_armour_db(skillsonly_pruned_armour, skill_subset=skill_subset)
+    pruned_armour_combos = generate_and_prune_armour_combinations(pruned_armour_db, skill_subset=skill_subset, \
+                                                                    required_set_bonus_skills=required_set_bonus_skills)
+
+    # If we don't sort, the runtime becomes less deterministic.
+    # (I guess running statistical analyses on intentionally less-deterministic runtimes might be better, but I'd rather
+    # keep things simple.)
+    def armour_combo_sort_key_fn(x):
+        head = x[ArmourSlot.HEAD]
+        chest = x[ArmourSlot.CHEST]
+        arms = x[ArmourSlot.ARMS]
+        waist = x[ArmourSlot.WAIST]
+        legs = x[ArmourSlot.LEGS]
+
+        buf = head.armour_set.set_name + head.armour_set.discriminator.name + head.armour_set_variant.name \
+                + chest.armour_set.set_name + chest.armour_set.discriminator.name + chest.armour_set_variant.name \
+                + arms.armour_set.set_name  + arms.armour_set.discriminator.name  + arms.armour_set_variant.name  \
+                + waist.armour_set.set_name + waist.armour_set.discriminator.name + waist.armour_set_variant.name \
+                + legs.armour_set.set_name  + legs.armour_set.discriminator.name  + legs.armour_set_variant.name
+        return buf
+    pruned_armour_combos.sort(key=armour_combo_sort_key_fn)
+
+    # Add to the cache.
+    t = (copy(skill_subset), copy(required_set_bonus_skills), pruned_armour_combos)
+    _pruned_armour_combos_cache.append(t)
+
+    return copy(pruned_armour_combos)
 
 
 def _armour_combination_iter(original_easyiterate_armour_db):
@@ -512,14 +546,13 @@ def _armour_combination_iter(original_easyiterate_armour_db):
 #
 # Returns a list of dictionaries of {ArmourSlot: ArmourEasyIterateInfo}
 def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill_subset=None, \
-                                            required_set_bonus_skills=set(), print_progress=True):
+                                            required_set_bonus_skills=set()):
     assert isinstance(required_set_bonus_skills, set)
 
-    if print_progress:
-        print()
-        print()
-        print("===== Armour Set Pruning =====")
-        print()
+    print()
+    print()
+    print("===== Armour Set Pruning =====")
+    print()
 
     all_combinations = [x for x in _armour_combination_iter(original_easyiterate_armour_db)
                                    if all(skill in x[1] for skill in required_set_bonus_skills)]
@@ -571,20 +604,17 @@ def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill
         if not prune_combination_1:
             best_combinations.append(combination_1)
 
-        if print_progress:
-            curr_progress_segment += 1
-            if curr_progress_segment % 99 == 0:
-                progress()
+        curr_progress_segment += 1
+        if curr_progress_segment % 99 == 0:
+            progress()
 
-
-    if print_progress:
-        print()
-        print("original # of head/chest/arms/waist/legs combinations: " + str(len(all_combinations)))
-        print("combinations kept: " + str(len(best_combinations)))
-        print()
-        print("=============================")
-        print()
-        print()
+    print()
+    print("original # of head/chest/arms/waist/legs combinations: " + str(len(all_combinations)))
+    print("combinations kept: " + str(len(best_combinations)))
+    print()
+    print("=============================")
+    print()
+    print()
 
     return best_combinations
 

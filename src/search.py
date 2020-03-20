@@ -18,7 +18,8 @@ from collections import defaultdict, Counter
 
 from .builds    import (Build,
                        lookup_from_skills)
-from .serialize import (readjson_search_parameters)
+from .serialize import (SearchParameters,
+                       readjson_search_parameters)
 from .utils     import (update_and_print_progress,
                        grouper,
                        interleaving_shuffle,
@@ -35,8 +36,7 @@ from .database_weapons     import (WeaponClass,
 from .database_armour      import (ArmourSlot,
                                   armour_db,
                                   skillsonly_pruned_armour,
-                                  prune_easyiterate_armour_db,
-                                  generate_and_prune_armour_combinations,
+                                  get_pruned_armour_combos,
                                   calculate_armour_contribution)
 from .database_charms      import (charms_db,
                                   charms_indexed_by_skill,
@@ -50,19 +50,19 @@ MAX_BATCHES = 2048
 SHUFFLE_MAX_PARTITIONS = 10
 
 
-def armour_combo_sort_key_fn(x):
-    head = x[ArmourSlot.HEAD]
-    chest = x[ArmourSlot.CHEST]
-    arms = x[ArmourSlot.ARMS]
-    waist = x[ArmourSlot.WAIST]
-    legs = x[ArmourSlot.LEGS]
+# get_pruned_armour_combos caches results, so we just trigger it before entering the worker processes.
+def _cache_pruned_armour_combos(search_parameters):
+    assert isinstance(search_parameters, SearchParameters)
 
-    buf = head.armour_set.set_name + head.armour_set.discriminator.name + head.armour_set_variant.name \
-            + chest.armour_set.set_name + chest.armour_set.discriminator.name + chest.armour_set_variant.name \
-            + arms.armour_set.set_name  + arms.armour_set.discriminator.name  + arms.armour_set_variant.name  \
-            + waist.armour_set.set_name + waist.armour_set.discriminator.name + waist.armour_set_variant.name \
-            + legs.armour_set.set_name  + legs.armour_set.discriminator.name  + legs.armour_set_variant.name
-    return buf
+    skills_with_minimum_levels = {k: v for (k, v) in search_parameters.selected_skills.items() if (v > 0)}
+    skill_subset = set(search_parameters.selected_skills) # Get all the keys
+
+    required_set_bonus_skills = set(search_parameters.selected_set_bonuses) # Just making sure it's a set
+    # IMPORTANT: We're not checking yet if these skills are actually attainable via. set bonus.
+
+    x = get_pruned_armour_combos(skill_subset=skill_subset, required_set_bonus_skills=required_set_bonus_skills)
+    assert isinstance(x, list)
+    return
 
 
 def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_skills, skill_subset=None, required_skills={}):
@@ -233,6 +233,8 @@ def find_highest_efr_build(search_parameters_jsonstr):
     num_workers = search_parameters.num_worker_threads
 
     start_time = time.time()
+
+    _cache_pruned_armour_combos(search_parameters)
 
     with mp.Pool(num_workers) as p:
         manager = mp.Manager()
@@ -405,16 +407,7 @@ def _find_highest_efr_build_worker(args):
     ############################
 
     weapons = [weapon for (_, weapon) in weapon_db.items() if weapon.type is desired_weapon_class]
-
-    pruned_armour_db = prune_easyiterate_armour_db(skillsonly_pruned_armour, skill_subset=skill_subset, \
-                                                                    print_progress=print_progress)
-    pruned_armour_combos = generate_and_prune_armour_combinations(pruned_armour_db, skill_subset=skill_subset, \
-                                                                    required_set_bonus_skills=required_set_bonus_skills,
-                                                                    print_progress=print_progress)
-    # If we don't sort, the runtime becomes less deterministic.
-    # (I guess running statistical analyses on intentionally less-deterministic runtimes might be better, but I'd rather
-    # keep things simple.)
-    pruned_armour_combos.sort(key=armour_combo_sort_key_fn)
+    armour_combos = get_pruned_armour_combos(skill_subset=skill_subset, required_set_bonus_skills=required_set_bonus_skills)
 
     charms = set()
     for skill in skill_subset:
@@ -436,9 +429,9 @@ def _find_highest_efr_build_worker(args):
 
     print("Lowest ceiling EFR: " + str(all_weapon_configurations[-1][3]))
 
-    sublist_ideal_len = int(ceil(len(pruned_armour_combos) / MAX_BATCHES))
-    all_armour_combos_sublists = list(grouper(pruned_armour_combos, sublist_ideal_len))
-    assert sum(len(x) for x in all_armour_combos_sublists) >= len(pruned_armour_combos)
+    sublist_ideal_len = int(ceil(len(armour_combos) / MAX_BATCHES))
+    all_armour_combos_sublists = list(grouper(armour_combos, sublist_ideal_len))
+    assert sum(len(x) for x in all_armour_combos_sublists) >= len(armour_combos)
     all_armour_combos_sublists = list(interleaving_shuffle(all_armour_combos_sublists, max_partitions=SHUFFLE_MAX_PARTITIONS))
 
 
@@ -450,7 +443,7 @@ def _find_highest_efr_build_worker(args):
     associated_affinity = None
     associated_build = None
 
-    grandtotal_progress_segments = len(pruned_armour_combos)
+    grandtotal_progress_segments = len(armour_combos)
 
     def check_parent_for_new_best_efr_and_update():
         nonlocal best_efr
