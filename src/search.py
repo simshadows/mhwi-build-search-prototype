@@ -39,24 +39,24 @@ from .database_armour      import (ArmourSlot,
                                   get_pruned_armour_combos,
                                   calculate_armour_contribution)
 from .database_charms      import (charms_db,
-                                  charms_indexed_by_skill,
+                                  get_charms_subset,
                                   calculate_skills_dict_from_charm)
 from .database_decorations import (Decoration,
                                   get_pruned_deco_set,
                                   calculate_decorations_skills_contribution)
 
 
-def _split_armour_combos_into_batches(armour_combos, batch_size, *, batch_shuffle_rounds):
+def _split_armour_combos_into_batches(armour_combos, batch_size, batch_shuffle_rounds):
     assert isinstance(armour_combos, list)
     assert isinstance(batch_size, int) and (batch_size > 0)
     assert isinstance(batch_shuffle_rounds, int) and (batch_shuffle_rounds > 0)
 
     def armour_combo_sort_key_fn(x):
-        head = x[ArmourSlot.HEAD]
+        head  = x[ArmourSlot.HEAD]
         chest = x[ArmourSlot.CHEST]
-        arms = x[ArmourSlot.ARMS]
+        arms  = x[ArmourSlot.ARMS]
         waist = x[ArmourSlot.WAIST]
-        legs = x[ArmourSlot.LEGS]
+        legs  = x[ArmourSlot.LEGS]
 
         buf = head.armour_set.set_name + head.armour_set.discriminator.name + head.armour_set_variant.name \
                 + chest.armour_set.set_name + chest.armour_set.discriminator.name + chest.armour_set_variant.name \
@@ -261,7 +261,7 @@ def find_highest_efr_build(search_parameters_jsonstr):
     # Cache armour combos and determine number of batches
     armour_combos = _cache_pruned_armour_combos(search_parameters)
     armour_combos_batches = _split_armour_combos_into_batches(armour_combos, search_parameters.batch_size, \
-                                                                batch_shuffle_rounds=search_parameters.batch_shuffle_rounds)
+                                                                search_parameters.batch_shuffle_rounds)
     num_batches = len(armour_combos_batches)
 
     with mp.Pool(num_workers) as p:
@@ -437,29 +437,17 @@ def _find_highest_efr_build_worker(args):
     ############################
 
     weapons = [weapon for (_, weapon) in weapon_db.items() if weapon.type is desired_weapon_class]
-    armour_combos = get_pruned_armour_combos(skill_subset=skill_subset, required_set_bonus_skills=required_set_bonus_skills)
-    armour_combos_batches = _split_armour_combos_into_batches(armour_combos, batch_size, \
-                                                                batch_shuffle_rounds=batch_shuffle_rounds)
-
-    charms = set()
-    for skill in skill_subset:
-        if skill in charms_indexed_by_skill:
-            for charm in charms_indexed_by_skill[skill]:
-                charms.add(charm)
-    if len(charms) == 0:
-        charms = [None]
-    else:
-        charms = list(charms)
-
     all_skills_max_except_free_elem = {skill: skill.value.limit for skill in skill_subset}
     all_weapon_configurations = list(_generate_weapon_combinations(weapons, all_skills_max_except_free_elem, \
                                         skill_states, health_regen_minimum=minimum_health_regen_augment))
     all_weapon_configurations.sort(key=lambda x : x[3], reverse=True)
     assert all_weapon_configurations[0][3] >= all_weapon_configurations[-1][3]
 
-    debugging_num_initial_weapon_configs = len(all_weapon_configurations)
+    armour_combos = get_pruned_armour_combos(skill_subset=skill_subset, required_set_bonus_skills=required_set_bonus_skills)
+    armour_combos_batches = _split_armour_combos_into_batches(armour_combos, batch_size, batch_shuffle_rounds)
 
-    print("Lowest ceiling EFR: " + str(all_weapon_configurations[-1][3]))
+    charms = get_charms_subset(skill_subset)
+    charms = [None] if (len(charms) == 0) else list(charms)
 
     ####################
     # STAGE 3: Search! #
@@ -470,6 +458,7 @@ def _find_highest_efr_build_worker(args):
     associated_build = None
 
     grandtotal_progress_segments = len(armour_combos)
+    debugging_num_initial_weapon_configs = len(all_weapon_configurations)
 
     def check_parent_for_new_best_efr_and_update():
         nonlocal best_efr
