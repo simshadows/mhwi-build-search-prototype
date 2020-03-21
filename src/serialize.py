@@ -38,6 +38,8 @@ def writejson_search_parameters(**kwargs):
     # KWARGS: Algorithm Performance Parameters
 
     num_worker_threads = kwargs["num_worker_threads"]
+    batch_size = kwargs["batch_size"]
+    batch_shuffle_rounds = kwargs["batch_shuffle_rounds"]
 
     assert isinstance(selected_weapon_class, WeaponClass)
     assert all(isinstance(k, Skill) and isinstance(v, int) and (v >= 0) for (k, v) in selected_skills.items())
@@ -49,6 +51,7 @@ def writejson_search_parameters(**kwargs):
     assert all(isinstance(k, Skill) and isinstance(v, int) and (v >= 0) for (k, v) in skill_states.items())
 
     assert isinstance(num_worker_threads, int) and (num_worker_threads > 0)
+    assert isinstance(batch_size, int) and (num_worker_threads > 0)
 
     data = {
             "selected_weapon_class": selected_weapon_class.name,
@@ -62,6 +65,8 @@ def writejson_search_parameters(**kwargs):
 
             "algorithm_performance_parameters": {
                 "num_worker_threads": num_worker_threads,
+                "batch_size": batch_size,
+                "batch_shuffle_rounds": batch_shuffle_rounds,
             }
         }
     return json_dumps_formatted(data)
@@ -82,6 +87,8 @@ SearchParameters = namedtuple(
         # Algorithm Performance Parameters
 
         "num_worker_threads",
+        "batch_size",
+        "batch_shuffle_rounds",
     ]
 )
 def readjson_search_parameters(json_str):
@@ -102,6 +109,8 @@ def readjson_search_parameters(json_str):
     # Get Data: Algorithm Performance Parameters
 
     num_worker_threads         = json_data["algorithm_performance_parameters"]["num_worker_threads"]
+    batch_size                 = json_data["algorithm_performance_parameters"]["batch_size"]
+    batch_shuffle_rounds       = json_data["algorithm_performance_parameters"]["batch_shuffle_rounds"]
 
     # Translate Data
 
@@ -117,7 +126,9 @@ def readjson_search_parameters(json_str):
 
             # Algorithm Performance Parameters
 
-            num_worker_threads = num_worker_threads,
+            num_worker_threads   = num_worker_threads,
+            batch_size           = batch_size,
+            batch_shuffle_rounds = batch_shuffle_rounds,
         )
 
     # Data Validation

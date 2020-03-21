@@ -467,24 +467,6 @@ def get_pruned_armour_combos(skill_subset=None, required_set_bonus_skills=set())
     pruned_armour_combos = generate_and_prune_armour_combinations(pruned_armour_db, skill_subset=skill_subset, \
                                                                     required_set_bonus_skills=required_set_bonus_skills)
 
-    # If we don't sort, the runtime becomes less deterministic.
-    # (I guess running statistical analyses on intentionally less-deterministic runtimes might be better, but I'd rather
-    # keep things simple.)
-    def armour_combo_sort_key_fn(x):
-        head = x[ArmourSlot.HEAD]
-        chest = x[ArmourSlot.CHEST]
-        arms = x[ArmourSlot.ARMS]
-        waist = x[ArmourSlot.WAIST]
-        legs = x[ArmourSlot.LEGS]
-
-        buf = head.armour_set.set_name + head.armour_set.discriminator.name + head.armour_set_variant.name \
-                + chest.armour_set.set_name + chest.armour_set.discriminator.name + chest.armour_set_variant.name \
-                + arms.armour_set.set_name  + arms.armour_set.discriminator.name  + arms.armour_set_variant.name  \
-                + waist.armour_set.set_name + waist.armour_set.discriminator.name + waist.armour_set_variant.name \
-                + legs.armour_set.set_name  + legs.armour_set.discriminator.name  + legs.armour_set_variant.name
-        return buf
-    pruned_armour_combos.sort(key=armour_combo_sort_key_fn)
-
     # Add to the cache.
     t = (copy(skill_subset), copy(required_set_bonus_skills), pruned_armour_combos)
     _pruned_armour_combos_cache.append(t)

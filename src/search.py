@@ -46,8 +46,32 @@ from .database_decorations import (Decoration,
                                   calculate_decorations_skills_contribution)
 
 
-MAX_BATCHES = 2048
-SHUFFLE_MAX_PARTITIONS = 10
+def _split_armour_combos_into_batches(armour_combos, batch_size, *, batch_shuffle_rounds):
+    assert isinstance(armour_combos, list)
+    assert isinstance(batch_size, int) and (batch_size > 0)
+    assert isinstance(batch_shuffle_rounds, int) and (batch_shuffle_rounds > 0)
+
+    def armour_combo_sort_key_fn(x):
+        head = x[ArmourSlot.HEAD]
+        chest = x[ArmourSlot.CHEST]
+        arms = x[ArmourSlot.ARMS]
+        waist = x[ArmourSlot.WAIST]
+        legs = x[ArmourSlot.LEGS]
+
+        buf = head.armour_set.set_name + head.armour_set.discriminator.name + head.armour_set_variant.name \
+                + chest.armour_set.set_name + chest.armour_set.discriminator.name + chest.armour_set_variant.name \
+                + arms.armour_set.set_name  + arms.armour_set.discriminator.name  + arms.armour_set_variant.name  \
+                + waist.armour_set.set_name + waist.armour_set.discriminator.name + waist.armour_set_variant.name \
+                + legs.armour_set.set_name  + legs.armour_set.discriminator.name  + legs.armour_set_variant.name
+        return buf
+    sorted_armour_combos = sorted(armour_combos, key=armour_combo_sort_key_fn)
+
+    armour_combos_batches = list(grouper(sorted_armour_combos, batch_size))
+    assert sum(len(x) for x in armour_combos_batches) >= len(armour_combos)
+    armour_combos_batches = list(interleaving_shuffle(armour_combos_batches, max_partitions=batch_shuffle_rounds))
+    assert sum(len(x) for x in armour_combos_batches) >= len(armour_combos)
+
+    return armour_combos_batches
 
 
 # get_pruned_armour_combos caches results, so we just trigger it before entering the worker processes.
@@ -62,7 +86,7 @@ def _cache_pruned_armour_combos(search_parameters):
 
     x = get_pruned_armour_combos(skill_subset=skill_subset, required_set_bonus_skills=required_set_bonus_skills)
     assert isinstance(x, list)
-    return
+    return x
 
 
 def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_skills, skill_subset=None, required_skills={}):
@@ -234,7 +258,11 @@ def find_highest_efr_build(search_parameters_jsonstr):
 
     start_time = time.time()
 
-    _cache_pruned_armour_combos(search_parameters)
+    # Cache armour combos and determine number of batches
+    armour_combos = _cache_pruned_armour_combos(search_parameters)
+    armour_combos_batches = _split_armour_combos_into_batches(armour_combos, search_parameters.batch_size, \
+                                                                batch_shuffle_rounds=search_parameters.batch_shuffle_rounds)
+    num_batches = len(armour_combos_batches)
 
     with mp.Pool(num_workers) as p:
         manager = mp.Manager()
@@ -246,7 +274,7 @@ def find_highest_efr_build(search_parameters_jsonstr):
         pipes_parent_to_children = [x for (_, x) in all_pipes] # Parent keeps the write-only half.
 
         # We fill up the queue with all batch numbers. Children just grab these values.
-        for batch in range(MAX_BATCHES + num_workers): # If a worker finds we've exceeded the batches, it exits.
+        for batch in range(num_batches + num_workers): # If a worker finds we've exceeded the batches, it exits.
             job_queue.put(batch)
         assert not job_queue.full()
 
@@ -401,6 +429,8 @@ def _find_highest_efr_build_worker(args):
 
     skill_states = search_parameters.skill_states
 
+    batch_size = search_parameters.batch_size
+    batch_shuffle_rounds = search_parameters.batch_shuffle_rounds
 
     ############################
     # STAGE 2: Component Lists #
@@ -408,6 +438,8 @@ def _find_highest_efr_build_worker(args):
 
     weapons = [weapon for (_, weapon) in weapon_db.items() if weapon.type is desired_weapon_class]
     armour_combos = get_pruned_armour_combos(skill_subset=skill_subset, required_set_bonus_skills=required_set_bonus_skills)
+    armour_combos_batches = _split_armour_combos_into_batches(armour_combos, batch_size, \
+                                                                batch_shuffle_rounds=batch_shuffle_rounds)
 
     charms = set()
     for skill in skill_subset:
@@ -428,12 +460,6 @@ def _find_highest_efr_build_worker(args):
     debugging_num_initial_weapon_configs = len(all_weapon_configurations)
 
     print("Lowest ceiling EFR: " + str(all_weapon_configurations[-1][3]))
-
-    sublist_ideal_len = int(ceil(len(armour_combos) / MAX_BATCHES))
-    all_armour_combos_sublists = list(grouper(armour_combos, sublist_ideal_len))
-    assert sum(len(x) for x in all_armour_combos_sublists) >= len(armour_combos)
-    all_armour_combos_sublists = list(interleaving_shuffle(all_armour_combos_sublists, max_partitions=SHUFFLE_MAX_PARTITIONS))
-
 
     ####################
     # STAGE 3: Search! #
@@ -471,11 +497,11 @@ def _find_highest_efr_build_worker(args):
     while True:
         # We get a job from the queue.
         new_batch_index = job_queue.get(block=True)
-        if new_batch_index >= len(all_armour_combos_sublists):
+        if new_batch_index >= len(armour_combos_batches):
             break
-        print(worker_string + f"New batch number: {new_batch_index} of 0-{len(all_armour_combos_sublists)-1}")
+        print(worker_string + f"New batch number: {new_batch_index} of 0-{len(armour_combos_batches)-1}")
 
-        armour_combos_sublist = all_armour_combos_sublists[new_batch_index]
+        armour_combos_sublist = armour_combos_batches[new_batch_index]
 
         total_progress_segments = len(armour_combos_sublist)
         curr_progress_segment = 0

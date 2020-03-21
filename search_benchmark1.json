@@ -38,6 +38,8 @@
     },
 
     "algorithm_performance_parameters": {
-        "num_worker_threads": 32
+        "num_worker_threads": 32,
+        "batch_size": 1,
+        "batch_shuffle_rounds": 10
     }
 }
