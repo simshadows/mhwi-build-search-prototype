@@ -492,7 +492,7 @@ def _find_highest_efr_build_worker(args):
                 continue
 
             armour_contribution = calculate_armour_contribution(curr_armour)
-            armour_set_bonus_skills = calculate_set_bonus_skills(armour_contribution.set_bonuses)
+            armour_set_bonus_skills = calculate_set_bonus_skills(armour_contribution.set_bonuses, None)
 
             all_armour_skills = defaultdict(lambda : 0)
             all_armour_skills.update(armour_contribution.skills)

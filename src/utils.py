@@ -75,6 +75,7 @@ class ExecutionProgress:
         return
 
     def update_and_print_progress(self):
+        assert self._total_progress_segments is not None
         self._curr_progress_segment += 1
 
         if (self._granularity == 1) or (self._curr_progress_segment % (self._granularity - 1) == 0) \

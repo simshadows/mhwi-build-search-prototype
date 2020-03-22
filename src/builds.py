@@ -348,7 +348,8 @@ class Build:
             skills_dict[skill] += level
 
         # Armour set bonuses
-        skills_from_set_bonuses = calculate_set_bonus_skills(armour_contribution.set_bonuses)
+        skills_from_set_bonuses = calculate_set_bonus_skills(armour_contribution.set_bonuses, \
+                                                                weapon_upgrades_contribution.set_bonus)
         if len(set(skills_dict) & set(skills_from_set_bonuses)) != 0:
             raise RuntimeError("We shouldn't be getting any mixing between regular skills and set bonuses here.")
 

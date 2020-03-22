@@ -241,12 +241,20 @@ def clipped_skills_defaultdict(skills_dict):
 # This will take a dictionary of {SetBonus: number_of_pieces} and returns the skills it provides as a dictionary
 # of {Skill: level}.
 # This assumes that set bonus skills are all binary.
-def calculate_set_bonus_skills(set_bonus_pieces_dict):
+def calculate_set_bonus_skills(set_bonus_pieces_dict, weapon_set_bonus_contribution):
+    assert isinstance(weapon_set_bonus_contribution, SetBonus) or (weapon_set_bonus_contribution is None)
+
     ret = {}
+
     for (set_bonus, num_pieces) in set_bonus_pieces_dict.items():
+
+        if set_bonus is weapon_set_bonus_contribution:
+            num_pieces += 1
+
         for (stage, skill) in set_bonus.value.stages.items():
             if num_pieces >= stage:
                 ret[skill] = 1
+
     return ret
 
 

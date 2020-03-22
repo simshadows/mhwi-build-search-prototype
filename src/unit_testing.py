@@ -26,6 +26,7 @@ from .database_weapons     import (WeaponClass,
                                   WeaponUpgradeTracker,
                                   IBCWeaponUpgradeType,
                                   SafiWeaponStandardUpgradeType,
+                                  SafiWeaponSetBonusUpgradeType,
                                   WeaponUpgradeScheme)
 from .database_armour      import (ArmourDiscriminator,
                                   ArmourVariant,
@@ -229,9 +230,11 @@ def _run_tests_lookup():
         build = Build(weapon, transformed_armour_dict, charm, weapon_augments_tracker, weapon_upgrades_tracker, \
                                             decorations_list)
         results = build.calculate_performance(skill_states_dict)
+        if (expected_level == 0) and (Skill[expected_skill] not in results.skills):
+            return
         if Skill[expected_skill] not in results.skills:
             raise ValueError(f"Skill {expected_skill} not present.")
-        returned_level = results.skills[Skill[expected_skill]]
+        returned_level = results.skills.get(Skill[expected_skill], 0)
         if returned_level != expected_level:
             raise ValueError(f"Skill level mismatch for {expected_skill}. Expected {expected_level}. Got {returned_level}.")
 
@@ -510,7 +513,7 @@ def _run_tests_lookup():
 
     check_efr(555.83)
 
-    print("Testing some Safi builds.")
+    print("Testing some Safi weapon builds.")
 
     weapon = weapon_db["SAFI_SHATTERSPLITTER"]
 
@@ -559,6 +562,22 @@ def _run_tests_lookup():
         ]
 
     check_efr(706.40)
+
+    armour_dict[ArmourSlot.WAIST] = ("Damascus", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS)
+
+    check_efr(706.40)
+    check_skill("MASTERS_TOUCH", 0) # Set Bonus
+
+    weapon_upgrades_config = [
+            (SafiWeaponStandardUpgradeType.ATTACK,          6),
+            (SafiWeaponStandardUpgradeType.ATTACK,          5),
+            (SafiWeaponStandardUpgradeType.SHARPNESS,       5),
+            (SafiWeaponStandardUpgradeType.SHARPNESS,       5),
+            (SafiWeaponSetBonusUpgradeType.TEOSTRA_ESSENCE, 1),
+        ]
+
+    check_efr(688.88)
+    check_skill("MASTERS_TOUCH", 1) # Set Bonus
 
     return True
 

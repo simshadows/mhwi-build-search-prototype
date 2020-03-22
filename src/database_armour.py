@@ -517,7 +517,7 @@ def _armour_combination_iter(original_easyiterate_armour_db):
         if __debug__:
             num_total_regular_skills = len(total_skills)
 
-        total_set_bonus_skills = calculate_set_bonus_skills(total_set_bonuses)
+        total_set_bonus_skills = calculate_set_bonus_skills(total_set_bonuses, None)
         total_skills.update(total_set_bonus_skills)
         assert len(total_skills) == len(total_set_bonus_skills) + num_total_regular_skills
 
