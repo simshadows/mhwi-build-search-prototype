@@ -237,17 +237,12 @@ def _generate_weapon_combinations(weapon_list, skills_for_ceiling_efr, skill_sta
     assert isinstance(skills_for_ceiling_efr, dict)
     assert isinstance(skill_states_dict, dict)
     for weapon in weapon_list:
-        bare_augments_tracker = WeaponAugmentTracker.get_instance(weapon)
-        for augments_config in bare_augments_tracker.get_maximized_configs(health_regen_minimum=health_regen_minimum):
-            augments_tracker = WeaponAugmentTracker.get_instance(weapon)
-            augments_tracker.update_with_config(augments_config)
-            for weapon_upgrade_config in WeaponUpgradeTracker.get_instance(weapon).get_maximized_configs():
-                weapon_upgrades_tracker = WeaponUpgradeTracker.get_instance(weapon)
-                weapon_upgrades_tracker.update_with_config(weapon_upgrade_config)
-                results = lookup_from_skills(weapon, skills_for_ceiling_efr, skill_states_dict, \
-                                                    augments_tracker, weapon_upgrades_tracker)
+        for augments_tracker in WeaponAugmentTracker.get_maximized_trackers(weapon, health_regen_minimum=health_regen_minimum):
+            for upgrades_tracker in WeaponUpgradeTracker.get_maximized_trackers_pruned(weapon):
+                results = lookup_from_skills(weapon, skills_for_ceiling_efr, skill_states_dict, augments_tracker, \
+                                                upgrades_tracker)
                 ceiling_efr = results.efr
-                yield (weapon, augments_tracker, weapon_upgrades_tracker, ceiling_efr)
+                yield (weapon, augments_tracker, upgrades_tracker, ceiling_efr)
 
 
 def find_highest_efr_build(search_parameters_jsonstr):

@@ -52,6 +52,18 @@ class WeaponAugmentTracker(ABC):
         else:
             raise RuntimeError(f"Augmentation scheme {weapon.augmentation_scheme} not supported.")
 
+    @classmethod
+    def get_maximized_trackers(cls, weapon, *, health_regen_minimum):
+        trackers = []
+
+        bare_tracker = cls.get_instance(weapon)
+        for config_obj in bare_tracker.get_maximized_configs(health_regen_minimum=health_regen_minimum):
+            tracker = cls.get_instance(weapon)
+            tracker.update_with_config(config_obj)
+            trackers.append(tracker)
+
+        return trackers
+
     # TODO: Use something better, like the __copy__() method.
     @abstractmethod
     def copy(self):
@@ -463,6 +475,25 @@ class WeaponUpgradeTracker(ABC):
             return NoWeaponUpgrades()
         else:
             raise RuntimeError(f"Upgrade scheme {weapon.upgrade_scheme} not supported.")
+
+    # TODO: Consider pruning configurations that are clearly inferior, rather than just pruning
+    #       configurations that have unique contributions.
+    @classmethod
+    def get_maximized_trackers_pruned(cls, weapon):
+        trackers = []
+        seen_tracker_contributions = set()
+
+        bare_tracker = cls.get_instance(weapon)
+        for config_obj in bare_tracker.get_maximized_configs():
+            tracker = cls.get_instance(weapon)
+            tracker.update_with_config(config_obj)
+
+            contribution = tracker.calculate_contribution()
+            if contribution not in seen_tracker_contributions:
+                seen_tracker_contributions.add(contribution)
+                trackers.append(tracker)
+
+        return trackers
 
     # TODO: Use something better, like the __copy__() method.
     @abstractmethod
