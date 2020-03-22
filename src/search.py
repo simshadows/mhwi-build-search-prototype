@@ -20,7 +20,7 @@ from .builds    import (Build,
                        lookup_from_skills)
 from .serialize import (SearchParameters,
                        readjson_search_parameters)
-from .utils     import (update_and_print_progress,
+from .utils     import (ExecutionProgress,
                        grouper,
                        interleaving_shuffle,
                        dict_enumkey_intval_str)
@@ -283,8 +283,7 @@ def find_highest_efr_build(search_parameters_jsonstr):
                 pipe.send(["NEW_EFR", efr_value])
             return
 
-        grandtotal_progress_segments = None
-        curr_progress_segment = 0
+        grandtotal_progress = ExecutionProgress("SEARCH", None)
         workers_complete = {i: False for i in range(num_workers)}
 
         current_best_efr = 0
@@ -295,12 +294,9 @@ def find_highest_efr_build(search_parameters_jsonstr):
             try:
                 msg = queue_children_to_parent.get(block=True, timeout=1)
                 if msg[1] == "PROGRESS":
-                    if grandtotal_progress_segments is None:
-                        grandtotal_progress_segments = msg[4]
-                    assert msg[4] == grandtotal_progress_segments
                     assert msg[2] == 1
-                    curr_progress_segment = update_and_print_progress("SEARCH", curr_progress_segment, \
-                                                                        grandtotal_progress_segments, start_time)
+                    grandtotal_progress.ensure_total_progress_count(msg[4])
+                    grandtotal_progress.update_and_print_progress()
                 elif msg[1] == "BUILD":
                     serial_data = msg[2]
                     intermediate_build = Build.deserialize(serial_data)

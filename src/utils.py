@@ -44,28 +44,60 @@ def json_dumps_formatted(data):
 #        f.write(json.dumps(data, sort_keys=True, indent=4))
 #    return
 
-def update_and_print_progress(msg, curr_progress_segment, total_progress_segments, start_real_time_seconds):
-    progress_segment_size = 1 / total_progress_segments
+class ExecutionProgress:
 
-    curr_progress_segment += 1
-    curr_progress = curr_progress_segment * progress_segment_size
-    curr_progress_percent_rnd = round(curr_progress * 100, 2)
-    curr_progress_str = f"{curr_progress_percent_rnd:.02f}%"
+    __slots__ = [
+            "_msg",
+            "_total_progress_segments",
+            "_curr_progress_segment",
+            "_start_time",
+            "_granularity",
+        ]
 
-    progress_real_time = time.time() - start_real_time_seconds
-    progress_real_time_minutes = int(progress_real_time // 60)
-    progress_real_time_seconds = int(progress_real_time % 60)
-    progress_real_time_str = f"{progress_real_time_minutes:02}:{progress_real_time_seconds:02}"
+    def __init__(self, msg, total_progress_segments, granularity=1):
+        assert isinstance(msg, str) and (len(msg.strip()) > 0)
+        assert (isinstance(total_progress_segments, int) and (total_progress_segments > 0)) or (total_progress_segments is None)
+        assert isinstance(granularity, int) and (granularity > 0)
 
-    seconds_per_segment = progress_real_time / curr_progress_segment
-    seconds_estimate = seconds_per_segment * total_progress_segments
-    estimate_minutes = int(seconds_estimate // 60)
-    estimate_seconds = int(seconds_estimate % 60) # This naming is so confusing lmao
-    estimate_str = f"{estimate_minutes:02}:{estimate_seconds:02}"
+        self._msg = msg
+        self._total_progress_segments = total_progress_segments # If this is none, we update later.
+        self._curr_progress_segment = 0
+        self._start_time = time.time()
+        self._granularity = granularity
+        return
 
-    print(f"[{msg} PROGRESS: {curr_progress_str}] elapsed {progress_real_time_str}, estimate {estimate_str}")
+    def ensure_total_progress_count(self, total_progress_segments):
+        if self._total_progress_segments is None:
+            self._total_progress_segments = total_progress_segments
+        elif self._total_progress_segments != total_progress_segments:
+            raise RuntimeError(f"Progress segment mismatch! Expected {self._total_progress_segments}, " \
+                                    f"we got {total_progress_segments}")
+        return
 
-    return curr_progress_segment
+    def update_and_print_progress(self):
+        self._curr_progress_segment += 1
+
+        if (self._granularity == 1) or (self._curr_progress_segment % (self._granularity - 1) == 0) \
+                or (self._curr_progress_segment == self._total_progress_segments):
+            progress_segment_size = 1 / self._total_progress_segments
+
+            curr_progress = self._curr_progress_segment * progress_segment_size
+            curr_progress_percent_rnd = round(curr_progress * 100, 2)
+            curr_progress_str = f"{curr_progress_percent_rnd:.02f}%"
+
+            progress_real_time = time.time() - self._start_time
+            progress_real_time_minutes = int(progress_real_time // 60)
+            progress_real_time_seconds = int(progress_real_time % 60)
+            progress_real_time_str = f"{progress_real_time_minutes:02}:{progress_real_time_seconds:02}"
+
+            seconds_per_segment = progress_real_time / self._curr_progress_segment
+            seconds_estimate = seconds_per_segment * self._total_progress_segments
+            estimate_minutes = int(seconds_estimate // 60)
+            estimate_seconds = int(seconds_estimate % 60) # This naming is so confusing lmao
+            estimate_str = f"{estimate_minutes:02}:{estimate_seconds:02}"
+
+            print(f"[{self._msg} PROGRESS: {curr_progress_str}] elapsed {progress_real_time_str}, estimate {estimate_str}")
+        return
 
 # Recipe from Python 3.8 Itertools documentation.
 def grouper(iterable, n, fillvalue=None):

@@ -14,7 +14,7 @@ from enum import Enum, auto
 from itertools import product
 
 from .enums import Tier
-from .utils import json_read, update_and_print_progress
+from .utils import json_read, ExecutionProgress
 
 from .database_skills import Skill, SetBonus, calculate_set_bonus_skills
 from .database_decorations import skill_to_simple_deco_size
@@ -540,17 +540,7 @@ def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill
                                    if all(skill in x[1] for skill in required_set_bonus_skills)]
     print(f"Number of armour combinations, before pruning: {len(all_combinations)}")
 
-    start_real_time = time.time()
-
-    total_progress_segments = len(all_combinations) // 100
-    progress_segment_size = 1 / total_progress_segments
-    curr_progress_segment = 0
-
-    def progress():
-        nonlocal curr_progress_segment
-        nonlocal total_progress_segments
-        nonlocal start_real_time
-        update_and_print_progress("COMBINATION PRUNING", int(curr_progress_segment // 100), total_progress_segments, start_real_time)
+    progress = ExecutionProgress("COMBINATION PRUNING", len(all_combinations), granularity=100)
 
     # We consider set bonuses to make certain pieces worth it.
     best_combinations = [] # [{ArmourSlot: ArmourEasyIterateInfo}]
@@ -587,9 +577,7 @@ def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill
         if not prune_combination_1:
             best_combinations.append(combination_1)
 
-        curr_progress_segment += 1
-        if curr_progress_segment % 99 == 0:
-            progress()
+        progress.update_and_print_progress()
 
     print()
     print(f"Number of armour combinations, after pruning: {len(best_combinations)}")
