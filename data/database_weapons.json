@@ -74,6 +74,21 @@
         "augmentation_scheme": "ICEBORNE",
         "upgrade_scheme"     : "NONE"
     },
+    "SAFI_SHATTERSPLITTER": {
+        "class" : "GREATSWORD",
+        "rarity": 12,
+        
+        "name"    : "Safi's Shattersplitter",
+        "attack"  : 1296,
+        "affinity": 5,
+        "slots"   : [4],
+        "is_raw"  : false,
+
+        "maximum_sharpness": [100, 50, 50, 50, 50, 90, 0],
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "SAFI_STANDARD"
+    },
     "LUNATIC_ROSE": {
         "class" : "GREATSWORD",
         "rarity": 12,

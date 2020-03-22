@@ -25,6 +25,7 @@ from .database_weapons     import (WeaponClass,
                                   WeaponAugmentationScheme,
                                   WeaponUpgradeTracker,
                                   IBCWeaponUpgradeType,
+                                  SafiWeaponStandardUpgradeType,
                                   WeaponUpgradeScheme)
 from .database_armour      import (ArmourDiscriminator,
                                   ArmourVariant,
@@ -508,6 +509,56 @@ def _run_tests_lookup():
         ]
 
     check_efr(555.83)
+
+    print("Testing some Safi builds.")
+
+    weapon = weapon_db["SAFI_SHATTERSPLITTER"]
+
+    charm = charms_db["CHALLENGER_CHARM"]
+
+    armour_dict = {
+            ArmourSlot.HEAD:  ("Teostra",     ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+            ArmourSlot.CHEST: ("Damascus",    ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+            ArmourSlot.ARMS:  ("Teostra",     ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+            ArmourSlot.WAIST: ("Teostra",     ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+            ArmourSlot.LEGS:  ("Yian Garuga", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+        }
+
+    weapon_augments_config = [
+            (IBWeaponAugmentType.ATTACK_INCREASE, 1),
+            #(IBWeaponAugmentType.HEALTH_REGEN,    1), # TODO: Update the max slot values to allow this.
+        ]
+
+    weapon_upgrades_config = [
+            (SafiWeaponStandardUpgradeType.ATTACK,    6),
+            (SafiWeaponStandardUpgradeType.ATTACK,    5),
+            (SafiWeaponStandardUpgradeType.ATTACK,    5),
+            (SafiWeaponStandardUpgradeType.SHARPNESS, 5),
+            (SafiWeaponStandardUpgradeType.SHARPNESS, 5),
+        ]
+
+    skill_states_dict = {
+            Skill.WEAKNESS_EXPLOIT: 2,
+            Skill.AGITATOR: 1,
+        }
+
+    decorations_list = [
+            Decoration.ATTACK_X2,
+            Decoration.COMPOUND_CHARGER_VITALITY,
+            Decoration.ATTACK_X2,
+            Decoration.CRITICAL,
+            Decoration.EXPERT,
+            Decoration.EXPERT_X2,
+            Decoration.TENDERIZER,
+            Decoration.COMPOUND_CHALLENGER_VITALITY,
+            Decoration.TENDERIZER,
+            Decoration.ATTACK,
+            Decoration.ATTACK_X2,
+            Decoration.CRITICAL,
+            Decoration.CRITICAL,
+        ]
+
+    check_efr(706.40)
 
     return True
 

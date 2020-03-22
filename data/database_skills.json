@@ -809,21 +809,21 @@
         }
     },
     "set_bonuses": {
-        "TIGREX_ESSENCE": {
-            "name": "Tigrex Essence",
-            "stages": [
-                {
-                    "parts": 3,
-                    "skill": "FREE_MEAL_SECRET"
-                }
-            ]
-        },
         "TEOSTRA_TECHNIQUE": {
             "name": "Teostra Technique",
             "stages": [
                 {
                     "parts": 3,
                     "skill": "MASTERS_TOUCH"
+                }
+            ]
+        },
+        "TIGREX_ESSENCE": {
+            "name": "Tigrex Essence",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "FREE_MEAL_SECRET"
                 }
             ]
         },

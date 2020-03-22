@@ -31,15 +31,11 @@ from .database_skills      import (RAW_BLUNDER_MULTIPLIER,
                                   clipped_skills_defaultdict,
                                   calculate_set_bonus_skills,
                                   calculate_skills_contribution)
-from .database_weapons     import (weapon_db,
+from .database_weapons     import (RAW_SHARPNESS_MODIFIERS,
+                                  weapon_db,
                                   WeaponAugmentTracker,
                                   WeaponUpgradeTracker,
                                   print_weapon_config)
-
-
-# Corresponds to each level from red through to purple, in increasing-modifier order.
-SHARPNESS_LEVEL_NAMES   = ("Red", "Orange", "Yellow", "Green", "Blue", "White", "Purple")
-RAW_SHARPNESS_MODIFIERS = (0.5,   0.75,     1.0,      1.05,    1.2,    1.32,    1.39    )
 
 
 BuildValues = namedtuple(
@@ -208,6 +204,9 @@ def lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_t
         from_augments = weapon_augments_tracker.calculate_contribution()
         from_weapon_upgrades = weapon_upgrades_tracker.calculate_contribution()
 
+        if from_weapon_upgrades.new_max_sharpness_values is not None:
+            maximum_sharpness_values = from_weapon_upgrades.new_max_sharpness_values
+
         handicraft_level = from_skills.handicraft_level
         sharpness_values, highest_sharpness_level = _actual_sharpness_level_values(maximum_sharpness_values, handicraft_level)
 
@@ -297,24 +296,28 @@ class Build:
 
     def calculate_performance(self, skill_states_dict):
         armour_contribution = calculate_armour_contribution(self._get_armour_dict())
+        weapon_augment_contribution = self._weapon_augments_tracker.calculate_contribution()
+        weapon_upgrades_contribution = self._weapon_upgrades_tracker.calculate_contribution()
+
         decorations_counter = Counter(self._decos)
 
-        slots_available_counter = Counter(list(self._weapon.slots) + list(armour_contribution.decoration_slots))
+        slots_available_list = list(self._weapon.slots) + list(armour_contribution.decoration_slots)
+        if weapon_augment_contribution.extra_decoration_slot_level > 0:
+            slots_available_list.append(weapon_augment_contribution.extra_decoration_slot_level)
+        if weapon_upgrades_contribution.extra_decoration_slot_level > 0:
+            slots_available_list.append(weapon_upgrades_contribution.extra_decoration_slot_level)
+        slots_available_counter = Counter(slots_available_list)
+        assert len(slots_available_counter) <= 4 # We only have slot sizes 1 to 4.
 
         # For debugging, we can first determine if the decorations fit in the selected gear.
         # (We should be able to rely on inputs here.
         # Both slots_*_counter are in the format {slot_size: count}
         if __debug__:
-            weapon_augment_contribution = self._weapon_augments_tracker.calculate_contribution() # TODO: This is redundant.
-            tmp_slots_available_counter = copy(Counter(list(self._weapon.slots) + list(armour_contribution.decoration_slots)))
-            if weapon_augment_contribution.extra_decoration_slot_level > 0:
-                tmp_slots_available_counter.update([weapon_augment_contribution.extra_decoration_slot_level])
-            assert len(tmp_slots_available_counter) <= 4 # We only have slot sizes 1 to 4.
-
             slots_used_counter = Counter()
             for (deco, total) in decorations_counter.items():
                 slots_used_counter.update([deco.value.slot_size] * total)
 
+            tmp_slots_available_counter = copy(slots_available_counter)
             for (deco_size, n) in slots_used_counter.items():
                 for usable_size in range(deco_size, 5):
                     if usable_size in tmp_slots_available_counter:

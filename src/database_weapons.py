@@ -10,11 +10,18 @@ This file provides the MHWI build optimizer script's weapons database.
 import json
 from abc import ABC, abstractmethod
 from collections import namedtuple
-from itertools import accumulate
+from itertools import accumulate, product
 from enum import Enum, auto
 from copy import copy
 
+from .database_skills import SetBonus
+
 from .utils import json_read
+
+
+# Corresponds to each level from red through to purple, in increasing-modifier order.
+SHARPNESS_LEVEL_NAMES   = ("Red", "Orange", "Yellow", "Green", "Blue", "White", "Purple")
+RAW_SHARPNESS_MODIFIERS = (0.5,   0.75,     1.0,      1.05,    1.2,    1.32,    1.39    )
 
 
 WEAPONS_DATA_FILENAME = "data/database_weapons.json"
@@ -438,6 +445,9 @@ WeaponUpgradesContribution = namedtuple(
     [
         "added_attack_power",
         "added_raw_affinity",
+        "extra_decoration_slot_level",
+        "new_max_sharpness_values",
+        "set_bonus",
     ],
 )
 class WeaponUpgradeTracker(ABC):
@@ -447,6 +457,8 @@ class WeaponUpgradeTracker(ABC):
         #assert isinstance(weapon, namedtuple) # TODO: Make a proper assertion.
         if weapon.upgrade_scheme is WeaponUpgradeScheme.ICEBORNE_COMMON:
             return IBCWeaponUpgradeTracker()
+        elif weapon.upgrade_scheme is WeaponUpgradeScheme.SAFI_STANDARD:
+            return SafiWeaponUpgrades()
         elif weapon.upgrade_scheme is WeaponUpgradeScheme.NONE:
             return NoWeaponUpgrades()
         else:
@@ -505,6 +517,9 @@ class NoWeaponUpgrades(WeaponUpgradeTracker):
         ret = WeaponUpgradesContribution (
                 added_attack_power = 0,
                 added_raw_affinity = 0,
+                extra_decoration_slot_level = 0,
+                new_max_sharpness_values = None,
+                set_bonus = None,
             )
         return ret
 
@@ -583,8 +598,11 @@ class IBCWeaponUpgradeTracker(WeaponUpgradeTracker):
                 raise RuntimeError("Unsupported upgrade type found: " + str(type(upgrade)))
 
         ret = WeaponUpgradesContribution (
-                added_attack_power = added_attack_power,
-                added_raw_affinity = added_raw_affinity,
+                added_attack_power          = added_attack_power,
+                added_raw_affinity          = added_raw_affinity,
+                extra_decoration_slot_level = 0,
+                new_max_sharpness_values    = None,
+                set_bonus                   = None,
             )
         return ret
 
@@ -617,11 +635,208 @@ class IBCWeaponUpgradeTracker(WeaponUpgradeTracker):
         return (len(self._upgrades) <= 7)
 
 
+class SafiWeaponStandardUpgradeType(Enum):
+    ATTACK    = auto()
+    AFFINITY  = auto()
+    #STATUS   = auto() # Will implement later.
+    #ELEMENT  = auto() # Will implement later.
+    #DEFENSE  = auto() # Will implement later.
+    SLOT      = auto()
+    SHARPNESS = auto()
+
+SafiWeaponSetBonusUpgradeTypeInfo = namedtuple("SafiWeaponSetBonusUpgradeTypeInfo", ["upgrade_name", "set_bonus_name"])
+class SafiWeaponSetBonusUpgradeType(Enum):
+    TEOSTRA_ESSENCE  = SafiWeaponSetBonusUpgradeTypeInfo("Teostra Essence",  "TEOSTRA_TECHNIQUE")
+    TIGREX_ESSENCE   = SafiWeaponSetBonusUpgradeTypeInfo("Tigrex Essence",   "TIGREX_ESSENCE")
+    VELKHANA_ESSENCE = SafiWeaponSetBonusUpgradeTypeInfo("Velkhana Essence", "VELKHANA_DIVINITY")
+    # I'll add the others as I fill the database!
+
+class SafiWeaponUpgrades(WeaponUpgradeTracker):
+
+    __slots__ = [
+            "_config",
+        ]
+
+    # TODO: These values are true for GS according to honeyhunterworld.com. What about other weapons?
+    #           level =  1     2     3     4   5   6
+    _ATTACK_VALUES    = (None, None, None, 7,  9,  14) # Raw added to the weapon raw. Other levels not yet implemented.
+    _AFFINITY_VALUES  = (None, None, None, 8,  10, 15) # Added affinity percentage. Other levels not yet implemented.
+    _SLOT_VALUES      = (None, None, 1,    2,  3,  4 ) # The level of the slot. Slot I and II don't exist.
+    _SHARPNESS_VALUES = (None, None, None, 40, 50, 70) # Sharpness value added. Other levels not yet implemented.
+
+    _WHITE_MAX = 120 # Maximum white sharpness value before we overflow into purple sharpness.
+    _BASE_SHARPNESS = MaximumSharpness(100, 50, 50, 50, 50, 90, 0) # All Safi weapons start at this sharpness.
+
+    _MAXIMIZED_CONFIG_REGULAR_PICKS = [ # TODO: Consider automating this definition.
+            (SafiWeaponStandardUpgradeType.ATTACK,    5),
+            (SafiWeaponStandardUpgradeType.AFFINITY,  5),
+            (SafiWeaponStandardUpgradeType.SHARPNESS, 5),
+            (SafiWeaponStandardUpgradeType.SLOT,      5),
+        ]
+
+    _MAXIMIZED_CONFIG_LEVEL_6_PICKS = [ # TODO: Consider automating this definition.
+            (SafiWeaponStandardUpgradeType.ATTACK,    6),
+            (SafiWeaponStandardUpgradeType.AFFINITY,  6),
+            (SafiWeaponStandardUpgradeType.SHARPNESS, 6),
+            (SafiWeaponStandardUpgradeType.SLOT,      6),
+        ]
+
+    _MAXIMIZED_CONFIG_SET_BONUS_PICKS = [(x, 1) for x in SafiWeaponSetBonusUpgradeType]
+
+    def __init__(self):
+        self._config = []
+        assert self._state_is_valid()
+        return
+
+    def copy(self):
+        new = copy(self)
+        new._config = copy(self._config)
+        assert new._state_is_valid()
+        return new
+
+    def get_config(self):
+        return copy(self._config)
+
+    def get_serialized_config(self):
+        assert self._state_is_valid()
+        json_serializable = [(upgrade_type.name, level) for (upgrade_type, level) in self._config]
+        return json.dumps(json_serializable)
+
+    def calculate_contribution(self):
+        assert self._state_is_valid() # We rely on these assumptions. E.g. only one set bonus upgrade.
+
+        added_attack_power          = 0
+        added_raw_affinity          = 0
+        extra_decoration_slot_level = 0
+        added_sharpness_value       = 0 # We turn this into new_max_sharpness_values once we have it.
+        set_bonus                   = None
+
+        for (upgrade_type, level) in self._config:
+            if upgrade_type is SafiWeaponStandardUpgradeType.ATTACK:
+                added_attack_power += self._ATTACK_VALUES[level - 1]
+            elif upgrade_type is SafiWeaponStandardUpgradeType.AFFINITY:
+                added_raw_affinity += self._AFFINITY_VALUES[level - 1]
+            elif upgrade_type is SafiWeaponStandardUpgradeType.SLOT:
+                extra_decoration_slot_level += self._SLOT_VALUES[level - 1]
+            elif upgrade_type is SafiWeaponStandardUpgradeType.SHARPNESS:
+                added_sharpness_value += self._SHARPNESS_VALUES[level - 1]
+            elif isinstance(upgrade_type, SafiWeaponSetBonusUpgradeType):
+                assert set_bonus is None
+                set_bonus = SetBonus[upgrade_type.value.set_bonus_name]
+            else:
+                raise RuntimeError("Not a valid Safi upgrade type.")
+            
+        # Now, we calculate sharpness
+
+        assert SHARPNESS_LEVEL_NAMES[5] == "White"
+        assert SHARPNESS_LEVEL_NAMES[6] == "Purple"
+        assert len(SHARPNESS_LEVEL_NAMES) == 7
+        white_value = self._BASE_SHARPNESS[5] + added_sharpness_value
+        purple_value = 0
+        if white_value > self._WHITE_MAX:
+            purple_value = white_value - self._WHITE_MAX
+            white_value = self._WHITE_MAX
+
+        new_max_sharpness_values = MaximumSharpness(
+                self._BASE_SHARPNESS[0],
+                self._BASE_SHARPNESS[1],
+                self._BASE_SHARPNESS[2],
+                self._BASE_SHARPNESS[3],
+                self._BASE_SHARPNESS[4],
+                white_value,
+                purple_value,
+            )
+
+        # We've calculated everything, so now we return.
+
+        ret = WeaponUpgradesContribution (
+                added_attack_power          = added_attack_power,
+                added_raw_affinity          = added_raw_affinity,
+                extra_decoration_slot_level = extra_decoration_slot_level,
+                new_max_sharpness_values    = new_max_sharpness_values,
+                set_bonus                   = set_bonus,
+            )
+        return ret
+
+    def get_maximized_configs(self):
+        maximized_configs = []
+
+        it = product(
+                self._MAXIMIZED_CONFIG_LEVEL_6_PICKS,
+                self._MAXIMIZED_CONFIG_REGULAR_PICKS,
+                self._MAXIMIZED_CONFIG_REGULAR_PICKS,
+                self._MAXIMIZED_CONFIG_REGULAR_PICKS,
+                self._MAXIMIZED_CONFIG_REGULAR_PICKS + self._MAXIMIZED_CONFIG_SET_BONUS_PICKS,
+            )
+        for tup in it:
+            config = list(tup)
+            if self._is_valid_configuration(config):
+                maximized_configs.append(config)
+
+        return maximized_configs
+
+    def update_with_config(self, selected_config):
+        self._config = copy(selected_config)
+        assert self._state_is_valid()
+        return
+
+    def update_with_serialized_config(self, serialized_config):
+        json_parsed_config = json.loads(serialized_config)
+
+        self._config = []
+        for (upgrade_type_str, level) in json_parsed_config:
+            if upgrade_type_str in SafiWeaponStandardUpgradeType.__members__:
+                upgrade_type = SafiWeaponStandardUpgradeType[upgrade_type_str]
+            elif upgrade_type_str in SafiWeaponSetBonusUpgradeType.__members__:
+                upgrade_type = SafiWeaponSetBonusUpgradeType[upgrade_type_str]
+            else:
+                raise RuntimeError("Unknown Safi upgrade type.")
+            self._config.append((upgrade_type, level))
+
+        assert self._state_is_valid() # We test for config validity here.
+        return
+
+    def _state_is_valid(self):
+        if len(self._config) > 5 or (not self._is_valid_configuration(self._config)):
+            return False
+
+        for (upgrade_type, level) in self._config:
+            if not (isinstance(upgrade_type, SafiWeaponStandardUpgradeType)
+                            or isinstance(upgrade_type, SafiWeaponSetBonusUpgradeType)):
+                return False
+        return True
+
+    @classmethod
+    def _is_valid_configuration(cls, config_list):
+        assert len(config_list) <= 5
+
+        has_slot = False
+        has_set_bonus = False
+        has_level_6 = False
+
+        for (upgrade_type, level) in config_list:
+            if upgrade_type is SafiWeaponStandardUpgradeType.SLOT:
+                if has_slot:
+                    return False
+                has_slot = True
+            elif isinstance(upgrade_type, SafiWeaponSetBonusUpgradeType):
+                if has_set_bonus:
+                    return False
+                has_set_bonus = True
+            elif (level > 6) or (level < 1):
+                return False
+            elif level == 6:
+                if has_level_6:
+                    return False
+                has_level_6 = True
+        return True
+
+
 # If None is used instead of this Enum, then the weapon cannot be upgraded.
 class WeaponUpgradeScheme(Enum):
     NONE = auto()
     ICEBORNE_COMMON = auto()
-    #SAFI = auto() # To be implemented later!
+    SAFI_STANDARD = auto()
 
 
 WeaponClassInfo = namedtuple("WeaponClassInfo", ["name", "bloat"])
@@ -811,8 +1026,13 @@ def print_weapon_config(linebegin, weapon, weapon_augments_tracker, weapon_upgra
     print()
     for (augment, level) in weapon_augments_tracker.get_config():
         print(f"{linebegin}{augment.name} {level}")
-    for (stage, upgrade) in enumerate(weapon_upgrades_tracker.get_config()):
-        print(f"{linebegin}Custom Upgrade: {upgrade.name} {stage+1}")
+    # TODO: Let the tracker print itself.
+    if isinstance(weapon_upgrades_tracker, IBCWeaponUpgradeTracker):
+        for (stage, upgrade) in enumerate(weapon_upgrades_tracker.get_config()):
+            print(f"{linebegin}Custom Upgrade: {upgrade.name} {stage+1}")
+    elif isinstance(weapon_upgrades_tracker, SafiWeaponUpgrades):
+        for (upgrade, level) in weapon_upgrades_tracker.get_config():
+            print(f"{linebegin}Safi Awakening: {upgrade.name} {level}")
     return
 
 

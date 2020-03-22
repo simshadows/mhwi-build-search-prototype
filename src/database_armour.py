@@ -538,6 +538,7 @@ def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill
 
     all_combinations = [x for x in _armour_combination_iter(original_easyiterate_armour_db)
                                    if all(skill in x[1] for skill in required_set_bonus_skills)]
+    print(f"Number of armour combinations, before pruning: {len(all_combinations)}")
 
     start_real_time = time.time()
 
@@ -591,8 +592,7 @@ def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill
             progress()
 
     print()
-    print("original # of head/chest/arms/waist/legs combinations: " + str(len(all_combinations)))
-    print("combinations kept: " + str(len(best_combinations)))
+    print(f"Number of armour combinations, after pruning: {len(best_combinations)}")
     print()
     print("=============================")
     print()
