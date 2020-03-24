@@ -35,7 +35,6 @@ from .database_weapons     import (WeaponClass,
                                   print_weapon_config)
 from .database_armour      import (ArmourSlot,
                                   armour_db,
-                                  skillsonly_pruned_armour,
                                   get_pruned_armour_combos,
                                   calculate_armour_contribution)
 from .database_charms      import (charms_db,
@@ -84,7 +83,8 @@ def _cache_pruned_armour_combos(search_parameters):
     required_set_bonus_skills = set(search_parameters.selected_set_bonuses) # Just making sure it's a set
     # IMPORTANT: We're not checking yet if these skills are actually attainable via. set bonus.
 
-    x = get_pruned_armour_combos(skill_subset=skill_subset, required_set_bonus_skills=required_set_bonus_skills)
+    x = get_pruned_armour_combos(search_parameters.selected_armour_tier, skill_subset=skill_subset, \
+                                        required_set_bonus_skills=required_set_bonus_skills)
     assert isinstance(x, list)
     return x
 
@@ -241,8 +241,12 @@ def _generate_weapon_combinations(weapon_list, skills_for_ceiling_efr, skill_sta
             for upgrades_tracker in WeaponUpgradeTracker.get_maximized_trackers_pruned(weapon):
                 results = lookup_from_skills(weapon, skills_for_ceiling_efr, skill_states_dict, augments_tracker, \
                                                 upgrades_tracker)
+                upgrades_contributions = upgrades_tracker.calculate_contribution()
+
                 ceiling_efr = results.efr
-                yield (weapon, augments_tracker, upgrades_tracker, ceiling_efr)
+                set_bonus = upgrades_contributions.set_bonus
+
+                yield (weapon, augments_tracker, upgrades_tracker, ceiling_efr, set_bonus)
 
 
 def find_highest_efr_build(search_parameters_jsonstr):
@@ -434,7 +438,10 @@ def _find_highest_efr_build_worker(args):
     all_weapon_configurations.sort(key=lambda x : x[3], reverse=True)
     assert all_weapon_configurations[0][3] >= all_weapon_configurations[-1][3]
 
-    armour_combos = get_pruned_armour_combos(skill_subset=skill_subset, required_set_bonus_skills=required_set_bonus_skills)
+    #possible_weapon_set_bonuses = set()
+
+    armour_combos = get_pruned_armour_combos(search_parameters.selected_armour_tier, skill_subset=skill_subset, \
+                                                required_set_bonus_skills=required_set_bonus_skills)
     armour_combos_batches = _split_armour_combos_into_batches(armour_combos, batch_size, batch_shuffle_rounds)
 
     charms = get_charms_subset(skill_subset)
@@ -509,7 +516,7 @@ def _find_highest_efr_build_worker(args):
 
                 do_regenerate_weapon_list = False
 
-                for (weapon, weapon_augments_tracker, weapon_upgrades_tracker, weapon_ceil_efr) in all_weapon_configurations:
+                for (weapon, w_augments_tracker, w_upgrades_tracker, _, w_set_bonus) in all_weapon_configurations:
 
                     deco_slots = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
                     deco_dicts = _generate_deco_dicts(deco_slots, decorations, including_charm_skills, \
@@ -524,15 +531,15 @@ def _find_highest_efr_build_worker(args):
                             including_deco_skills[skill] += level
                             # Now, we also have decoration skills included.
                         
-                        results = lookup_from_skills(weapon, including_deco_skills, skill_states, \
-                                                        weapon_augments_tracker, weapon_upgrades_tracker)
+                        results = lookup_from_skills(weapon, including_deco_skills, skill_states, w_augments_tracker, \
+                                                        w_upgrades_tracker)
                         assert results is not list
 
                         if results.efr > best_efr:
                             best_efr = results.efr
                             associated_affinity = results.affinity
-                            associated_build = Build(weapon, curr_armour, charm, weapon_augments_tracker, \
-                                                        weapon_upgrades_tracker, deco_dict)
+                            associated_build = Build(weapon, curr_armour, charm, w_augments_tracker, w_upgrades_tracker, \
+                                                            deco_dict)
                             send_found_build(associated_build)
                             do_regenerate_weapon_list = True
 

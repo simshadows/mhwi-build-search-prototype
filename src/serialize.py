@@ -15,6 +15,7 @@ This is with two exceptions:
 import json
 from collections import namedtuple
 
+from .enums import Tier
 from .utils import all_unique, json_dumps_formatted
 
 from .database_weapons     import WeaponClass
@@ -26,6 +27,7 @@ def writejson_search_parameters(**kwargs):
 
     # KWARGS: Search Parameters
 
+    selected_armour_tier   = kwargs["selected_armour_tier"]
     selected_weapon_class  = kwargs["selected_weapon_class"]
     selected_skills        = kwargs["selected_skills"]
     selected_set_bonuses   = kwargs["selected_set_bonuses"]
@@ -41,6 +43,7 @@ def writejson_search_parameters(**kwargs):
     batch_size = kwargs["batch_size"]
     batch_shuffle_rounds = kwargs["batch_shuffle_rounds"]
 
+    assert isinstance(selected_armour_tier, Tier) or (selected_armour_tier is None)
     assert isinstance(selected_weapon_class, WeaponClass)
     assert all(isinstance(k, Skill) and isinstance(v, int) and (v >= 0) for (k, v) in selected_skills.items())
     assert all(isinstance(x, Skill) for x in selected_set_bonuses) and all_unique(selected_set_bonuses)
@@ -54,10 +57,11 @@ def writejson_search_parameters(**kwargs):
     assert isinstance(batch_size, int) and (num_worker_threads > 0)
 
     data = {
+            "selected_armour_tier" : selected_armour_tier,
             "selected_weapon_class": selected_weapon_class.name,
-            "selected_skills": {k.name: v for (k, v) in selected_skills.items()},
-            "selected_set_bonuses": [x.name for x in selected_set_bonuses],
-            "selected_decorations": [x.name for x in selected_decorations],
+            "selected_skills"      : {k.name: v for (k, v) in selected_skills.items()},
+            "selected_set_bonuses" : [x.name for x in selected_set_bonuses],
+            "selected_decorations" : [x.name for x in selected_decorations],
 
             "min_health_regen_augment_level": min_health_regen_level,
 
@@ -75,6 +79,7 @@ def writejson_search_parameters(**kwargs):
 SearchParameters = namedtuple(
     "SearchParameters",
     [
+        "selected_armour_tier",
         "selected_weapon_class",
         "selected_skills",
         "selected_set_bonuses",
@@ -97,6 +102,7 @@ def readjson_search_parameters(json_str):
 
     # Get Data: Search Parameters
 
+    selected_armour_tier_json  = json_data["selected_armour_tier"]
     selected_weapon_class_json = json_data["selected_weapon_class"]
     selected_skills_json       = json_data["selected_skills"]
     selected_set_bonuses_json  = json_data["selected_set_bonuses"]
@@ -114,7 +120,10 @@ def readjson_search_parameters(json_str):
 
     # Translate Data
 
+    selected_armour_tier = None if selected_armour_tier_json is None else Tier[selected_armour_tier_json]
+
     tup = SearchParameters(
+            selected_armour_tier  = selected_armour_tier,
             selected_weapon_class = WeaponClass[selected_weapon_class_json],
             selected_skills       = {Skill[k]: v   for (k, v) in selected_skills_json.items()},
             selected_set_bonuses  = {Skill[x]      for x      in selected_set_bonuses_json},

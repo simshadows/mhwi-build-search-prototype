@@ -16,6 +16,10 @@ I'm not intending to give it a good user interface yet, but if you *really* insi
 
 However, the code has 32 hardcoded as the number of worker threads. Just go in and change this to however many CPU threads exist in your computer. It should be the line `NUM_WORKERS = 32` somewhere on the top of `search.py`.
 
+## Critical Bugs
+
+- The decoration combination pruner is known to over-prune in very rare edge cases where there are too few decorations to put in the slots. This will be fixed later.
+
 ## Planned Development Roadmap
 
 1) Make a simple EFR optimizer for GS and SnS. I want this script to automatically create entire builds with as little manual tweaking as possible (except for updating the database, or stating build constraints).
@@ -43,8 +47,6 @@ Because the runtime is turning out to be pretty slow and Python's multithreaded 
 2) I'll also need to be confident that the armour pruning doesn't throw away armour *sets* that are still useful. This will need continued testing.
 
 3) Free Element will need to be taken into account since adding it can actually reduce a build's EFR by disabling Non-elemental Boost. My pruning algorithms currently don't take this into account, so it is possible for a gear piece with Free Element to cause another gear piece without Free Element to be pruned, even if it may be better for pure-raw builds.
-
-4) I think the decoration combination pruning has a few bugs that cause it to over-prune. However, the over-pruning will *rarely affect real builds* as it's really only applicable for cases where you have too few decorations to actually put into the slots. However, I shoudl really fix the bugs anyway.
 
 ## Nerd Stuff (THIS IS OUTDATED)
 

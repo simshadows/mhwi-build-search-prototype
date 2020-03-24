@@ -362,7 +362,8 @@ def _obtain_easyiterate_armour_db(original_armour_db):
     return dict(intermediate) # TODO: We should make it so we just start off with a regular dictionary from the start.
 
 
-def prune_easyiterate_armour_db(original_easyiterate_armour_db, skill_subset=None):
+def prune_easyiterate_armour_db(selected_armour_tier, original_easyiterate_armour_db, skill_subset=None):
+    assert isinstance(selected_armour_tier, Tier) or (selected_armour_tier is None)
 
     print()
     print()
@@ -371,6 +372,10 @@ def prune_easyiterate_armour_db(original_easyiterate_armour_db, skill_subset=Non
 
     intermediate = {}
     for (gear_slot, piece_list) in original_easyiterate_armour_db.items():
+
+        # First, we need to filter by tier.
+        if selected_armour_tier is not None:
+            piece_list = [x for x in piece_list if (x.armour_set.discriminator.value.tier is selected_armour_tier)]
 
         # We consider set bonuses to make certain pieces worth it.
         best_pieces = [] # [(set_name, discriminator, variant)]
@@ -450,25 +455,30 @@ easyiterate_armour = _obtain_easyiterate_armour_db(armour_db)
 # This will prune out pieces that can be recreated better or more flexibly by another piece.
 # Importantly, the data structure is the same as easyiterate_armour.
 # This will make this practically interchangable with easyiterate_armour if all you care about are skills.
-skillsonly_pruned_armour = prune_easyiterate_armour_db(easyiterate_armour) # We don't need this right now.
+#skillsonly_pruned_armour = prune_easyiterate_armour_db(easyiterate_armour) # We don't need this right now.
 
 
 _pruned_armour_combos_cache = [] # [(skill_subset, required_set_bonus_skills, pruned_armour_combos)]
 
 
-def get_pruned_armour_combos(skill_subset=None, required_set_bonus_skills=set()):
+def get_pruned_armour_combos(selected_armour_tier, skill_subset=None, required_set_bonus_skills=set()):
+    assert isinstance(selected_armour_tier, Tier) or (selected_armour_tier is None)
+    assert isinstance(skill_subset, set) or (skill_subset is None)
+    assert isinstance(required_set_bonus_skills, set)
+
     # Check cache first.
-    for (c_skill_subset, c_required_set_bonus_skills, c_armour_combo_list) in _pruned_armour_combos_cache:
-        if (c_skill_subset == skill_subset) and (c_required_set_bonus_skills == required_set_bonus_skills):
+    for (c_selected_armour_tier, c_skill_subset, c_required_set_bonus_skills, c_armour_combo_list) in _pruned_armour_combos_cache:
+        if (c_selected_armour_tier is selected_armour_tier) and (c_skill_subset == skill_subset) \
+                            and (c_required_set_bonus_skills == required_set_bonus_skills):
             return c_armour_combo_list
 
     # If it's not in the cache, then we have to generate it.
-    pruned_armour_db = prune_easyiterate_armour_db(skillsonly_pruned_armour, skill_subset=skill_subset)
+    pruned_armour_db = prune_easyiterate_armour_db(selected_armour_tier, easyiterate_armour, skill_subset=skill_subset)
     pruned_armour_combos = generate_and_prune_armour_combinations(pruned_armour_db, skill_subset=skill_subset, \
                                                                     required_set_bonus_skills=required_set_bonus_skills)
 
     # Add to the cache.
-    t = (copy(skill_subset), copy(required_set_bonus_skills), pruned_armour_combos)
+    t = (selected_armour_tier, copy(skill_subset), copy(required_set_bonus_skills), pruned_armour_combos)
     _pruned_armour_combos_cache.append(t)
 
     return copy(pruned_armour_combos)
