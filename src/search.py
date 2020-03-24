@@ -28,7 +28,8 @@ from .utils     import (ExecutionProgress,
 from .database_skills      import (Skill,
                                   calculate_possible_set_bonuses_from_skills,
                                   calculate_set_bonus_skills)
-from .database_weapons     import get_pruned_weapon_combos
+from .database_weapons     import (calculate_final_weapon_values,
+                                  get_pruned_weapon_combos)
 from .database_armour      import (ArmourSlot,
                                   get_pruned_armour_combos,
                                   calculate_armour_contribution)
@@ -88,6 +89,8 @@ def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_s
     assert isinstance(required_skills, dict)
     # assert all(x in slots_available_counter for x in [1, 2, 3, 4]) # This isn't enforced anymore.
     # assert all(x in all_possible_decos for x in [1, 2, 3, 4]) # This isn't enforced anymore.
+    if not (len(slots_available_counter) <= 4):
+        print(slots_available_counter)
     assert len(slots_available_counter) <= 4
     assert len(all_possible_decos) > 0
 
@@ -231,17 +234,14 @@ def _extend_weapon_combos_tuples(weapon_combos, skills_for_ceiling_efr, skill_st
 
     new_weapon_combos = []
 
-    # First, we fill our list of weapon combinations.
-
     for (weapon, augments_tracker, upgrades_tracker) in weapon_combos:
+        combination_values = calculate_final_weapon_values(weapon, augments_tracker, upgrades_tracker)
+
         results = lookup_from_skills(weapon, skills_for_ceiling_efr, skill_states_dict, augments_tracker, \
                                         upgrades_tracker)
-        upgrades_contributions = upgrades_tracker.calculate_contribution()
-
         ceiling_efr = results.efr
-        set_bonus = upgrades_contributions.set_bonus
 
-        tup = (weapon, augments_tracker, upgrades_tracker, ceiling_efr, set_bonus)
+        tup = (weapon, augments_tracker, upgrades_tracker, combination_values, ceiling_efr)
 
         new_weapon_combos.append(tup)
 
@@ -441,8 +441,8 @@ def _find_highest_efr_build_worker(args):
     weapon_combos = get_pruned_weapon_combos(desired_weapon_class, minimum_health_regen_augment)
     all_skills_max_except_free_elem = {skill: skill.value.limit for skill in skill_subset}
     weapon_combos = _extend_weapon_combos_tuples(weapon_combos, all_skills_max_except_free_elem, skill_states)
-    weapon_combos.sort(key=lambda x : x[3], reverse=True)
-    assert weapon_combos[0][3] >= weapon_combos[-1][3]
+    weapon_combos.sort(key=lambda x : x[4], reverse=True)
+    assert weapon_combos[0][4] >= weapon_combos[-1][4]
 
     armour_combos = get_pruned_armour_combos(search_parameters.selected_armour_tier, skill_subset=skill_subset, \
                                                 required_set_bonus_skills=required_set_bonus_skills)
@@ -478,7 +478,7 @@ def _find_highest_efr_build_worker(args):
         nonlocal weapon_combos
         new_weapon_configuration_list = []
         for weapon_configuration in weapon_combos:
-            if weapon_configuration[3] > best_efr: # Check if the ceiling EFR is over the best EFR
+            if weapon_configuration[4] > best_efr: # Check if the ceiling EFR is over the best EFR
                 new_weapon_configuration_list.append(weapon_configuration)
         weapon_combos = new_weapon_configuration_list
         print(worker_string + f"New number of weapon configurations: {len(weapon_combos)} " + \
@@ -520,9 +520,9 @@ def _find_highest_efr_build_worker(args):
 
                 do_regenerate_weapon_list = False
 
-                for (weapon, w_augments_tracker, w_upgrades_tracker, _, w_set_bonus) in weapon_combos:
+                for (weapon, w_augments_tracker, w_upgrades_tracker, w_combo_values, _) in weapon_combos:
 
-                    deco_slots = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
+                    deco_slots = Counter(list(w_combo_values.slots) + list(armour_contribution.decoration_slots))
                     deco_dicts = _generate_deco_dicts(deco_slots, decorations, including_charm_skills, \
                                                         skill_subset=skill_subset, required_skills=skills_with_minimum_levels)
                     # deco_dicts may be an empty list if no decoration combination can fulfill skill requirements.

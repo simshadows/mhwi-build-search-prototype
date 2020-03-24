@@ -925,6 +925,11 @@ def calculate_final_weapon_values(weapon, weapon_augments_tracker, weapon_upgrad
     bloat_value = weapon.type.value.bloat
     weapon_true_raw = weapon.attack / bloat_value
 
+    slots = weapon.slots \
+                + ((a_contrib.extra_decoration_slot_level,) if (a_contrib.extra_decoration_slot_level > 0) else tuple()) \
+                + ((u_contrib.extra_decoration_slot_level,) if (u_contrib.extra_decoration_slot_level > 0) else tuple())
+    assert all((x in {1,2,3,4}) for x in slots)
+
     if u_contrib.new_max_sharpness_values is not None:
         maximum_sharpness = u_contrib.new_max_sharpness_values
     else:
@@ -935,7 +940,7 @@ def calculate_final_weapon_values(weapon, weapon_augments_tracker, weapon_upgrad
 
             true_raw  = weapon_true_raw + a_contrib.added_attack_power + u_contrib.added_attack_power,
             affinity  = weapon.affinity + a_contrib.added_raw_affinity + u_contrib.added_raw_affinity,
-            slots     = weapon.slots + (a_contrib.extra_decoration_slot_level,) + (u_contrib.extra_decoration_slot_level,),
+            slots     = slots,
             set_bonus = u_contrib.set_bonus,
             is_raw    = weapon.is_raw,
 
