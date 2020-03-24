@@ -14,7 +14,7 @@ from enum import Enum, auto
 from itertools import product
 
 from .enums import Tier
-from .utils import json_read, ExecutionProgress
+from .utils import json_read, ExecutionProgress, prune_by_superceding
 
 from .database_skills import Skill, SetBonus, calculate_set_bonus_skills
 from .database_decorations import skill_to_simple_deco_size
@@ -197,12 +197,11 @@ def _obtain_armour_db():
 
 
 # Returns if p1 supercedes p2.
-def _armour_piece_supercedes(p1, p1_set_bonus, p2, p2_set_bonus, p1_is_preferred, skill_subset=None):
+def _armour_piece_supercedes(p1, p1_set_bonus, p2, p2_set_bonus, skill_subset=None):
     assert isinstance(p1, ArmourPieceInfo)
     assert isinstance(p2, ArmourPieceInfo)
     assert isinstance(p1_set_bonus, SetBonus) or (p1_set_bonus is None)
     assert isinstance(p2_set_bonus, SetBonus) or (p2_set_bonus is None)
-    assert isinstance(p1_is_preferred, bool)
     assert (isinstance(skill_subset, set) and all(isinstance(x, Skill) for x in skill_subset)) or (skill_subset is None)
 
     if (p2_set_bonus is not None) and (p1_set_bonus is not p2_set_bonus):
@@ -213,7 +212,7 @@ def _armour_piece_supercedes(p1, p1_set_bonus, p2, p2_set_bonus, p1_is_preferred
     p2_skills = p2.skills
     p1_slots = Counter(p1.decoration_slots)
     p2_slots = Counter(p2.decoration_slots)
-    return _skills_and_slots_supercedes(p1_skills, p1_slots, p2_skills, p2_slots, p1_is_preferred, skill_subset=skill_subset)
+    return _skills_and_slots_supercedes(p1_skills, p1_slots, p2_skills, p2_slots, skill_subset=skill_subset)
 
 
 # Returns if armour set p1 supercedes armour set p2.
@@ -229,7 +228,7 @@ def _armour_piece_supercedes(p1, p1_set_bonus, p2, p2_set_bonus, p1_is_preferred
 # This function only determines if it knows *for sure* if p1 supercedes p2.
 # There may be cases where p1 can actually supercede p2, but the current version of this function doesn't
 # check for the specific conditions allowing p1 to supercede p2.
-def _skills_and_slots_supercedes(p1_skills, p1_slots, p2_skills, p2_slots, p1_is_preferred, skill_subset=None):
+def _skills_and_slots_supercedes(p1_skills, p1_slots, p2_skills, p2_slots, skill_subset=None):
     assert isinstance(p1_skills, dict)
     assert isinstance(p2_skills, dict)
     assert isinstance(p1_slots, Counter)
@@ -344,12 +343,7 @@ def _skills_and_slots_supercedes(p1_skills, p1_slots, p2_skills, p2_slots, p1_is
 
     # Stage 4: What happens if we don't necessarily have room to spare?
 
-    if p1_is_preferred:
-        return True # p1 is higher in the sort order, so we'll allow it to supercede p2.
-
-    return False
-
-
+    return None # We defer the decision to the tiebreaker.
 
 
 def _obtain_easyiterate_armour_db(original_armour_db):
@@ -377,60 +371,12 @@ def prune_easyiterate_armour_db(selected_armour_tier, original_easyiterate_armou
         if selected_armour_tier is not None:
             piece_list = [x for x in piece_list if (x.armour_set.discriminator.value.tier is selected_armour_tier)]
 
-        # We consider set bonuses to make certain pieces worth it.
-        best_pieces = [] # [(set_name, discriminator, variant)]
-
-        # This loop is a mostly-unnecessary O(n^2) for n pieces in the list.
-        # I have a very good feeling this can be improved on later if needed. Just keeping things simple for now.
-        for (i, piece1) in enumerate(piece_list):
-            assert isinstance(piece1, ArmourPieceInfo)
-
+        def left_supercedes_right(piece1, piece2):
             piece1_set_bonus = piece1.armour_set.set_bonus
-            assert isinstance(piece1_set_bonus, SetBonus) or (piece1_set_bonus is None)
+            piece2_set_bonus = piece2.armour_set.set_bonus
+            return _armour_piece_supercedes(piece1, piece1_set_bonus, piece2, piece2_set_bonus, skill_subset=skill_subset) 
 
-            piece1_is_never_superceded = True
-
-            for (j, piece2) in enumerate(piece_list):
-                assert isinstance(piece2, ArmourPieceInfo)
-                
-                if piece1 is piece2:
-                    continue
-
-                piece2_set_bonus = piece2.armour_set.set_bonus
-
-                assert isinstance(piece2_set_bonus, SetBonus) or (piece2_set_bonus is None)
-
-                # We determine tie-breaker preference using sort order.
-                p2_is_preferred = (j > i)
-
-                piece2_supercedes_piece1 = _armour_piece_supercedes(piece2, piece2_set_bonus, piece1, \
-                                                        piece1_set_bonus, p2_is_preferred, skill_subset=skill_subset) 
-
-                if piece2_supercedes_piece1:
-                    piece1_is_never_superceded = False
-                    break
-
-            if piece1_is_never_superceded:
-                best_pieces.append(piece1)
-                buf = []
-                buf.append(gear_slot.name.ljust(6))
-                buf.append(piece1.armour_set.set_name.ljust(15))
-                buf.append(piece1.armour_set_variant.value.ascii_postfix)
-                buf = " ".join(buf)
-                print(f"KEPT: {buf}")
-            else:
-                buf = []
-                buf.append(gear_slot.name.ljust(6))
-                buf.append(piece1.armour_set.set_name.ljust(15))
-                buf.append(piece1.armour_set_variant.value.ascii_postfix)
-                buf = " ".join(buf)
-                print(f"                                               PRUNED: {buf}")
-
-        print()
-        print("=============================")
-        print()
-
-        intermediate[gear_slot] = best_pieces
+        intermediate[gear_slot] = prune_by_superceding(piece_list, left_supercedes_right)
 
     total_kept = sum(len(x) for (_, x) in intermediate.items())
     total_original = sum(len(x) for (_, x) in original_easyiterate_armour_db.items())
@@ -554,42 +500,16 @@ def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill
 
     progress = ExecutionProgress("COMBINATION PRUNING", len(all_combinations), granularity=100)
 
-    # We consider set bonuses to make certain pieces worth it.
-    best_combinations = [] # [{ArmourSlot: ArmourEasyIterateInfo}]
+    def left_supercedes_right(left, right):
+        (combination_1, total_skills_1, total_slots_1) = left
+        (combination_2, total_skills_2, total_slots_2) = right
+        return _skills_and_slots_supercedes(total_skills_1, total_slots_1, total_skills_2, total_slots_2, \
+                                                skill_subset=skill_subset) 
 
-    # This loop is a mostly-unnecessary O(n^2) for n pieces in the list.
-    # I have a very good feeling this can be improved on later if needed. Just keeping things simple for now.
-    for i, (combination_1, total_skills_1, total_slots_1) in enumerate(all_combinations):
-        assert isinstance(combination_1, dict)
-        assert all(isinstance(combination_1[slot], ArmourPieceInfo) for slot in ArmourSlot) # Important for identity
-        assert isinstance(total_skills_1, dict)
-        assert isinstance(total_slots_1, Counter)
-
-        prune_combination_1 = False
-
-        for j, (combination_2, total_skills_2, total_slots_2) in enumerate(all_combinations):
-            assert isinstance(combination_2, dict)
-            assert isinstance(total_skills_2, dict)
-            assert isinstance(total_slots_2, Counter)
-
-            if all((combination_1[slot] is combination_2[slot]) for slot in ArmourSlot):
-                continue # We don't compare equivalent combinations.
-
-            # We determine tie-breaker preference using sort order.
-            set2_is_preferred = (j > i)
-
-            set2_supercedes_set1 = _skills_and_slots_supercedes(total_skills_2, total_slots_2, \
-                                                                total_skills_1, total_slots_1, \
-                                                                set2_is_preferred, skill_subset=skill_subset)
-
-            if set2_supercedes_set1:
-                prune_combination_1 = True
-                break
-
-        if not prune_combination_1:
-            best_combinations.append(combination_1)
-
+    def update_progress():
         progress.update_and_print_progress()
+
+    best_combinations = prune_by_superceding(all_combinations, left_supercedes_right, execute_per_iteration=update_progress)
 
     print()
     print(f"Number of armour combinations, after pruning: {len(best_combinations)}")
@@ -598,7 +518,7 @@ def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill
     print()
     print()
 
-    return best_combinations
+    return [x[0] for x in best_combinations]
 
 
 # calculate_armour_contribution() input looks like this:

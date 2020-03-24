@@ -927,12 +927,12 @@ def get_pruned_weapon_combos(weapon_class, set_bonus_subset, health_regen_minimu
 
         for augments_tracker in WeaponAugmentTracker.get_maximized_trackers(weapon, health_regen_minimum=health_regen_minimum):
             for upgrades_tracker in WeaponUpgradeTracker.get_maximized_trackers_pruned(weapon):
-
-                weapon_combinations.append((weapon, augments_tracker, upgrades_tracker))
+                precalculated_values = calculate_final_weapon_values(weapon, augments_tracker, upgrades_tracker)
+                weapon_combinations.append(((weapon, augments_tracker, upgrades_tracker), precalculated_values))
 
     # TODO: Implement pruning!
     
-    return weapon_combinations
+    return [x[0] for x in weapon_combinations]
 
 
 WeaponClassInfo = namedtuple("WeaponClassInfo", ["name", "bloat"])

@@ -14,11 +14,14 @@ from enum import Enum, auto
 from math import floor, ceil
 from itertools import zip_longest
 
+
 #_CWD = os.getcwd()
 ENCODING = "utf-8"
 
+
 class _InternalToken(Enum):
     NULL_REFERENCE = auto()
+
 
 # Probably will be useful, e.g. when I implement caching.
 #def mkdir_recursive(relfilepath):
@@ -30,12 +33,15 @@ class _InternalToken(Enum):
 #        pass
 #    return
 
+
 def json_read(relfilepath):
     with open(relfilepath, encoding=ENCODING, mode="r") as f:
         return json.loads(f.read())
 
+
 def json_dumps_formatted(data):
     return json.dumps(data, sort_keys=True, indent=4)
+
 
 # Also will probably be useful, e.g. when I implement caching.
 #def json_write(relfilepath, *, data=None):
@@ -43,6 +49,7 @@ def json_dumps_formatted(data):
 #    with open(relfilepath, encoding=ENCODING, mode="w") as f:
 #        f.write(json.dumps(data, sort_keys=True, indent=4))
 #    return
+
 
 class ExecutionProgress:
 
@@ -100,12 +107,14 @@ class ExecutionProgress:
             print(f"[{self._msg} PROGRESS: {curr_progress_str}] elapsed {progress_real_time_str}, estimate {estimate_str}")
         return
 
+
 # Recipe from Python 3.8 Itertools documentation.
 def grouper(iterable, n, fillvalue=None):
     "Collect data into fixed-length chunks or blocks"
     # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
     args = [iter(iterable)] * n
     return zip_longest(*args, fillvalue=fillvalue)
+
 
 # A predictable shuffle function, as long as the list length remains constant, regardless of list element contents.
 # Predictability is a very important feature of this function's applications.
@@ -121,8 +130,61 @@ def interleaving_shuffle(list_obj, max_partitions=8):
                 yield partition[i]
     return
 
+
 def all_unique(iterable_obj):
     return len(set(iterable_obj)) == len(iterable_obj)
+
+
+# Prunes by a "supercedes" rule, where some objects in iterable can be replaced by other objects.
+#
+# left_supercedes_right is a function (of two arguments) that returns one of three values:
+#   1) True if it is guaranteed that the first argument can replace the right argument,
+#   2) False otherwise, or
+#   3) None if both arguments are effectively equal, but that we want one of them to be pruned
+#      away. In this case, prune_by_superceding() will arbitrarily prune one of the two elements
+#      (probably by sort order).
+#
+# execute_per_iteration is a function (of no arguments) that is called at the end of every
+# iteration through iterable. The very last execution of this function happens once
+# prune_by_superceding() has dealt with the last element in iterable. This is useful for
+# implementing progress counters (since this function can run rather slow).
+#
+# IMPORTANT NOTE:
+#   left_supercedes_right may be an underestimating function. What this means is that if
+#   left_supercedes_right returns True, it is guaranteed that the left argument supercedes
+#   the right argument, but if left_supercedes_right returns False, then the left argument
+#   may or may not actually supercede the right argument.
+#
+#   For example, it is logically sound to have this function be a constant function that
+#   returns False. This will mean this function simply returns a list containing exactly
+#   all elements of iterable.
+#
+#   If left_supercedes_right returns True on a pair of elements where the left argument
+#   does not actually supercede the right argument, then the behaviour of this function
+#   is undefined and invalid.
+#
+def prune_by_superceding(iterable, left_supercedes_right, execute_per_iteration=lambda : None):
+    assert callable(left_supercedes_right)
+
+    ret = []
+
+    li = list(iterable)
+    for i, right in enumerate(li):
+        right_is_never_superceded = True
+        for j, left in enumerate(li):
+            if i == j:
+                continue # We don't compare the same element
+            result = left_supercedes_right(left, right)
+            if result is None: # The decision function calls for a tie-breaker.
+                result = (i < j) # We arbitrarily favour the left element.
+            if result:
+                right_is_never_superceded = False
+                break
+        if right_is_never_superceded:
+            ret.append(right)
+        execute_per_iteration()
+    return ret
+
 
 def dict_enumkey_intval_str(d):
     return "\n".join(f"{k.name}: {v}" for (k, v) in d.items())
