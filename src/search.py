@@ -26,25 +26,15 @@ from .utils     import (ExecutionProgress,
                        dict_enumkey_intval_str)
 
 from .database_skills      import (Skill,
-                                  SetBonus,
-                                  skills_with_implemented_features,
                                   calculate_possible_set_bonuses_from_skills,
                                   calculate_set_bonus_skills)
-from .database_weapons     import (WeaponClass,
-                                  weapon_db,
-                                  WeaponAugmentTracker,
-                                  WeaponUpgradeTracker,
-                                  print_weapon_config)
+from .database_weapons     import get_pruned_weapon_combos
 from .database_armour      import (ArmourSlot,
-                                  armour_db,
                                   get_pruned_armour_combos,
                                   calculate_armour_contribution)
-from .database_charms      import (charms_db,
-                                  get_charms_subset,
+from .database_charms      import (get_charms_subset,
                                   calculate_skills_dict_from_charm)
-from .database_decorations import (Decoration,
-                                  get_pruned_deco_set,
-                                  calculate_decorations_skills_contribution)
+from .database_decorations import calculate_decorations_skills_contribution
 
 
 def _split_armour_combos_into_batches(armour_combos, batch_size, batch_shuffle_rounds):
@@ -234,38 +224,28 @@ def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_s
         return ret # We return the subset where all slots are consumed.
 
 
-def _get_weapon_combinations(weapon_list, skills_for_ceiling_efr, skill_states_dict, set_bonus_subset, \
-                                    health_regen_minimum=0):
-    assert isinstance(weapon_list, list)
+def _extend_weapon_combos_tuples(weapon_combos, skills_for_ceiling_efr, skill_states_dict):
+    assert isinstance(weapon_combos, list)
     assert isinstance(skills_for_ceiling_efr, dict)
     assert isinstance(skill_states_dict, dict)
-    assert isinstance(set_bonus_subset, set) and all(isinstance(x, SetBonus) for x in set_bonus_subset)
-    assert isinstance(health_regen_minimum, int) and (health_regen_minimum >= 0)
 
-    weapon_combinations = []
+    new_weapon_combos = []
 
     # First, we fill our list of weapon combinations.
 
-    for weapon in weapon_list:
-        for augments_tracker in WeaponAugmentTracker.get_maximized_trackers(weapon, health_regen_minimum=health_regen_minimum):
-            for upgrades_tracker in WeaponUpgradeTracker.get_maximized_trackers_pruned(weapon):
-                results = lookup_from_skills(weapon, skills_for_ceiling_efr, skill_states_dict, augments_tracker, \
-                                                upgrades_tracker)
-                upgrades_contributions = upgrades_tracker.calculate_contribution()
+    for (weapon, augments_tracker, upgrades_tracker) in weapon_combos:
+        results = lookup_from_skills(weapon, skills_for_ceiling_efr, skill_states_dict, augments_tracker, \
+                                        upgrades_tracker)
+        upgrades_contributions = upgrades_tracker.calculate_contribution()
 
-                ceiling_efr = results.efr
-                set_bonus = upgrades_contributions.set_bonus
+        ceiling_efr = results.efr
+        set_bonus = upgrades_contributions.set_bonus
 
-                tup = (weapon, augments_tracker, upgrades_tracker, ceiling_efr, set_bonus)
+        tup = (weapon, augments_tracker, upgrades_tracker, ceiling_efr, set_bonus)
 
-                weapon_combinations.append(tup)
+        new_weapon_combos.append(tup)
 
-    # Now, we prune it based on set_bonus_subset.
-
-    # TODO! This will be implemented in the very near future :)
-    # Note: set_bonus_subset is passed in, but isn't used yet. It is intended to be used for pruning.
-
-    return weapon_combinations #[x for (x, _) in weapon_combinations]
+    return new_weapon_combos
 
 
 def find_highest_efr_build(search_parameters_jsonstr):
@@ -457,13 +437,11 @@ def _find_highest_efr_build_worker(args):
     # STAGE 3: Component Lists #
     ############################
 
-    weapons = [weapon for (_, weapon) in weapon_db.items() if weapon.type is desired_weapon_class]
+    weapon_combos = get_pruned_weapon_combos(desired_weapon_class, candidate_set_bonuses, minimum_health_regen_augment)
     all_skills_max_except_free_elem = {skill: skill.value.limit for skill in skill_subset}
-    all_weapon_configurations = _get_weapon_combinations(weapons, all_skills_max_except_free_elem, \
-                                                            skill_states, candidate_set_bonuses, \
-                                                            health_regen_minimum=minimum_health_regen_augment)
-    all_weapon_configurations.sort(key=lambda x : x[3], reverse=True)
-    assert all_weapon_configurations[0][3] >= all_weapon_configurations[-1][3]
+    weapon_combos = _extend_weapon_combos_tuples(weapon_combos, all_skills_max_except_free_elem, skill_states)
+    weapon_combos.sort(key=lambda x : x[3], reverse=True)
+    assert weapon_combos[0][3] >= weapon_combos[-1][3]
 
     armour_combos = get_pruned_armour_combos(search_parameters.selected_armour_tier, skill_subset=skill_subset, \
                                                 required_set_bonus_skills=required_set_bonus_skills)
@@ -481,7 +459,7 @@ def _find_highest_efr_build_worker(args):
     associated_build = None
 
     grandtotal_progress_segments = len(armour_combos)
-    debugging_num_initial_weapon_configs = len(all_weapon_configurations)
+    debugging_num_initial_weapon_configs = len(weapon_combos)
 
     def check_parent_for_new_best_efr_and_update():
         nonlocal best_efr
@@ -496,13 +474,13 @@ def _find_highest_efr_build_worker(args):
         return is_updated
 
     def regenerate_weapon_list():
-        nonlocal all_weapon_configurations
+        nonlocal weapon_combos
         new_weapon_configuration_list = []
-        for weapon_configuration in all_weapon_configurations:
+        for weapon_configuration in weapon_combos:
             if weapon_configuration[3] > best_efr: # Check if the ceiling EFR is over the best EFR
                 new_weapon_configuration_list.append(weapon_configuration)
-        all_weapon_configurations = new_weapon_configuration_list
-        print(worker_string + f"New number of weapon configurations: {len(all_weapon_configurations)} " + \
+        weapon_combos = new_weapon_configuration_list
+        print(worker_string + f"New number of weapon configurations: {len(weapon_combos)} " + \
                                     f"out of {debugging_num_initial_weapon_configs}")
         return
 
@@ -541,7 +519,7 @@ def _find_highest_efr_build_worker(args):
 
                 do_regenerate_weapon_list = False
 
-                for (weapon, w_augments_tracker, w_upgrades_tracker, _, w_set_bonus) in all_weapon_configurations:
+                for (weapon, w_augments_tracker, w_upgrades_tracker, _, w_set_bonus) in weapon_combos:
 
                     deco_slots = Counter(list(weapon.slots) + list(armour_contribution.decoration_slots))
                     deco_dicts = _generate_deco_dicts(deco_slots, decorations, including_charm_skills, \

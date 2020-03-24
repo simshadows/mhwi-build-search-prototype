@@ -915,6 +915,26 @@ def calculate_final_weapon_values(weapon, weapon_augments_tracker, weapon_upgrad
     return tup
 
 
+# Returns a list of tuples (weapon, augments_tracker, upgrades_tracker)
+def get_pruned_weapon_combos(weapon_class, set_bonus_subset, health_regen_minimum):
+
+    weapon_combinations = []
+
+    for (_, weapon) in weapon_db.items():
+
+        if weapon.type is not weapon_class:
+            continue # We ignore weapons that don't match our desired weapon class.
+
+        for augments_tracker in WeaponAugmentTracker.get_maximized_trackers(weapon, health_regen_minimum=health_regen_minimum):
+            for upgrades_tracker in WeaponUpgradeTracker.get_maximized_trackers_pruned(weapon):
+
+                weapon_combinations.append((weapon, augments_tracker, upgrades_tracker))
+
+    # TODO: Implement pruning!
+    
+    return weapon_combinations
+
+
 WeaponClassInfo = namedtuple("WeaponClassInfo", ["name", "bloat"])
 
 class WeaponClass(Enum):
