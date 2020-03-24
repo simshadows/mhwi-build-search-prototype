@@ -870,6 +870,51 @@ class WeaponUpgradeScheme(Enum):
     SAFI_STANDARD = auto()
 
 
+WeaponFinalValues = namedtuple(
+    "WeaponFinalValues",
+    [
+        "original_weapon", # The original weapon object
+
+        "true_raw",
+        "affinity",
+        "slots",
+        "set_bonus",
+        "is_raw",
+
+        "maximum_sharpness",
+    ],
+)
+# Calculates a weapon's final values based on all selected augments and upgrades.
+def calculate_final_weapon_values(weapon, weapon_augments_tracker, weapon_upgrades_tracker):
+    assert isinstance(weapon, tuple) # TODO: Make a more specific type assertion.
+    assert isinstance(weapon_augments_tracker, WeaponAugmentTracker)
+    assert isinstance(weapon_upgrades_tracker, WeaponUpgradeTracker)
+
+    a_contrib = weapon_augments_tracker.calculate_contribution()
+    u_contrib = weapon_upgrades_tracker.calculate_contribution()
+
+    bloat_value = weapon.type.value.bloat
+    weapon_true_raw = weapon.attack / bloat_value
+
+    if u_contrib.new_max_sharpness_values is not None:
+        maximum_sharpness = u_contrib.new_max_sharpness_values
+    else:
+        maximum_sharpness = weapon.maximum_sharpness
+
+    tup = WeaponFinalValues(
+            original_weapon = weapon,
+
+            true_raw  = weapon_true_raw + a_contrib.added_attack_power + u_contrib.added_attack_power,
+            affinity  = weapon.affinity + a_contrib.added_raw_affinity + u_contrib.added_raw_affinity,
+            slots     = weapon.slots + (a_contrib.extra_decoration_slot_level,) + (u_contrib.extra_decoration_slot_level,),
+            set_bonus = u_contrib.set_bonus,
+            is_raw    = weapon.is_raw,
+
+            maximum_sharpness = maximum_sharpness,
+        )
+    return tup
+
+
 WeaponClassInfo = namedtuple("WeaponClassInfo", ["name", "bloat"])
 
 class WeaponClass(Enum):
@@ -1065,5 +1110,4 @@ def print_weapon_config(linebegin, weapon, weapon_augments_tracker, weapon_upgra
         for (upgrade, level) in weapon_upgrades_tracker.get_config():
             print(f"{linebegin}Safi Awakening: {upgrade.name} {level}")
     return
-
 

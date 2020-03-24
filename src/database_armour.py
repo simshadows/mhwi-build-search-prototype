@@ -546,9 +546,11 @@ def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill
     print("===== Armour Set Pruning =====")
     print()
 
-    all_combinations = [x for x in _armour_combination_iter(original_easyiterate_armour_db)
-                                   if all(skill in x[1] for skill in required_set_bonus_skills)]
+    all_combinations = list(_armour_combination_iter(original_easyiterate_armour_db))
     print(f"Number of armour combinations, before pruning: {len(all_combinations)}")
+
+    all_combinations = [x for x in all_combinations if all(skill in x[1] for skill in required_set_bonus_skills)]
+    print(f"Number of armour combinations, after filtering by set bonus: {len(all_combinations)}")
 
     progress = ExecutionProgress("COMBINATION PRUNING", len(all_combinations), granularity=100)
 

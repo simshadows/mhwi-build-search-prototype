@@ -162,8 +162,6 @@
                 "name": "Critical Element",
                 "limit": 1,
 
-                "only_from_set_bonuses": 1,
-
                 "tooltip": "((TODO))"
         },
         "CRITICAL_EYE": {
@@ -314,8 +312,6 @@
                 "name": "Frostcraft",
                 "limit": 1,
 
-                "only_from_set_bonuses": 1,
-
                 "tooltip": "((TODO))"
         },
         "GEOLOGIST": {
@@ -465,8 +461,6 @@
         "MASTERS_TOUCH": {
                 "name": "Master's Touch",
                 "limit": 1,
-
-                "only_from_set_bonuses": 1,
 
                 "tooltip": "((TODO))"
         },

@@ -238,6 +238,14 @@ def clipped_skills_defaultdict(skills_dict):
     return defaultdict(lambda : 0, {skill: min(level, skill.value.limit) for (skill, level) in skills_dict.items()})
 
 
+# From a set of skills attainable from set bonuses, this function calculates the subset of set bonuses that may
+# provide them.
+def calculate_possible_set_bonuses_from_skills(set_bonus_skills):
+    assert isinstance(set_bonus_skills, set)
+    assert all(isinstance(x, Skill) for x in set_bonus_skills)
+    return set(x for x in SetBonus if any((skill in set_bonus_skills) for (_, skill) in x.value.stages.items()))
+
+
 # This will take a dictionary of {SetBonus: number_of_pieces} and returns the skills it provides as a dictionary
 # of {Skill: level}.
 # This assumes that set bonus skills are all binary.

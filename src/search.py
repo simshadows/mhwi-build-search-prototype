@@ -26,7 +26,9 @@ from .utils     import (ExecutionProgress,
                        dict_enumkey_intval_str)
 
 from .database_skills      import (Skill,
+                                  SetBonus,
                                   skills_with_implemented_features,
+                                  calculate_possible_set_bonuses_from_skills,
                                   calculate_set_bonus_skills)
 from .database_weapons     import (WeaponClass,
                                   weapon_db,
@@ -232,10 +234,18 @@ def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_s
         return ret # We return the subset where all slots are consumed.
 
 
-def _generate_weapon_combinations(weapon_list, skills_for_ceiling_efr, skill_states_dict, health_regen_minimum=0):
+def _get_weapon_combinations(weapon_list, skills_for_ceiling_efr, skill_states_dict, set_bonus_subset, \
+                                    health_regen_minimum=0):
     assert isinstance(weapon_list, list)
     assert isinstance(skills_for_ceiling_efr, dict)
     assert isinstance(skill_states_dict, dict)
+    assert isinstance(set_bonus_subset, set) and all(isinstance(x, SetBonus) for x in set_bonus_subset)
+    assert isinstance(health_regen_minimum, int) and (health_regen_minimum >= 0)
+
+    weapon_combinations = []
+
+    # First, we fill our list of weapon combinations.
+
     for weapon in weapon_list:
         for augments_tracker in WeaponAugmentTracker.get_maximized_trackers(weapon, health_regen_minimum=health_regen_minimum):
             for upgrades_tracker in WeaponUpgradeTracker.get_maximized_trackers_pruned(weapon):
@@ -246,7 +256,16 @@ def _generate_weapon_combinations(weapon_list, skills_for_ceiling_efr, skill_sta
                 ceiling_efr = results.efr
                 set_bonus = upgrades_contributions.set_bonus
 
-                yield (weapon, augments_tracker, upgrades_tracker, ceiling_efr, set_bonus)
+                tup = (weapon, augments_tracker, upgrades_tracker, ceiling_efr, set_bonus)
+
+                weapon_combinations.append(tup)
+
+    # Now, we prune it based on set_bonus_subset.
+
+    # TODO! This will be implemented in the very near future :)
+    # Note: set_bonus_subset is passed in, but isn't used yet. It is intended to be used for pruning.
+
+    return weapon_combinations #[x for (x, _) in weapon_combinations]
 
 
 def find_highest_efr_build(search_parameters_jsonstr):
@@ -427,18 +446,24 @@ def _find_highest_efr_build_worker(args):
     batch_size = search_parameters.batch_size
     batch_shuffle_rounds = search_parameters.batch_shuffle_rounds
 
+    ########################
+    # STAGE 2: Helper Data #
+    ########################
+
+    # candidate_set_bonuses is a set of set bonuses that can fulfill our specified set of required set bonus skills.
+    candidate_set_bonuses = calculate_possible_set_bonuses_from_skills(required_set_bonus_skills)
+
     ############################
-    # STAGE 2: Component Lists #
+    # STAGE 3: Component Lists #
     ############################
 
     weapons = [weapon for (_, weapon) in weapon_db.items() if weapon.type is desired_weapon_class]
     all_skills_max_except_free_elem = {skill: skill.value.limit for skill in skill_subset}
-    all_weapon_configurations = list(_generate_weapon_combinations(weapons, all_skills_max_except_free_elem, \
-                                        skill_states, health_regen_minimum=minimum_health_regen_augment))
+    all_weapon_configurations = _get_weapon_combinations(weapons, all_skills_max_except_free_elem, \
+                                                            skill_states, candidate_set_bonuses, \
+                                                            health_regen_minimum=minimum_health_regen_augment)
     all_weapon_configurations.sort(key=lambda x : x[3], reverse=True)
     assert all_weapon_configurations[0][3] >= all_weapon_configurations[-1][3]
-
-    #possible_weapon_set_bonuses = set()
 
     armour_combos = get_pruned_armour_combos(search_parameters.selected_armour_tier, skill_subset=skill_subset, \
                                                 required_set_bonus_skills=required_set_bonus_skills)
@@ -448,7 +473,7 @@ def _find_highest_efr_build_worker(args):
     charms = [None] if (len(charms) == 0) else list(charms)
 
     ####################
-    # STAGE 3: Search! #
+    # STAGE 4: Search! #
     ####################
 
     best_efr = 0

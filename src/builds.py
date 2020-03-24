@@ -35,6 +35,7 @@ from .database_weapons     import (RAW_SHARPNESS_MODIFIERS,
                                   weapon_db,
                                   WeaponAugmentTracker,
                                   WeaponUpgradeTracker,
+                                  calculate_final_weapon_values,
                                   print_weapon_config)
 
 
@@ -96,22 +97,16 @@ def _actual_sharpness_level_values(weapon_maximum_sharpness, handicraft_level):
 
 
 def _calculate_efr(**kwargs):
-    weapon_type = kwargs["weapon_type"]
-    bloat       = weapon_type.value.bloat
+    weapon_true_raw       = kwargs["weapon_true_raw"]
+    weapon_affinity       = kwargs["weapon_affinity"]
+    weapon_raw_multiplier = kwargs["weapon_raw_multiplier"]
 
-    weapon_base_raw            = kwargs["weapon_raw"] / bloat
-    weapon_affinity_percentage = kwargs["weapon_affinity_percentage"]
-    weapon_raw_multiplier      = kwargs["weapon_raw_multiplier"]
-
-    added_raw                 = kwargs["added_raw"]
-    added_affinity_percentage = kwargs["added_affinity_percentage"]
-
-    augment_added_raw = kwargs["augment_added_raw"]
-    wepupgrade_added_raw = kwargs["wepupgrade_added_raw"]
+    added_raw      = kwargs["added_raw"]
+    added_affinity = kwargs["added_affinity"]
 
     raw_sharpness_modifier = kwargs["raw_sharpness_modifier"]
     raw_crit_multiplier    = kwargs["raw_crit_multiplier"]
-    raw_crit_chance        = min(weapon_affinity_percentage + added_affinity_percentage, 100) / 100
+    raw_crit_chance        = min(weapon_affinity + added_affinity, 100) / 100
 
     if raw_crit_chance < 0:
         # Negative Affinity
@@ -121,7 +116,7 @@ def _calculate_efr(**kwargs):
         # Positive Affinity
         raw_crit_modifier = (raw_crit_multiplier * raw_crit_chance) + (1 - raw_crit_chance)
 
-    weapon_new_raw = (weapon_base_raw + augment_added_raw + wepupgrade_added_raw) * weapon_raw_multiplier
+    weapon_new_raw = weapon_true_raw * weapon_raw_multiplier
     true_raw = round(weapon_new_raw, 0) + added_raw
 
     efr = true_raw * raw_sharpness_modifier * raw_crit_modifier
@@ -194,6 +189,8 @@ def lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_t
     else:
         # We terminate recursion here.
 
+        weapon_final_values = calculate_final_weapon_values(weapon, weapon_augments_tracker, weapon_upgrades_tracker)
+
         maximum_sharpness_values = weapon.maximum_sharpness
         from_skills = calculate_skills_contribution(
                 skills_dict,
@@ -201,34 +198,26 @@ def lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_t
                 maximum_sharpness_values,
                 weapon.is_raw
             )
-        from_augments = weapon_augments_tracker.calculate_contribution()
-        from_weapon_upgrades = weapon_upgrades_tracker.calculate_contribution()
-
-        if from_weapon_upgrades.new_max_sharpness_values is not None:
-            maximum_sharpness_values = from_weapon_upgrades.new_max_sharpness_values
 
         handicraft_level = from_skills.handicraft_level
+        maximum_sharpness_values = weapon_final_values.maximum_sharpness
         sharpness_values, highest_sharpness_level = _actual_sharpness_level_values(maximum_sharpness_values, handicraft_level)
 
         item_attack_power = POWERCHARM_ATTACK_POWER + POWERTALON_ATTACK_POWER
 
         kwargs = {}
-        kwargs["weapon_raw"]                 = weapon.attack
-        kwargs["weapon_type"]                = weapon.type
-        kwargs["weapon_affinity_percentage"] = weapon.affinity
-        kwargs["added_raw"]                  = from_skills.added_attack_power + item_attack_power
-        kwargs["added_affinity_percentage"]  = from_skills.added_raw_affinity + from_augments.added_raw_affinity \
-                                                            + from_weapon_upgrades.added_raw_affinity
-        kwargs["raw_sharpness_modifier"]     = RAW_SHARPNESS_MODIFIERS[highest_sharpness_level]
-        kwargs["raw_crit_multiplier"]        = from_skills.raw_critical_multiplier
+        kwargs["weapon_true_raw"]        = weapon_final_values.true_raw
+        kwargs["weapon_affinity"]        = weapon_final_values.affinity
+        kwargs["added_raw"]              = from_skills.added_attack_power + item_attack_power
+        kwargs["added_affinity"]         = from_skills.added_raw_affinity
+        kwargs["raw_sharpness_modifier"] = RAW_SHARPNESS_MODIFIERS[highest_sharpness_level]
+        kwargs["raw_crit_multiplier"]    = from_skills.raw_critical_multiplier
 
         kwargs["weapon_raw_multiplier"] = from_skills.weapon_base_attack_power_multiplier
-        kwargs["augment_added_raw"] = from_augments.added_attack_power
-        kwargs["wepupgrade_added_raw"] = from_weapon_upgrades.added_attack_power
 
         ret = LookupFromSkillsValues(
                 efr               = _calculate_efr(**kwargs),
-                affinity          = kwargs["weapon_affinity_percentage"] + kwargs["added_affinity_percentage"],
+                affinity          = kwargs["weapon_affinity"] + kwargs["added_affinity"],
                 sharpness_values  = sharpness_values,
 
                 skills = skills_dict,
