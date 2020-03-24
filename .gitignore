@@ -1,3 +1,8 @@
+# Project-specific ignores
+debugging_dumps/*
+
+# Everything below are Python-generic ignores.
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

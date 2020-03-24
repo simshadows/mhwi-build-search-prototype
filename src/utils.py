@@ -7,7 +7,7 @@ Author:   contact@simshadows.com
 Contains general utility stuff.
 """
 
-#import os
+import os
 import time
 import json
 from enum import Enum, auto
@@ -15,7 +15,7 @@ from math import floor, ceil
 from itertools import zip_longest
 
 
-#_CWD = os.getcwd()
+_CWD = os.getcwd()
 ENCODING = "utf-8"
 
 
@@ -23,15 +23,14 @@ class _InternalToken(Enum):
     NULL_REFERENCE = auto()
 
 
-# Probably will be useful, e.g. when I implement caching.
-#def mkdir_recursive(relfilepath):
-#    absfilepath = os.path.join(_CWD, relfilepath)
-#    absdir = os.path.dirname(absfilepath)
-#    try:
-#        os.makedirs(absdir)
-#    except FileExistsError:
-#        pass
-#    return
+def ensure_directory(relfilepath):
+    absfilepath = os.path.join(_CWD, relfilepath)
+    absdir = os.path.dirname(absfilepath)
+    try:
+        os.makedirs(absdir)
+    except FileExistsError:
+        pass
+    return
 
 
 def json_read(relfilepath):

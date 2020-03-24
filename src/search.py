@@ -431,13 +431,14 @@ def _find_highest_efr_build_worker(args):
     ########################
 
     # candidate_set_bonuses is a set of set bonuses that can fulfill our specified set of required set bonus skills.
-    candidate_set_bonuses = calculate_possible_set_bonuses_from_skills(required_set_bonus_skills)
+    #candidate_set_bonuses = calculate_possible_set_bonuses_from_skills(required_set_bonus_skills)
+    # NOT ACTUALLY USED YET!
 
     ############################
     # STAGE 3: Component Lists #
     ############################
 
-    weapon_combos = get_pruned_weapon_combos(desired_weapon_class, candidate_set_bonuses, minimum_health_regen_augment)
+    weapon_combos = get_pruned_weapon_combos(desired_weapon_class, minimum_health_regen_augment)
     all_skills_max_except_free_elem = {skill: skill.value.limit for skill in skill_subset}
     weapon_combos = _extend_weapon_combos_tuples(weapon_combos, all_skills_max_except_free_elem, skill_states)
     weapon_combos.sort(key=lambda x : x[3], reverse=True)

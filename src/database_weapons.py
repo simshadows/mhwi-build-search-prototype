@@ -10,13 +10,16 @@ This file provides the MHWI build optimizer script's weapons database.
 import json
 from abc import ABC, abstractmethod
 from collections import namedtuple
-from itertools import accumulate, product
+from itertools import accumulate, product, zip_longest
 from enum import Enum, auto
 from copy import copy
 
 from .database_skills import SetBonus
 
-from .utils import json_read
+from .utils import ENCODING, ensure_directory, json_read, prune_by_superceding
+
+
+DEBUGGING_WEAPON_PRUNING_DUMP_FILENAME = "debugging_dumps/weapon_pruning_dump.txt"
 
 
 # Corresponds to each level from red through to purple, in increasing-modifier order.
@@ -106,6 +109,12 @@ class WeaponAugmentTracker(ABC):
     def update_with_serialized_config(self, serialized_config):
         raise NotImplementedError
 
+    # Returns a one-line string that represents the state of the tracker.
+    # Mostly targeted for debugging purposes.
+    @abstractmethod
+    def to_str_debugging(self):
+        raise NotImplementedError
+
 
 class NoWeaponAugments(WeaponAugmentTracker):
 
@@ -140,6 +149,9 @@ class NoWeaponAugments(WeaponAugmentTracker):
     def update_with_serialized_config(self, serialized_config):
         assert serialized_config == self.MAGIC_WORD
         return
+
+    def to_str_debugging(self):
+        return "Cannot augment this weapon."
 
 
 class IBWeaponAugmentType(Enum):
@@ -427,6 +439,9 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
         assert self._state_is_valid()
         return
 
+    def to_str_debugging(self):
+        return f"[Augmentation Level: {self._aug_level}] " + ",".join(f"{k.name}_{v}" for (k, v) in self._augments.items())
+
     def _state_is_valid(self):
         aug_maximum = self.IB_AUGMENTATION_SLOTS[self._rarity][self._aug_level]
 
@@ -530,6 +545,11 @@ class WeaponUpgradeTracker(ABC):
     def update_with_serialized_config(self, serialized_config):
         raise NotImplementedError
 
+    # Similar to WeaponAugmentTracker
+    @abstractmethod
+    def to_str_debugging(self):
+        raise NotImplementedError
+
 
 class NoWeaponUpgrades(WeaponUpgradeTracker):
 
@@ -564,6 +584,9 @@ class NoWeaponUpgrades(WeaponUpgradeTracker):
 
     def update_with_serialized_config(self, serialized_config):
         assert serialized_config == self.MAGIC_WORD
+
+    def to_str_debugging(self):
+        return "Cannot upgrade this weapon."
 
 
 class IBCWeaponUpgradeType(Enum):
@@ -660,6 +683,9 @@ class IBCWeaponUpgradeTracker(WeaponUpgradeTracker):
         
         assert self._state_is_valid()
         return
+
+    def to_str_debugging(self):
+        return ",".join(x.name for x in self._upgrades)
 
     def _state_is_valid(self):
         # We generally just rely on calculate_contribution() to raise exceptions when something's wrong.
@@ -827,6 +853,9 @@ class SafiWeaponUpgrades(WeaponUpgradeTracker):
         assert self._state_is_valid() # We test for config validity here.
         return
 
+    def to_str_debugging(self):
+        return ",".join(f"{k.name}_{v}" for (k, v) in self._config)
+
     def _state_is_valid(self):
         if len(self._config) > 5 or (not self._is_valid_configuration(self._config)):
             return False
@@ -915,8 +944,88 @@ def calculate_final_weapon_values(weapon, weapon_augments_tracker, weapon_upgrad
     return tup
 
 
+# Decides if w1 supercedes w2.
+def _weapon_combo_supercedes(w1, w2):
+    assert isinstance(w1, WeaponFinalValues)
+    assert isinstance(w2, WeaponFinalValues)
+
+    # STAGE 1: We first decide if w1 has any values less than w2.
+
+    if w1.true_raw < w2.true_raw:
+        return False
+    if w1.affinity < w2.affinity:
+        return False
+    
+    # The logic of this slots thing is a little complex. Here's are some examples of how it works!
+    # Let's assume left is w1 and right is w2.
+    #   [3,3] [1]     --> continue since w1 is clearly better.
+    #   [1] [3,3]     --> return False since (1 < 3) for the first element evaluates True.
+    #   [4,1,1] [3,3] --> return False since (1 < 3) for the second element evaluates True.
+    # To explain that last example, we can't guarantee that the [3,3] jewels can be fit into [4,1,1],
+    # hence we cannot prune away w2.
+    w1_slots = sorted(list(w1.slots), reverse=True)
+    w2_slots = sorted(list(w2.slots), reverse=True)
+    assert w1_slots[0] >= w1_slots[-1] # Sanity check that it's in descending order.
+    assert w2_slots[0] >= w2_slots[-1] # Sanity check that it's in descending order.
+    if any((w1_slot < w2_slot) for (w1_slot, w2_slot) in zip_longest(w1_slots, w2_slots, fillvalue=0)):
+        return False
+
+    # We can explain this through truth tables:
+    #                | w2=None  | w2=setbonusA | w2=setbonusB
+    #   -------------|----------|--------------|--------------
+    #   w1=None      | continue | return False | return False
+    #   w1=setbonusA | continue | continue     | return False
+    #   w1=setbonusB | continue | return False | continue
+    #   -------------|----------|--------------|--------------
+    # So, we only continue if w2 is None, or the set bonuses are the same.
+    if not ((w2.set_bonus is None) or (w1.set_bonus is w1.set_bonus)):
+        return False
+
+    # For now, we just group everything by whether they are raw or not.
+    # Any pair where one is raw and one isn't cannot supercede each other.
+    if w1.is_raw != w2.is_raw:
+        return False
+
+    # We just return if any sharpness level in w1 has fewer hits than in w2.
+    assert len(w1.maximum_sharpness) == len(w2.maximum_sharpness)
+    if any((s1 < s2) for (s1, s2) in zip(w1.maximum_sharpness, w2.maximum_sharpness)):
+        return False
+
+    # STAGE 2: We now decide if w1 has anything better than w2.
+
+    if w1.true_raw > w2.true_raw:
+        return True
+    if w1.affinity > w2.affinity:
+        return True
+
+    # The same as in stage 1, but the other way around!
+    if any((w1_slot > w2_slot) for (w1_slot, w2_slot) in zip_longest(w1_slots, w2_slots, fillvalue=0)):
+        return True
+
+    # For set bonuses, let's have a look at the remaining options:
+    #                | w2=None     | w2=setbonusA | w2=setbonusB
+    #   -------------|-------------|--------------|--------------
+    #   w1=None      | continue    |              | 
+    #   w1=setbonusA | return True | continue     | 
+    #   w1=setbonusB | return True |              | continue
+    #   -------------|-------------|--------------|--------------
+    # So, we will only continue now only if both weapons have the same set bonus.
+    if w1.set_bonus is not w2.set_bonus:
+        return True
+
+    # We don't deal with is_raw. That has already been dealt with for us.
+
+    # This one is also similar to stage 1, but the other way around :)
+    if any((s1 > s2) for (s1, s2) in zip(w1.maximum_sharpness, w2.maximum_sharpness)):
+        return True
+
+    # STAGE 3: The two weapons are effectively the same.
+    
+    return None
+
+
 # Returns a list of tuples (weapon, augments_tracker, upgrades_tracker)
-def get_pruned_weapon_combos(weapon_class, set_bonus_subset, health_regen_minimum):
+def get_pruned_weapon_combos(weapon_class, health_regen_minimum):
 
     weapon_combinations = []
 
@@ -930,9 +1039,41 @@ def get_pruned_weapon_combos(weapon_class, set_bonus_subset, health_regen_minimu
                 precalculated_values = calculate_final_weapon_values(weapon, augments_tracker, upgrades_tracker)
                 weapon_combinations.append(((weapon, augments_tracker, upgrades_tracker), precalculated_values))
 
-    # TODO: Implement pruning!
+    # Now, we prune!
+
+    def left_supercedes_right(weapon1, weapon2):
+        return _weapon_combo_supercedes(weapon1[1], weapon2[1])
+
+    if __debug__:
+        before = weapon_combinations
+
+    weapon_combinations = prune_by_superceding(weapon_combinations, left_supercedes_right)
+
+    if __debug__:
+        after = weapon_combinations
+        diff = [x for x in before if (x not in after)]
+        buf = []
+        for x in diff:
+            superceding_set = None
+            for y in after:
+                if left_supercedes_right(y, x):
+                    superceding_set = y
+                    break
+            assert (superceding_set is not None)
+            buf.append(x[0][0].name)
+            buf.append(x[0][1].to_str_debugging())
+            buf.append(x[0][2].to_str_debugging())
+            buf.append("<IS SUPERCEDED BY>")
+            buf.append(y[0][0].name)
+            buf.append(y[0][1].to_str_debugging())
+            buf.append(y[0][2].to_str_debugging())
+            buf.append("\n")
+        ensure_directory(DEBUGGING_WEAPON_PRUNING_DUMP_FILENAME)
+        with open(DEBUGGING_WEAPON_PRUNING_DUMP_FILENAME, encoding=ENCODING, mode="w") as f:
+            f.write("\n".join(buf))
     
-    return [x[0] for x in weapon_combinations]
+    weapon_combinations = [x[0] for x in weapon_combinations]
+    return weapon_combinations
 
 
 WeaponClassInfo = namedtuple("WeaponClassInfo", ["name", "bloat"])
