@@ -8,35 +8,34 @@ This file contains build data structures, functions to operate on them, and how 
 a build to file (and serialize/deserialize to text).
 """
 
-import sys, time, json
-from math import ceil
+import json
 from copy import copy
 
-from collections import namedtuple, defaultdict, Counter
+from collections import namedtuple, Counter
 
 from .database_armour      import (ArmourDiscriminator,
                                   ArmourVariant,
                                   ArmourSlot,
-                                  armour_db,
-                                  calculate_armour_contribution)
-from .database_decorations import (calculate_decorations_skills_contribution,
-                                  Decoration)
+                                  armour_db)
 from .database_charms      import (CharmInfo,
-                                  charms_db,
-                                  #charms_indexed_by_skill,
-                                  calculate_skills_dict_from_charm)
+                                  charms_db)
+from .database_decorations import Decoration
 from .database_misc        import (POWERCHARM_ATTACK_POWER,
                                   POWERTALON_ATTACK_POWER)
-from .database_skills      import (RAW_BLUNDER_MULTIPLIER,
-                                  clipped_skills_defaultdict,
-                                  calculate_set_bonus_skills,
-                                  calculate_skills_contribution)
 from .database_weapons     import (RAW_SHARPNESS_MODIFIERS,
-                                  weapon_db,
-                                  WeaponAugmentTracker,
-                                  WeaponUpgradeTracker,
-                                  calculate_final_weapon_values,
-                                  print_weapon_config)
+                                  weapon_db)
+
+from .query_armour      import calculate_armour_contribution
+from .query_charms      import calculate_skills_dict_from_charm
+from .query_decorations import calculate_decorations_skills_contribution
+from .query_skills      import (RAW_BLUNDER_MULTIPLIER,
+                               clipped_skills_defaultdict,
+                               calculate_set_bonus_skills,
+                               calculate_skills_contribution)
+from .query_weapons     import (WeaponAugmentTracker,
+                               WeaponUpgradeTracker,
+                               calculate_final_weapon_values,
+                               print_weapon_config)
 
 
 BuildValues = namedtuple(

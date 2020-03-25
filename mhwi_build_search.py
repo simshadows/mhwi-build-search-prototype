@@ -11,28 +11,22 @@ In this version, we assume each level under maximum Handicraft will subtract sha
 """
 
 import sys
-from copy import copy
 
-#from math import floor
-from collections import namedtuple, defaultdict, Counter
+from collections import defaultdict
 
 from src.unit_testing import run_tests
-from src.builds       import lookup_from_skills
 from src.search       import find_highest_efr_build
-from src.serialize    import writejson_search_parameters
 from src.utils        import ENCODING
 
-from src.database_skills      import Skill
-from src.database_weapons     import (WeaponClass,
-                                     weapon_db,
-                                     IBWeaponAugmentType)
 from src.database_armour      import (ArmourDiscriminator,
                                      ArmourVariant,
                                      ArmourSlot,
                                      armour_db)
 from src.database_decorations import Decoration
-from src.database_misc        import (POWERCHARM_ATTACK_POWER,
-                                     POWERTALON_ATTACK_POWER)
+from src.database_skills      import Skill
+from src.database_weapons     import weapon_db
+
+from src.query_weapons import IBWeaponAugmentType
 
 
 def print_debugging_statistics():

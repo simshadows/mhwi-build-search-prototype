@@ -14,33 +14,34 @@ from .builds import (Build,
                     lookup_from_skills)
 from .search import _generate_deco_dicts
 
-from .database_skills      import (Skill,
-                                  clipped_skills_defaultdict,
-                                  calculate_set_bonus_skills,
-                                  calculate_skills_contribution)
-from .database_weapons     import (WeaponClass,
-                                  weapon_db,
-                                  WeaponAugmentTracker,
-                                  IBWeaponAugmentType,
-                                  WeaponAugmentationScheme,
-                                  WeaponUpgradeTracker,
-                                  IBCWeaponUpgradeType,
-                                  SafiWeaponStandardUpgradeType,
-                                  SafiWeaponSetBonusUpgradeType,
-                                  WeaponUpgradeScheme)
 from .database_armour      import (ArmourDiscriminator,
                                   ArmourVariant,
                                   ArmourSlot,
-                                  armour_db,
-                                  _armour_piece_supercedes, # For testing.
-                                  calculate_armour_contribution)
+                                  armour_db)
 from .database_charms      import (charms_db,
-                                  charms_indexed_by_skill,
-                                  calculate_skills_dict_from_charm)
-from .database_decorations import (Decoration,
-                                  calculate_decorations_skills_contribution)
+                                  charms_indexed_by_skill)
+from .database_decorations import Decoration
 from .database_misc        import (POWERCHARM_ATTACK_POWER,
-                                   POWERTALON_ATTACK_POWER)
+                                  POWERTALON_ATTACK_POWER)
+from .database_skills      import Skill
+from .database_weapons     import (WeaponAugmentationScheme,
+                                  WeaponUpgradeScheme,
+                                  WeaponClass,
+                                  weapon_db)
+
+from .query_armour      import (_armour_piece_supercedes, # For testing.
+                               calculate_armour_contribution)
+from .query_charms      import calculate_skills_dict_from_charm
+from .query_decorations import calculate_decorations_skills_contribution
+from .query_skills      import (clipped_skills_defaultdict,
+                               calculate_set_bonus_skills,
+                               calculate_skills_contribution)
+from .query_weapons     import (WeaponAugmentTracker,
+                               IBWeaponAugmentType,
+                               WeaponUpgradeTracker,
+                               IBCWeaponUpgradeType,
+                               SafiWeaponStandardUpgradeType,
+                               SafiWeaponSetBonusUpgradeType)
 
 
 def run_tests():

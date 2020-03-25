@@ -7,10 +7,8 @@ Author:   contact@simshadows.com
 This file contains various queries and search algorithms.
 """
 
-import sys, time
-from math import ceil
+import time
 from copy import copy
-#from enum import Enum, auto
 import multiprocessing as mp
 from queue import Empty
 
@@ -22,20 +20,19 @@ from .serialize import (SearchParameters,
                        readjson_search_parameters)
 from .utils     import (ExecutionProgress,
                        grouper,
-                       interleaving_shuffle,
-                       dict_enumkey_intval_str)
+                       interleaving_shuffle)
 
-from .database_skills      import (Skill,
-                                  calculate_possible_set_bonuses_from_skills,
-                                  calculate_set_bonus_skills)
-from .database_weapons     import (calculate_final_weapon_values,
-                                  get_pruned_weapon_combos)
-from .database_armour      import (ArmourSlot,
-                                  get_pruned_armour_combos,
-                                  calculate_armour_contribution)
-from .database_charms      import (get_charms_subset,
-                                  calculate_skills_dict_from_charm)
-from .database_decorations import calculate_decorations_skills_contribution
+from .database_armour import ArmourSlot
+
+from .query_armour      import (get_pruned_armour_combos,
+                               calculate_armour_contribution)
+from .query_charms      import (get_charms_subset,
+                               calculate_skills_dict_from_charm)
+from .query_decorations import calculate_decorations_skills_contribution
+from .query_skills      import (calculate_possible_set_bonuses_from_skills,
+                               calculate_set_bonus_skills)
+from .query_weapons     import (calculate_final_weapon_values,
+                               get_pruned_weapon_combos)
 
 
 def _split_armour_combos_into_batches(armour_combos, batch_size, batch_shuffle_rounds):
