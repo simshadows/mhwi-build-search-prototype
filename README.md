@@ -2,19 +2,15 @@
 
 **CURRENT A WORK IN PROGRESS.** I'm developing this to aid in build optimization for the game Monster Hunter World Iceborne!
 
-This project is written for Python 3.8.
-
 ## How Do I Use It?
 
 I'm not intending to give it a good user interface yet, but if you *really* insist, then:
 
-1) Install at least Python 3.8.
+1) Install at least Python 3.6.
 
-2) Open a terminal window in the repository and execute `$ python3.8 -O mhwi_build_search.py search search_benchmark1.json`.
+2) Open a terminal window in the repository and execute `$ python3.6 -O mhwi_build_search.py search search_benchmark1.json`.
 
 3) Enjoy. You literally have nothing else to do other than watch the terminal output because this program has no user interface.
-
-However, the code has 32 hardcoded as the number of worker threads. Just go in and change this to however many CPU threads exist in your computer. It should be the line `NUM_WORKERS = 32` somewhere on the top of `search.py`.
 
 ## Critical Bugs
 
@@ -42,11 +38,7 @@ Because the runtime is turning out to be pretty slow and Python's multithreaded 
 
 ## TODOs
 
-1) I'll need to be confident that the armour pruning doesn't throw away armour pieces that are still useful. This will need continued testing.
-
-2) I'll also need to be confident that the armour pruning doesn't throw away armour *sets* that are still useful. This will need continued testing.
-
-3) Free Element will need to be taken into account since adding it can actually reduce a build's EFR by disabling Non-elemental Boost. My pruning algorithms currently don't take this into account, so it is possible for a gear piece with Free Element to cause another gear piece without Free Element to be pruned, even if it may be better for pure-raw builds.
+- Free Element will need to be taken into account since adding it can actually reduce a build's EFR by disabling Non-elemental Boost. My pruning algorithms currently don't take this into account, so it is possible for a gear piece with Free Element to cause another gear piece without Free Element to be pruned, even if it may be better for pure-raw builds.
 
 ## Nerd Stuff (THIS IS OUTDATED)
 

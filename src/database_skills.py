@@ -57,16 +57,7 @@ SkillInfo = namedtuple(
 
         "info",          # More information about the skill. I probably wrote this myself. If no info, put an empty string.
         "previous_name", # If the skill name was changed, put it here. If no previous name, put None.
-    ],
-    defaults=[
-        0,    # extended_limit              Most skills don't have extensions.
-              #                            
-        None, # states                      Most skills aren't stateful.
-        True, # zeroth_state_can_be_blank   Most stateful skills are binary.
-              #                            
-        "",   # info                        I don't care to write about *ALL* skills yet.
-        None, # previous_name               Most skills don't have previous names.
-    ],
+    ]
 )
 
 SetBonusInfo = namedtuple(
@@ -108,14 +99,15 @@ def _obtain_skills_enum():
                 name = skill_json_data["name"],
 
                 limit          = skill_json_data["limit"],
-                extended_limit = skill_json_data.get("extended_limit", None),
+                extended_limit = skill_json_data.get("extended_limit", None), # Most skills don't have extensions.
 
-                states                    = skill_json_data.get("states",                    None),
-                zeroth_state_can_be_blank = skill_json_data.get("zeroth_state_can_be_blank", True),
+                states                    = skill_json_data.get("states", None), # Most skills aren't stateful.
+                zeroth_state_can_be_blank = skill_json_data.get("zeroth_state_can_be_blank", True), # Most stateful skills
+                                                                                                    # are binary.
 
                 tooltip       = skill_json_data["tooltip"],
-                info          = skill_json_data.get("info",          None),
-                previous_name = skill_json_data.get("previous_name", None),
+                info          = skill_json_data.get("info", ""), # I don't care to write about *ALL* skills yet.
+                previous_name = skill_json_data.get("previous_name", None), # Most skills don't have previous names.
             )
 
         if (not isinstance(tup.name, str)) or (len(tup.name) == 0):
@@ -136,7 +128,7 @@ def _obtain_skills_enum():
 
         elif (not isinstance(tup.tooltip, str)) or (len(tup.tooltip) == 0):
             validation_error("Skill tooltips must be non-empty strings.", skill=skill_id)
-        elif (tup.info is not None) and ((not isinstance(tup.info, str)) or (len(tup.info) == 0)):
+        elif (not isinstance(tup.info, str)):
             validation_error("Skill info (not the tooltips!) must be either null, or a non-empty string.", skill=skill_id)
         elif (tup.previous_name is not None) and ((not isinstance(tup.previous_name, str)) or (len(tup.previous_name) == 0)):
             validation_error("Skill previous name must be either null, or a non-empty string.", skill=skill_id)
