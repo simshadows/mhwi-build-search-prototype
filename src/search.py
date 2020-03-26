@@ -71,8 +71,11 @@ def _cache_pruned_armour_combos(search_parameters):
     skills_with_minimum_levels = {k: v for (k, v) in search_parameters.selected_skills.items() if (v > 0)}
     skill_subset = set(search_parameters.selected_skills) # Get all the keys
 
-    required_set_bonus_skills = set(search_parameters.selected_set_bonuses) # Just making sure it's a set
+    required_set_bonus_skills = search_parameters.selected_set_bonus_skills
     # IMPORTANT: We're not checking yet if these skills are actually attainable via. set bonus.
+
+    minimum_set_bonus_combos = calculate_possible_set_bonus_combos(required_set_bonus_skills)
+    relaxed_minimum_set_bonus_combos = relax_set_bonus_combos(minimum_set_bonus_combos)
 
     x = get_pruned_armour_combos(search_parameters.selected_armour_tier, skill_subset=skill_subset, \
                                         required_set_bonus_skills=required_set_bonus_skills)
@@ -414,7 +417,7 @@ def _find_highest_efr_build_worker(args):
     skills_with_minimum_levels = {k: v for (k, v) in search_parameters.selected_skills.items() if (v > 0)}
     skill_subset = set(search_parameters.selected_skills) # Get all the keys
 
-    required_set_bonus_skills = set(search_parameters.selected_set_bonuses) # Just making sure it's a set
+    required_set_bonus_skills = set(search_parameters.selected_set_bonus_skills) # Just making sure it's a set
     # IMPORTANT: We're not checking yet if these skills are actually attainable via. set bonus.
 
     decorations = list(search_parameters.selected_decorations)

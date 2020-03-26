@@ -27,15 +27,15 @@ def writejson_search_parameters(**kwargs):
 
     # KWARGS: Search Parameters
 
-    selected_armour_tier   = kwargs["selected_armour_tier"]
-    selected_weapon_class  = kwargs["selected_weapon_class"]
-    selected_skills        = kwargs["selected_skills"]
-    selected_set_bonuses   = kwargs["selected_set_bonuses"]
-    selected_decorations   = kwargs["selected_decorations"]
+    selected_armour_tier      = kwargs["selected_armour_tier"]
+    selected_weapon_class     = kwargs["selected_weapon_class"]
+    selected_skills           = kwargs["selected_skills"]
+    selected_set_bonus_skills = kwargs["selected_set_bonus_skills"]
+    selected_decorations      = kwargs["selected_decorations"]
 
-    min_health_regen_level = kwargs["min_health_regen_level"]
+    min_health_regen_level    = kwargs["min_health_regen_level"]
 
-    skill_states           = kwargs["skill_states"]
+    skill_states              = kwargs["skill_states"]
 
     # KWARGS: Algorithm Performance Parameters
 
@@ -46,7 +46,7 @@ def writejson_search_parameters(**kwargs):
     assert isinstance(selected_armour_tier, Tier) or (selected_armour_tier is None)
     assert isinstance(selected_weapon_class, WeaponClass)
     assert all(isinstance(k, Skill) and isinstance(v, int) and (v >= 0) for (k, v) in selected_skills.items())
-    assert all(isinstance(x, Skill) for x in selected_set_bonuses) and all_unique(selected_set_bonuses)
+    assert all(isinstance(x, Skill) for x in selected_set_bonus_skills) and all_unique(selected_set_bonus_skills)
     assert all(isinstance(x, Decoration) for x in selected_decorations) and all_unique(selected_decorations)
 
     assert isinstance(min_health_regen_level, int) and (min_health_regen_level >= 0)
@@ -57,11 +57,11 @@ def writejson_search_parameters(**kwargs):
     assert isinstance(batch_size, int) and (num_worker_threads > 0)
 
     data = {
-            "selected_armour_tier" : selected_armour_tier,
-            "selected_weapon_class": selected_weapon_class.name,
-            "selected_skills"      : {k.name: v for (k, v) in selected_skills.items()},
-            "selected_set_bonuses" : [x.name for x in selected_set_bonuses],
-            "selected_decorations" : [x.name for x in selected_decorations],
+            "selected_armour_tier"      : selected_armour_tier,
+            "selected_weapon_class"     : selected_weapon_class.name,
+            "selected_skills"           : {k.name: v for (k, v) in selected_skills.items()},
+            "selected_set_bonus_skills" : [x.name for x in selected_set_bonus_skills],
+            "selected_decorations"      : [x.name for x in selected_decorations],
 
             "min_health_regen_augment_level": min_health_regen_level,
 
@@ -82,7 +82,7 @@ SearchParameters = namedtuple(
         "selected_armour_tier",
         "selected_weapon_class",
         "selected_skills",
-        "selected_set_bonuses",
+        "selected_set_bonus_skills",
         "selected_decorations",
 
         "min_health_regen_augment_level",
@@ -102,15 +102,15 @@ def readjson_search_parameters(json_str):
 
     # Get Data: Search Parameters
 
-    selected_armour_tier_json  = json_data["selected_armour_tier"]
-    selected_weapon_class_json = json_data["selected_weapon_class"]
-    selected_skills_json       = json_data["selected_skills"]
-    selected_set_bonuses_json  = json_data["selected_set_bonuses"]
-    selected_decorations_json  = json_data["selected_decorations"]
+    selected_armour_tier_json      = json_data["selected_armour_tier"]
+    selected_weapon_class_json     = json_data["selected_weapon_class"]
+    selected_skills_json           = json_data["selected_skills"]
+    selected_set_bonus_skills_json = json_data["selected_set_bonus_skills"]
+    selected_decorations_json      = json_data["selected_decorations"]
 
-    min_health_regen_json      = json_data["min_health_regen_augment_level"]
+    min_health_regen_json          = json_data["min_health_regen_augment_level"]
 
-    skill_states_json          = json_data["skill_states"]
+    skill_states_json              = json_data["skill_states"]
 
     # Get Data: Algorithm Performance Parameters
 
@@ -123,11 +123,11 @@ def readjson_search_parameters(json_str):
     selected_armour_tier = None if selected_armour_tier_json is None else Tier[selected_armour_tier_json]
 
     tup = SearchParameters(
-            selected_armour_tier  = selected_armour_tier,
-            selected_weapon_class = WeaponClass[selected_weapon_class_json],
-            selected_skills       = {Skill[k]: v   for (k, v) in selected_skills_json.items()},
-            selected_set_bonuses  = {Skill[x]      for x      in selected_set_bonuses_json},
-            selected_decorations  = {Decoration[x] for x      in selected_decorations_json},
+            selected_armour_tier      = selected_armour_tier,
+            selected_weapon_class     = WeaponClass[selected_weapon_class_json],
+            selected_skills           = {Skill[k]: v   for (k, v) in selected_skills_json.items()},
+            selected_set_bonus_skills = {Skill[x]      for x      in selected_set_bonus_skills_json},
+            selected_decorations      = {Decoration[x] for x      in selected_decorations_json},
 
             min_health_regen_augment_level = min_health_regen_json,
 
