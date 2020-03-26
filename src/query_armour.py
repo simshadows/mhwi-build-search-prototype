@@ -212,7 +212,7 @@ def prune_easyiterate_armour_db(selected_armour_tier, original_easyiterate_armou
 _pruned_armour_combos_cache = [] # [(skill_subset, required_set_bonus_skills, pruned_armour_combos)]
 
 
-def get_pruned_armour_combos(selected_armour_tier, skill_subset=None, required_set_bonus_skills=set()):
+def get_pruned_armour_combos(selected_armour_tier, skill_subset, required_set_bonus_skills):
     assert isinstance(selected_armour_tier, Tier) or (selected_armour_tier is None)
     assert isinstance(skill_subset, set) or (skill_subset is None)
     assert isinstance(required_set_bonus_skills, set)

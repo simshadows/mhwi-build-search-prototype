@@ -1,6 +1,6 @@
 # Sim's MHWI Build Search Tool
 
-**CURRENT A WORK IN PROGRESS.** I'm developing this to aid in build optimization for the game Monster Hunter World Iceborne!
+**CURRENTLY A WORK IN PROGRESS.** I'm developing this to aid in build optimization for the game Monster Hunter World Iceborne!
 
 ## How Do I Use It?
 
@@ -12,9 +12,15 @@ I'm not intending to give it a good user interface yet, but if you *really* insi
 
 3) Enjoy. You literally have nothing else to do other than watch the terminal output because this program has no user interface.
 
-## Critical Bugs
+## Issues
+
+### Critical Bugs
 
 - The decoration combination pruner is known to over-prune in very rare edge cases where there are too few decorations to put in the slots. This will be fixed later.
+
+### Other Weird Issues
+
+- In `pypy3.6-v7.3.0-win32`, caches (such as `_pruned_armour_combos_cache`) seem to stay empty after the process forks into worker processes. It doesn't break the program, but it results in longer runtimes, and broken terminal output.
 
 ## Planned Development Roadmap
 

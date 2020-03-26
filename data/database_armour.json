@@ -1,5 +1,12 @@
 {
     "naming_schemes": {
+        "BUFF_BODY_SCHEME": [
+            "(invalid)",
+            "Chest",
+            "Arms",
+            "Waist",
+            "Legs"
+        ],
         "COMMON_SCHEME_1": [
             "Helm",
             "Mail",
@@ -21,12 +28,12 @@
             "Coil",
             "Greaves"
         ],
-        "BUFF_BODY_SCHEME": [
-            "(invalid)",
-            "Chest",
-            "Arms",
-            "Waist",
-            "Legs"
+        "DRACHEN_SCHEME": [
+            "Armet",
+            "Mail",
+            "Vambraces",
+            "Coil",
+            "Greaves"
         ]
     },
     "armour": [
@@ -60,6 +67,24 @@
                 "ARMS" : [[3],   {"CRITICAL_EYE": 3                       }],
                 "WAIST": [[1,1], {"LATENT_POWER": 3                       }],
                 "LEGS" : [[3,1], {"CRITICAL_EYE": 2                       }]
+            }
+        },
+        {
+            "set": "Drachen",
+            "discriminator": "HIGH_RANK",
+            "rarity": 8,
+            
+            "prefix": "Drachen",
+            "naming_scheme": "DRACHEN_SCHEME",
+
+            "set_bonus": "SOUL_OF_THE_DRAGOON",
+
+            "HR_ALPHA": {
+                "HEAD" : [[3,1], {"CRITICAL_BOOST": 1, "AIRBORNE":        1}],
+                "CHEST": [[3],   {"CRITICAL_EYE":   2, "CRITICAL_BOOST":  1}],
+                "ARMS" : [[2,2], {"CRITICAL_EYE":   2, "ATTACK_BOOST":    1}],
+                "WAIST": [[3],   {"CRITICAL_EYE":   2, "POWER_PROLONGER": 1}],
+                "LEGS" : [[2],   {"ATTACK_BOOST":   2, "CRITICAL_BOOST":  1}]
             }
         },
         {

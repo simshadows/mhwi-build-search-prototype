@@ -29,7 +29,8 @@ from .query_armour      import (get_pruned_armour_combos,
 from .query_charms      import (get_charms_subset,
                                calculate_skills_dict_from_charm)
 from .query_decorations import calculate_decorations_skills_contribution
-from .query_skills      import (calculate_possible_set_bonuses_from_skills,
+from .query_skills      import (calculate_possible_set_bonus_combos,
+                               relax_set_bonus_combos,
                                calculate_set_bonus_skills)
 from .query_weapons     import (calculate_final_weapon_values,
                                get_pruned_weapon_combos)
@@ -423,17 +424,21 @@ def _find_highest_efr_build_worker(args):
     batch_size = search_parameters.batch_size
     batch_shuffle_rounds = search_parameters.batch_shuffle_rounds
 
-    ########################
-    # STAGE 2: Helper Data #
-    ########################
+    ############################
+    # STAGE 2: Component Lists #
+    ############################
 
-    # candidate_set_bonuses is a set of set bonuses that can fulfill our specified set of required set bonus skills.
-    #candidate_set_bonuses = calculate_possible_set_bonuses_from_skills(required_set_bonus_skills)
+    # minimum_set_bonus_combos is a set of set bonuses that can fulfill our specified set of required set bonus skills.
+    minimum_set_bonus_combos = calculate_possible_set_bonus_combos(required_set_bonus_skills)
+    relaxed_minimum_set_bonus_combos = relax_set_bonus_combos(minimum_set_bonus_combos)
     # NOT ACTUALLY USED YET!
 
-    ############################
-    # STAGE 3: Component Lists #
-    ############################
+    # For debugging candidate_set_bonuses
+    #buf = []
+    #for x in relaxed_minimum_set_bonus_combos:
+    #    buf.append(",".join(k.name + "=" + str(v) for (k, v) in x.items()))
+    #print("\n".join(buf))
+    #print()
 
     weapon_combos = get_pruned_weapon_combos(desired_weapon_class, minimum_health_regen_augment)
     all_skills_max_except_free_elem = {skill: skill.value.limit for skill in skill_subset}
@@ -441,15 +446,14 @@ def _find_highest_efr_build_worker(args):
     weapon_combos.sort(key=lambda x : x[4], reverse=True)
     assert weapon_combos[0][4] >= weapon_combos[-1][4]
 
-    armour_combos = get_pruned_armour_combos(search_parameters.selected_armour_tier, skill_subset=skill_subset, \
-                                                required_set_bonus_skills=required_set_bonus_skills)
+    armour_combos = get_pruned_armour_combos(search_parameters.selected_armour_tier, skill_subset, required_set_bonus_skills)
     armour_combos_batches = _split_armour_combos_into_batches(armour_combos, batch_size, batch_shuffle_rounds)
 
     charms = get_charms_subset(skill_subset)
     charms = [None] if (len(charms) == 0) else list(charms)
 
     ####################
-    # STAGE 4: Search! #
+    # STAGE 3: Search! #
     ####################
 
     best_efr = 0

@@ -741,8 +741,8 @@ def _run_tests_deco_dict_generation():
         new_existing_skills.update(existing_skills)
         result = _generate_deco_dicts(slots_available_counter, all_possible_decos, new_existing_skills, \
                                         skill_subset=skill_subset, required_skills=required_skills)
-        print()
-        print("\n".join(", ".join(f"{deco.name} {level}" for deco, level in deco_combo.items()) for deco_combo in result))
+        #print()
+        #print("\n".join(", ".join(f"{deco.name} {level}" for deco, level in deco_combo.items()) for deco_combo in result))
         return result
 
     def check_length(n):

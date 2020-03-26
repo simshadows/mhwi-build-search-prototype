@@ -7,10 +7,12 @@ Author:   contact@simshadows.com
 This file provides the MHWI build optimizer script's skills database queries.
 """
 
+from copy import copy
+from itertools import product
 from collections import namedtuple, defaultdict
 from enum import Enum, unique
 
-from .utils import json_read
+from .utils import json_read, prune_by_superceding
 
 from .database_skills import (Skill,
                              SetBonus)
@@ -58,12 +60,114 @@ def clipped_skills_defaultdict(skills_dict):
     return defaultdict(lambda : 0, {skill: min(level, skill.value.limit) for (skill, level) in skills_dict.items()})
 
 
-# From a set of skills attainable from set bonuses, this function calculates the subset of set bonuses that may
-# provide them.
-def calculate_possible_set_bonuses_from_skills(set_bonus_skills):
+# From a set of skills attainable from set bonuses, this function calculates all possible
+# combinations of set bonuses that, if at least one of these combinations is satisfied, will
+# grant all skills listed in set_bonus_skills.
+#
+# This function returns a list of dicts:
+#   [{SetBonus: minimum_number_of_pieces, ...}, ...]
+def calculate_possible_set_bonus_combos(set_bonus_skills):
     assert isinstance(set_bonus_skills, set)
     assert all(isinstance(x, Skill) for x in set_bonus_skills)
-    return set(x for x in SetBonus if any((skill in set_bonus_skills) for (_, skill) in x.value.stages.items()))
+
+    options = []
+    for skill_required in set_bonus_skills:
+        pick_one = []
+        for set_bonus in SetBonus:
+            for (num_pieces, skill_granted) in set_bonus.value.stages.items():
+                if skill_granted is skill_required:
+                    pick_one.append((set_bonus, num_pieces))
+                    break
+        if len(pick_one) == 0:
+            raise RuntimeError("A skill in set_bonus_skills cannot be satisfied by set bonuses.")
+        options.append(pick_one)
+
+    # Now that we have options, we make the combinations.
+
+    combinations = []
+    for combination_intermediate in product(*options):
+        combination = {}
+        for (set_bonus, num_pieces) in combination_intermediate:
+            if not ((set_bonus in combination) and (combination[set_bonus] <= num_pieces)):
+                combination[set_bonus] = num_pieces
+        combinations.append(combination)
+
+    # And now, we prune the combinations.
+
+    # left supercedes right if left is entirely a subset of right.
+    def left_supercedes_right(left, right):
+        assert isinstance(left, dict)
+        assert isinstance(right, dict)
+        if left == right:
+            return None
+        # Now, we check if the left is a strict subset of right.
+        # Note that we know the two dictionaries can't be equivalent, even though we're using the
+        # less-than-or-equal operator.
+        return any(l_num_pieces <= right.get(l_set_bonus, 0) for (l_set_bonus, l_num_pieces) in left.items())
+
+    return prune_by_superceding(combinations, left_supercedes_right)
+
+
+# Returns a new list of set bonus combinations (with a similar format to the input) with all combinations
+# relaxed by one piece.
+#
+# For example, if we have this as the input:
+#   [
+#     {
+#         set_bonus_a: 2,
+#         set_bonus_b: 4
+#     },
+#     {
+#         set_bonus_a: 4
+#     }
+#   ]
+# The output might look something like this:
+#   [
+#     {
+#         set_bonus_a: 1,
+#         set_bonus_b: 4
+#     },
+#     {
+#         set_bonus_a: 2,
+#         set_bonus_b: 3
+#     },
+#     {
+#         set_bonus_a: 3
+#     }
+#   ]
+def relax_set_bonus_combos(set_bonus_combos):
+    assert isinstance(set_bonus_combos, list)
+
+    ret = []
+
+    for set_bonus_combo in set_bonus_combos:
+        for (set_bonus, num_pieces) in set_bonus_combo.items():
+            assert isinstance(set_bonus, SetBonus)
+            assert isinstance(num_pieces, int) and (num_pieces > 0)
+
+            new_combo = copy(set_bonus_combo)
+            if num_pieces > 1:
+                new_combo[set_bonus] = num_pieces - 1
+            else:
+                del new_combo[set_bonus]
+
+            if len(new_combo) != 0:
+                ret.append(new_combo)
+
+    # We do a final step of pruning.
+
+    # left supercedes right if left is entirely a subset of right.
+    def left_supercedes_right(left, right):
+        assert isinstance(left, dict)
+        assert isinstance(right, dict)
+        if left == right:
+            return None
+        # Now, we check if the left is a strict subset of right.
+        # Note that we know the two dictionaries can't be equivalent, even though we're using the
+        # less-than-or-equal operator.
+        return any(l_num_pieces <= right.get(l_set_bonus, 0) for (l_set_bonus, l_num_pieces) in left.items())
+
+    return prune_by_superceding(ret, left_supercedes_right)
 
 
 # This will take a dictionary of {SetBonus: number_of_pieces} and returns the skills it provides as a dictionary

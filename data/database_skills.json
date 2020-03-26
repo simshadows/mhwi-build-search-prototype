@@ -236,6 +236,12 @@
 
                 "tooltip": "((TODO))"
         },
+        "ELEMENTAL_AIRBORNE": {
+                "name": "Elemental Airborne",
+                "limit": 1,
+
+                "tooltip": "Elemental damage increased for jumping attacks."
+        },
         "ENTOMOLOGIST": {
                 "name": "Entomologist",
                 "limit": 3,
@@ -462,7 +468,7 @@
                 "name": "Master's Touch",
                 "limit": 1,
 
-                "tooltip": "((TODO))"
+                "tooltip": "Prevents your weapon from losing sharpness during critical hits."
         },
         "MAXIMUM_MIGHT": {
                 "name": "Maximum Might",
@@ -803,6 +809,19 @@
         }
     },
     "set_bonuses": {
+        "SOUL_OF_THE_DRAGOON": {
+            "name": "Soul of the Dragoon",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "ELEMENTAL_AIRBORNE"
+                },
+                {
+                    "parts": 4,
+                    "skill": "MASTERS_TOUCH"
+                }
+            ]
+        },
         "TEOSTRA_TECHNIQUE": {
             "name": "Teostra Technique",
             "stages": [
