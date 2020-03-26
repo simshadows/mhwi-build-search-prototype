@@ -12,7 +12,7 @@ from collections import namedtuple, defaultdict, Counter
 from itertools import product
 
 from .enums import Tier
-from .utils import ExecutionProgress, prune_by_superceding
+from .utils import ExecutionProgress, prune_by_superceding, lists_of_dicts_are_equal
 
 from .database_decorations import skill_to_simple_deco_size
 from .database_skills import Skill, SetBonus
@@ -56,9 +56,9 @@ def _armour_piece_supercedes(p1, p1_set_bonus, p2, p2_set_bonus, skill_subset=No
 # This function only determines if it knows *for sure* if p1 supercedes p2.
 # There may be cases where p1 can actually supercede p2, but the current version of this function doesn't
 # check for the specific conditions allowing p1 to supercede p2.
-def _skills_and_slots_supercedes(p1_skills, p1_slots, p2_skills, p2_slots, skill_subset=None):
-    assert isinstance(p1_skills, dict)
-    assert isinstance(p2_skills, dict)
+def _skills_and_slots_supercedes(p1_skills_and_setbonuses, p1_slots, p2_skills_and_setbonuses, p2_slots, skill_subset=None):
+    assert isinstance(p1_skills_and_setbonuses, dict)
+    assert isinstance(p2_skills_and_setbonuses, dict)
     assert isinstance(p1_slots, Counter)
     assert isinstance(p2_slots, Counter)
     assert (isinstance(skill_subset, set) and all(isinstance(x, Skill) for x in skill_subset)) or (skill_subset is None)
@@ -84,15 +84,15 @@ def _skills_and_slots_supercedes(p1_skills, p1_slots, p2_skills, p2_slots, skill
     # At best, we can put the equivalent of two size-3 jewels into a size-4 slot
     p2_slots_overest = (p2_size1, p2_size2, p2_size3 + (p2_size4 * 2)) 
 
-    all_skills = set(p1_skills) | set(p2_skills)
+    all_skills = set(p1_skills_and_setbonuses) | set(p2_skills_and_setbonuses)
     if skill_subset is not None:
         all_skills = all_skills & skill_subset # We ignore anything not in the subset
 
     skills_unique_to_p1 = {}
     skills_unique_to_p2 = {}
     for skill in all_skills:
-        p1_level = p1_skills.get(skill, 0)
-        p2_level = p2_skills.get(skill, 0)
+        p1_level = p1_skills_and_setbonuses.get(skill, 0)
+        p2_level = p2_skills_and_setbonuses.get(skill, 0)
 
         if p1_level - p2_level > 0:
             skills_unique_to_p1[skill] = p1_level - p2_level
@@ -209,27 +209,27 @@ def prune_easyiterate_armour_db(selected_armour_tier, original_easyiterate_armou
     return intermediate
 
 
-_pruned_armour_combos_cache = [] # [(skill_subset, required_set_bonus_skills, pruned_armour_combos)]
+_pruned_armour_combos_cache = [] # [(skill_subset, minimum_set_bonus_combos, pruned_armour_combos)]
 
 
-def get_pruned_armour_combos(selected_armour_tier, skill_subset, required_set_bonus_skills):
+def get_pruned_armour_combos(selected_armour_tier, skill_subset, minimum_set_bonus_combos):
     assert isinstance(selected_armour_tier, Tier) or (selected_armour_tier is None)
     assert isinstance(skill_subset, set) or (skill_subset is None)
-    assert isinstance(required_set_bonus_skills, set)
+    assert isinstance(minimum_set_bonus_combos, list)
 
     # Check cache first.
-    for (c_selected_armour_tier, c_skill_subset, c_required_set_bonus_skills, c_armour_combo_list) in _pruned_armour_combos_cache:
-        if (c_selected_armour_tier is selected_armour_tier) and (c_skill_subset == skill_subset) \
-                            and (c_required_set_bonus_skills == required_set_bonus_skills):
+    for (c_selected_armour_tier, c_skill_subset, c_min_set_bonus_combos, c_armour_combo_list) in _pruned_armour_combos_cache:
+        if (c_selected_armour_tier is selected_armour_tier) \
+                    and (c_skill_subset == skill_subset) \
+                    and lists_of_dicts_are_equal(c_min_set_bonus_combos, minimum_set_bonus_combos):
             return c_armour_combo_list
 
     # If it's not in the cache, then we have to generate it.
     pruned_armour_db = prune_easyiterate_armour_db(selected_armour_tier, easyiterate_armour, skill_subset=skill_subset)
-    pruned_armour_combos = generate_and_prune_armour_combinations(pruned_armour_db, skill_subset=skill_subset, \
-                                                                    required_set_bonus_skills=required_set_bonus_skills)
+    pruned_armour_combos = generate_and_prune_armour_combinations(pruned_armour_db, skill_subset, minimum_set_bonus_combos)
 
     # Add to the cache.
-    t = (selected_armour_tier, copy(skill_subset), copy(required_set_bonus_skills), pruned_armour_combos)
+    t = (selected_armour_tier, copy(skill_subset), copy(minimum_set_bonus_combos), pruned_armour_combos)
     _pruned_armour_combos_cache.append(t)
 
     return copy(pruned_armour_combos)
@@ -255,10 +255,10 @@ def _armour_combination_iter(original_easyiterate_armour_db):
                 ArmourSlot.LEGS:  legs,
             }
 
-        total_skills = defaultdict(lambda : 0)
+        regular_skills = defaultdict(lambda : 0)
         total_slots = Counter()
 
-        total_set_bonuses = defaultdict(lambda : 0) # Don't use this after we update total_skills.
+        total_set_bonuses = defaultdict(lambda : 0) # Don't use this after we update regular_skills.
 
         # We fill the totals in this loop.
         for (gear_slot, piece) in combination.items():
@@ -268,29 +268,22 @@ def _armour_combination_iter(original_easyiterate_armour_db):
             assert isinstance(set_bonus, SetBonus) or (set_bonus is None)
 
             for (skill, level) in piece.skills.items():
-                total_skills[skill] += level
+                regular_skills[skill] += level
 
             if set_bonus is not None:
                 total_set_bonuses[set_bonus] += 1
 
             total_slots.update(piece.decoration_slots)
 
-        if __debug__:
-            num_total_regular_skills = len(total_skills)
-
-        total_set_bonus_skills = calculate_set_bonus_skills(total_set_bonuses, None)
-        total_skills.update(total_set_bonus_skills)
-        assert len(total_skills) == len(total_set_bonus_skills) + num_total_regular_skills
-
-        yield (combination, total_skills, total_slots)
+        yield (combination, regular_skills, total_slots, total_set_bonuses)
 
 
 # Applies the same pruning rule as _armour_piece_supercedes(), but over an entire armour set instead!
 #
 # Returns a list of dictionaries of {ArmourSlot: ArmourEasyIterateInfo}
-def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill_subset=None, \
-                                            required_set_bonus_skills=set()):
-    assert isinstance(required_set_bonus_skills, set)
+def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill_subset, minimum_set_bonus_combos):
+    assert isinstance(minimum_set_bonus_combos, list)
+    #assert isinstance(required_set_bonus_skills, set) # We're getting rid of this
 
     print()
     print()
@@ -300,15 +293,35 @@ def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill
     all_combinations = list(_armour_combination_iter(original_easyiterate_armour_db))
     print(f"Number of armour combinations, before pruning: {len(all_combinations)}")
 
-    all_combinations = [x for x in all_combinations if all(skill in x[1] for skill in required_set_bonus_skills)]
+    # We filter for only armour combinations that fulfil at least one set bonus combination.
+    def fulfils_min_set_bonus_combos(x):
+        armour_set_bonuses = x[3]
+        for minimum_set_bonus_combo in minimum_set_bonus_combos:
+            fulfilled = True
+            for (set_bonus, min_pieces) in minimum_set_bonus_combo.items():
+                if armour_set_bonuses.get(set_bonus, 0) < min_pieces:
+                    fulfilled = False
+                    break
+            if fulfilled:
+                return True
+        return False
+
+    all_combinations = [x for x in all_combinations if fulfils_min_set_bonus_combos(x)]
     print(f"Number of armour combinations, after filtering by set bonus: {len(all_combinations)}")
 
     progress = ExecutionProgress("COMBINATION PRUNING", len(all_combinations), granularity=100)
 
     def left_supercedes_right(left, right):
-        (combination_1, total_skills_1, total_slots_1) = left
-        (combination_2, total_skills_2, total_slots_2) = right
-        return _skills_and_slots_supercedes(total_skills_1, total_slots_1, total_skills_2, total_slots_2, \
+        (combination_1, regular_skills_1, total_slots_1, set_bonuses_1) = left
+        (combination_2, regular_skills_2, total_slots_2, set_bonuses_2) = right
+        skills_and_set_bonuses_1 = copy(regular_skills_1)
+        skills_and_set_bonuses_2 = copy(regular_skills_2)
+        skills_and_set_bonuses_1.update(set_bonuses_1)
+        skills_and_set_bonuses_2.update(set_bonuses_2)
+        assert len(skills_and_set_bonuses_1) == len(regular_skills_1) + len(set_bonuses_1)
+        assert len(skills_and_set_bonuses_2) == len(regular_skills_2) + len(set_bonuses_2)
+        return _skills_and_slots_supercedes(skills_and_set_bonuses_1, total_slots_1, \
+                                                skills_and_set_bonuses_2, total_slots_2, \
                                                 skill_subset=skill_subset) 
 
     def update_progress():

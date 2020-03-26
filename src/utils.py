@@ -85,6 +85,7 @@ class ExecutionProgress:
         self._curr_progress_segment += 1
 
         if (self._granularity == 1) or (self._curr_progress_segment % (self._granularity - 1) == 0) \
+                or (self._curr_progress_segment == 1) \
                 or (self._curr_progress_segment == self._total_progress_segments):
             progress_segment_size = 1 / self._total_progress_segments
 
@@ -183,6 +184,26 @@ def prune_by_superceding(iterable, left_supercedes_right, execute_per_iteration=
             ret.append(right)
         execute_per_iteration()
     return ret
+
+
+def lists_of_dicts_are_equal(a, b):
+    assert isinstance(a, list)
+    assert isinstance(b, list)
+    assert all(isinstance(x, dict) for x in a)
+    assert all(isinstance(x, dict) for x in b)
+
+    if len(a) != len(b):
+        return False
+
+    for d1 in a:
+        d1_in_b = False
+        for d2 in b:
+            if d1 == d2:
+                d1_in_b = True
+                break
+        if not d1_in_b:
+            return False
+    return True
 
 
 def dict_enumkey_intval_str(d):

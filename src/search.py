@@ -77,8 +77,7 @@ def _cache_pruned_armour_combos(search_parameters):
     minimum_set_bonus_combos = calculate_possible_set_bonus_combos(required_set_bonus_skills)
     relaxed_minimum_set_bonus_combos = relax_set_bonus_combos(minimum_set_bonus_combos)
 
-    x = get_pruned_armour_combos(search_parameters.selected_armour_tier, skill_subset=skill_subset, \
-                                        required_set_bonus_skills=required_set_bonus_skills)
+    x = get_pruned_armour_combos(search_parameters.selected_armour_tier, skill_subset, relaxed_minimum_set_bonus_combos)
     assert isinstance(x, list)
     return x
 
@@ -417,8 +416,7 @@ def _find_highest_efr_build_worker(args):
     skills_with_minimum_levels = {k: v for (k, v) in search_parameters.selected_skills.items() if (v > 0)}
     skill_subset = set(search_parameters.selected_skills) # Get all the keys
 
-    required_set_bonus_skills = set(search_parameters.selected_set_bonus_skills) # Just making sure it's a set
-    # IMPORTANT: We're not checking yet if these skills are actually attainable via. set bonus.
+    required_set_bonus_skills = search_parameters.selected_set_bonus_skills
 
     decorations = list(search_parameters.selected_decorations)
 
@@ -449,7 +447,8 @@ def _find_highest_efr_build_worker(args):
     weapon_combos.sort(key=lambda x : x[4], reverse=True)
     assert weapon_combos[0][4] >= weapon_combos[-1][4]
 
-    armour_combos = get_pruned_armour_combos(search_parameters.selected_armour_tier, skill_subset, required_set_bonus_skills)
+    armour_combos = get_pruned_armour_combos(search_parameters.selected_armour_tier, skill_subset, \
+                                                relaxed_minimum_set_bonus_combos) # Intentionally used the relaxed version
     armour_combos_batches = _split_armour_combos_into_batches(armour_combos, batch_size, batch_shuffle_rounds)
 
     charms = get_charms_subset(skill_subset)
@@ -507,17 +506,12 @@ def _find_highest_efr_build_worker(args):
                 continue
 
             armour_contribution = calculate_armour_contribution(curr_armour)
-            armour_set_bonus_skills = calculate_set_bonus_skills(armour_contribution.set_bonuses, None)
-
-            all_armour_skills = defaultdict(lambda : 0)
-            all_armour_skills.update(armour_contribution.skills)
-            all_armour_skills.update(armour_set_bonus_skills)
-            assert len(set(armour_contribution.skills) & set(armour_set_bonus_skills)) == 0 # No intersection.
-            # Now, we have all armour skills and set bonus skills
+            armour_regular_skills = armour_contribution.skills
+            armour_set_bonuses = armour_contribution.set_bonuses
 
             for charm in charms:
 
-                including_charm_skills = copy(all_armour_skills)
+                including_charm_skills = copy(armour_regular_skills)
                 for skill in calculate_skills_dict_from_charm(charm, charm.max_level):
                     including_charm_skills[skill] += charm.max_level
                 # Now, we also have charm skills included.
@@ -526,17 +520,27 @@ def _find_highest_efr_build_worker(args):
 
                 for (weapon, w_augments_tracker, w_upgrades_tracker, w_combo_values, _) in weapon_combos:
 
+                    set_bonus_skills = calculate_set_bonus_skills(armour_set_bonuses, w_combo_values.set_bonus)
+                    if not all((set_bonus_skills.get(x, 0) > 0) for x in required_set_bonus_skills):
+                        break # We prune combinations that don't fulfill the required set bonus skills here.
+
+                    including_set_bonus_skills = copy(including_charm_skills)
+                    including_set_bonus_skills.update(set_bonus_skills)
+
                     deco_slots = Counter(list(w_combo_values.slots) + list(armour_contribution.decoration_slots))
-                    deco_dicts = _generate_deco_dicts(deco_slots, decorations, including_charm_skills, \
+                    deco_dicts = _generate_deco_dicts(deco_slots, decorations, including_set_bonus_skills, \
                                                         skill_subset=skill_subset, required_skills=skills_with_minimum_levels)
                     # deco_dicts may be an empty list if no decoration combination can fulfill skill requirements.
                     # If so, the inner loop just doesn't execute.
 
                     for deco_dict in deco_dicts:
 
-                        including_deco_skills = copy(including_charm_skills)
+                        including_deco_skills = copy(including_set_bonus_skills)
                         for (skill, level) in calculate_decorations_skills_contribution(deco_dict).items():
-                            including_deco_skills[skill] += level
+                            if skill in including_deco_skills:
+                                including_deco_skills[skill] += level
+                            else:
+                                including_deco_skills[skill] = level
                             # Now, we also have decoration skills included.
                         
                         results = lookup_from_skills(weapon, including_deco_skills, skill_states, w_augments_tracker, \

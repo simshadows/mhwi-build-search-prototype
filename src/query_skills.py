@@ -256,3 +256,4 @@ def calculate_skills_contribution(skills_dict, skill_states_dict, maximum_sharpn
             added_raw_affinity                  = added_raw_affinity,
         )
     return ret
+
