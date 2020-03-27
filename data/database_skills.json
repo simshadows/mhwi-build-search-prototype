@@ -206,6 +206,12 @@
 
                 "tooltip": "((TODO))"
         },
+        "DRAGONVEIN_AWAKENING": {
+                "name": "Dragonvein Awakening",
+                "limit": 1,
+
+                "tooltip": "Elem., abnormal status, & affinity up with weapon drawn. Take damage when attacking, but can be recovered by continually attacking."
+        },
         "DUNGMASTER": {
                 "name": "Dungmaster",
                 "limit": 1,
@@ -774,6 +780,12 @@
 
                 "tooltip": "((TODO))"
         },
+        "TRUE_DRAGONVEIN_AWAKENING": {
+                "name": "True Dragonvein Awakening",
+                "limit": 1,
+
+                "tooltip": "Enhances attacks even more with weapon drawn. Take damage when attacking, but can be recovered by continually attacking."
+        },
         "WATER_ATTACK": {
                 "name": "Water Attack",
                 "limit": 6,
@@ -809,6 +821,19 @@
         }
     },
     "set_bonuses": {
+        "SAFI_JIIVA_SEAL": {
+            "name": "Safi'jiiva Seal",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "DRAGONVEIN_AWAKENING"
+                },
+                {
+                    "parts": 5,
+                    "skill": "TRUE_DRAGONVEIN_AWAKENING"
+                }
+            ]
+        },
         "SOUL_OF_THE_DRAGOON": {
             "name": "Soul of the Dragoon",
             "stages": [

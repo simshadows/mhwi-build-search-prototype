@@ -41,6 +41,13 @@
             "Vambraces",
             "Coil",
             "Greaves"
+        ],
+        "SAFI_SCHEME": [
+            "Crown",
+            "Chest",
+            "Vambraces",
+            "Belt",
+            "Boots"
         ]
     },
     "armour": [
@@ -92,6 +99,31 @@
                 "ARMS" : [[2,2], {"CRITICAL_EYE":   2, "ATTACK_BOOST":    1}],
                 "WAIST": [[3],   {"CRITICAL_EYE":   2, "POWER_PROLONGER": 1}],
                 "LEGS" : [[2],   {"ATTACK_BOOST":   2, "CRITICAL_BOOST":  1}]
+            }
+        },
+        {
+            "set": "Tigrex",
+            "discriminator": "MASTER_RANK",
+            "rarity": 10,
+            
+            "prefix": "Tigrex",
+            "naming_scheme": "COMMON_SCHEME_4",
+
+            "set_bonus": "TIGREX_ESSENCE",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[1],   {"ATTACK_BOOST": 2, "EARPLUGS":     2}],
+                "CHEST": [[2],   {"EARPLUGS":     2, "FREE_MEAL":    1}],
+                "ARMS" : [[1],   {"SPEED_EATING": 2, "ATTACK_BOOST": 2}],
+                "WAIST": [[3,1], {"EARPLUGS":     1, "FREE_MEAL":    1}],
+                "LEGS" : [[3,1], {"SPEED_EATING": 1, "FREE_MEAL":    1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4],     {"ATTACK_BOOST": 2, "EARPLUGS":     1}],
+                "CHEST": [[4,1],   {"EARPLUGS":     2                   }],
+                "ARMS" : [[4],     {"SPEED_EATING": 2, "ATTACK_BOOST": 1}],
+                "WAIST": [[4,2,1], {"EARPLUGS":     1                   }],
+                "LEGS" : [[4,2],   {"SPEED_EATING": 1                   }]
             }
         },
         {
@@ -217,6 +249,31 @@
                 "ARMS" : [[4],     {"EARPLUGS":     2                     }],
                 "WAIST": [[4,3],   {"RESENTMENT":   2                     }],
                 "LEGS" : [[4,2,2], {"CRITICAL_EYE": 2                     }]
+            }
+        },
+        {
+            "set": "Safi'jiiva",
+            "discriminator": "MASTER_RANK",
+            "rarity": 12,
+            
+            "prefix": "Safi Crested",
+            "naming_scheme": "SAFI_SCHEME",
+
+            "set_bonus": "SAFI_JIIVA_SEAL",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2,1,1], {"EVADE_WINDOW":      2, "CRITICAL_BOOST": 1}],
+                "CHEST": [[3,2],   {"BLIGHT_RESISTANCE": 2, "CRITICAL_BOOST": 1}],
+                "ARMS" : [[2,2,2], {"BLIGHT_RESISTANCE": 1, "MAXIMUM_MIGHT":  1}],
+                "WAIST": [[3],     {"EVADE_WINDOW":      2, "MAXIMUM_MIGHT":  1}],
+                "LEGS" : [[3,2,1], {"CRITICAL_BOOST":    1, "MAXIMUM_MIGHT":  1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1,1], {"EVADE_WINDOW":      1, "CRITICAL_BOOST": 1}],
+                "CHEST": [[4,2],   {"BLIGHT_RESISTANCE": 1, "CRITICAL_BOOST": 1}],
+                "ARMS" : [[4,2,2], {"BLIGHT_RESISTANCE": 1                     }],
+                "WAIST": [[4,1],   {"EVADE_WINDOW":      2                     }],
+                "LEGS" : [[4,2,1], {"CRITICAL_BOOST":    1                     }]
             }
         },
         {
