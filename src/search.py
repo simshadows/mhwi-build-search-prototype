@@ -454,6 +454,12 @@ def _find_highest_efr_build_worker(args):
     charms = get_charms_subset(skill_subset)
     charms = [None] if (len(charms) == 0) else list(charms)
 
+    print(worker_string + f"len(minimum_set_bonus_combos) = {len(minimum_set_bonus_combos)}")
+    print(worker_string + f"len(relaxed_minimum_set_bonus_combos) = {len(relaxed_minimum_set_bonus_combos)}")
+    print(worker_string + f"len(weapon_combos) = {len(weapon_combos)}")
+    print(worker_string + f"len(armour_combos) = {len(armour_combos)}")
+    print(worker_string + f"len(charms) = {len(charms)}")
+
     ####################
     # STAGE 3: Search! #
     ####################
@@ -522,7 +528,7 @@ def _find_highest_efr_build_worker(args):
 
                     set_bonus_skills = calculate_set_bonus_skills(armour_set_bonuses, w_combo_values.set_bonus)
                     if not all((set_bonus_skills.get(x, 0) > 0) for x in required_set_bonus_skills):
-                        break # We prune combinations that don't fulfill the required set bonus skills here.
+                        continue # We prune combinations that don't fulfill the required set bonus skills here.
 
                     including_set_bonus_skills = copy(including_charm_skills)
                     including_set_bonus_skills.update(set_bonus_skills)

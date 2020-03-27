@@ -1,0 +1,29 @@
+{
+    "armour": [
+        {
+            "set": "Tigrex",
+            "discriminator": "MASTER_RANK",
+            "rarity": 10,
+            
+            "prefix": "Tigrex",
+            "naming_scheme": "COMMON_SCHEME_4",
+
+            "set_bonus": "TIGREX_ESSENCE",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[1],   {"ATTACK_BOOST": 2, "EARPLUGS":     2}],
+                "CHEST": [[2],   {"EARPLUGS":     2, "FREE_MEAL":    1}],
+                "ARMS" : [[1],   {"SPEED_EATING": 2, "ATTACK_BOOST": 2}],
+                "WAIST": [[3,1], {"EARPLUGS":     1, "FREE_MEAL":    1}],
+                "LEGS" : [[3,1], {"SPEED_EATING": 1, "FREE_MEAL":    1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4],     {"ATTACK_BOOST": 2, "EARPLUGS":     1}],
+                "CHEST": [[4,1],   {"EARPLUGS":     2                   }],
+                "ARMS" : [[4],     {"SPEED_EATING": 2, "ATTACK_BOOST": 1}],
+                "WAIST": [[4,2,1], {"EARPLUGS":     1                   }],
+                "LEGS" : [[4,2],   {"SPEED_EATING": 1                   }]
+            }
+        }
+    ]
+}

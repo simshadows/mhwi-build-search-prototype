@@ -103,7 +103,11 @@ def calculate_possible_set_bonus_combos(set_bonus_skills):
         # Now, we check if the left is a strict subset of right.
         # Note that we know the two dictionaries can't be equivalent, even though we're using the
         # less-than-or-equal operator.
-        return any(l_num_pieces <= right.get(l_set_bonus, 0) for (l_set_bonus, l_num_pieces) in left.items())
+        set_bonuses_union = set(left) | set(right)
+        must_be_all = all(left.get(set_bonus, 0) <= right.get(set_bonus, 0) for set_bonus in set_bonuses_union)
+        if not must_be_all:
+            return False
+        return any(left.get(set_bonus, 0) < right.get(set_bonus, 0) for set_bonus in (set(left) | set(right)))
 
     return prune_by_superceding(combinations, left_supercedes_right)
 
@@ -165,7 +169,11 @@ def relax_set_bonus_combos(set_bonus_combos):
         # Now, we check if the left is a strict subset of right.
         # Note that we know the two dictionaries can't be equivalent, even though we're using the
         # less-than-or-equal operator.
-        return any(l_num_pieces <= right.get(l_set_bonus, 0) for (l_set_bonus, l_num_pieces) in left.items())
+        set_bonuses_union = set(left) | set(right)
+        must_be_all = all(left.get(set_bonus, 0) <= right.get(set_bonus, 0) for set_bonus in set_bonuses_union)
+        if not must_be_all:
+            return False
+        return any(left.get(set_bonus, 0) < right.get(set_bonus, 0) for set_bonus in (set(left) | set(right)))
 
     return prune_by_superceding(ret, left_supercedes_right)
 

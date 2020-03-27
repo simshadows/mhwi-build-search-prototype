@@ -25,7 +25,8 @@ from .database_weapons import (SHARPNESS_LEVEL_NAMES,
                               weapon_db)
 
 
-DEBUGGING_WEAPON_PRUNING_DUMP_FILENAME = "debugging_dumps/weapon_pruning_dump.txt"
+DEBUGGING_WEAPONS_PRUNED_DUMP_FILENAME = "debugging_dumps/weapons_pruned_dump.txt"
+DEBUGGING_WEAPONS_KEPT_DUMP_FILENAME = "debugging_dumps/weapons_kept_dump.txt"
 
 
 WeaponAugmentsContribution = namedtuple(
@@ -837,7 +838,7 @@ def _weapon_combo_supercedes(w1, w2):
     #   w1=setbonusB | continue | return False | continue
     #   -------------|----------|--------------|--------------
     # So, we only continue if w2 is None, or the set bonuses are the same.
-    if not ((w2.set_bonus is None) or (w1.set_bonus is w1.set_bonus)):
+    if (w2.set_bonus is not None) and (w1.set_bonus is not w2.set_bonus):
         return False
 
     # For now, we just group everything by whether they are raw or not.
@@ -910,6 +911,7 @@ def get_pruned_weapon_combos(weapon_class, health_regen_minimum):
 
     if __debug__:
         after = weapon_combinations
+        # First, we print weapons pruned.
         diff = [x for x in before if (x not in after)]
         buf = []
         assert len(diff) > 0
@@ -929,14 +931,28 @@ def get_pruned_weapon_combos(weapon_class, health_regen_minimum):
             buf.append(x[0][2].to_str_debugging())
             if effectively_equivalent:
                 buf.append("<IS EQUIVALENT TO>")
+                buf.append(effectively_equivalent[0][0].name)
+                buf.append(effectively_equivalent[0][1].to_str_debugging())
+                buf.append(effectively_equivalent[0][2].to_str_debugging())
             else:
                 buf.append("<IS SUPERCEDED BY>")
-            buf.append(y[0][0].name)
-            buf.append(y[0][1].to_str_debugging())
-            buf.append(y[0][2].to_str_debugging())
+                buf.append(superceding_set[0][0].name)
+                buf.append(superceding_set[0][1].to_str_debugging())
+                buf.append(superceding_set[0][2].to_str_debugging())
             buf.append("\n")
-        ensure_directory(DEBUGGING_WEAPON_PRUNING_DUMP_FILENAME)
-        with open(DEBUGGING_WEAPON_PRUNING_DUMP_FILENAME, encoding=ENCODING, mode="w") as f:
+        ensure_directory(DEBUGGING_WEAPONS_PRUNED_DUMP_FILENAME)
+        with open(DEBUGGING_WEAPONS_PRUNED_DUMP_FILENAME, encoding=ENCODING, mode="w") as f:
+            f.write("\n".join(buf))
+        # Then, we print weapons kept.
+        buf = []
+        assert len(after) > 0
+        for x in after:
+            buf.append(x[0][0].name)
+            buf.append(x[0][1].to_str_debugging())
+            buf.append(x[0][2].to_str_debugging())
+            buf.append("\n")
+        ensure_directory(DEBUGGING_WEAPONS_KEPT_DUMP_FILENAME)
+        with open(DEBUGGING_WEAPONS_KEPT_DUMP_FILENAME, encoding=ENCODING, mode="w") as f:
             f.write("\n".join(buf))
     
     weapon_combinations = [x[0] for x in weapon_combinations]
