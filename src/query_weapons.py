@@ -167,9 +167,10 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
         ]
 
     IB_AUGMENTATION_SLOTS = {
-            10: [5, 7, 9],
-            11: [4, 5, 6],
-            12: [3, 4, 5],
+            10: [5, 7, 9, 10],
+            11: [4, 5, 6, 8 ],
+            12: [3, 4, 5, 6 ],
+            #    0  1  2  3 = slot level
         }
 
     IB_SLOT_CONSUMPTIONS = {
@@ -181,6 +182,9 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
             #IBWeaponAugmentType.ELEMENT_STATUS_EFFECT_UP : [1, 2, 2, 2],
         }
 
+    _IB_MAX_SLOT_LEVEL = 3 # This determines the maximum slot level, i.e. length of each IB_AUGMENTATION_SLOTS list.
+    _IB_AUGMENT_MAX_LEVEL = 4 # This determines the maximum level of each of the IBWeaponAugmentTypes.
+
     IB_ATTACK_AUGMENT_VALUES               = (0, 5,  5, 5, 5)
     IB_AFFINITY_AUGMENT_VALUES_PERCENTAGES = (0, 10, 5, 5, 5)
     #                                level =  0  1   2  3  4
@@ -189,162 +193,6 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
 
     IB_ATTACK_AUGMENT_CUMULATIVE               = tuple(accumulate(IB_ATTACK_AUGMENT_VALUES))
     IB_AFFINITY_AUGMENT_PERCENTAGES_CUMULATIVE = tuple(accumulate(IB_AFFINITY_AUGMENT_VALUES_PERCENTAGES))
-
-    # {rarity: [config]}
-    _MAXIMIZED_CONFIGS_NOHEALTHREGEN = { # TODO: Consider automating this definition.
-            10: [
-                # Start without slots
-                [
-                    (IBWeaponAugmentType.ATTACK_INCREASE, 4),
-                ],
-                [
-                    (IBWeaponAugmentType.ATTACK_INCREASE  , 3),
-                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
-                ],
-                [
-                    (IBWeaponAugmentType.ATTACK_INCREASE  , 2),
-                    (IBWeaponAugmentType.AFFINITY_INCREASE, 2),
-                ],
-                [
-                    (IBWeaponAugmentType.ATTACK_INCREASE  , 1),
-                    (IBWeaponAugmentType.AFFINITY_INCREASE, 3),
-                ],
-                [
-                    (IBWeaponAugmentType.AFFINITY_INCREASE, 4),
-                ],
-                # Add one slot upgrade
-                [
-                    (IBWeaponAugmentType.ATTACK_INCREASE,   2),
-                    (IBWeaponAugmentType.SLOT_UPGRADE,      1),
-                ],
-                [
-                    (IBWeaponAugmentType.ATTACK_INCREASE,   1),
-                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
-                    (IBWeaponAugmentType.SLOT_UPGRADE,      1),
-                ],
-                [
-                    (IBWeaponAugmentType.AFFINITY_INCREASE, 3),
-                    (IBWeaponAugmentType.SLOT_UPGRADE,      1),
-                ],
-                # Add two or three slot upgrades
-                [
-                    (IBWeaponAugmentType.ATTACK_INCREASE,   1),
-                    (IBWeaponAugmentType.SLOT_UPGRADE,      2),
-                ],
-                [
-                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
-                    (IBWeaponAugmentType.SLOT_UPGRADE,      3),
-                ],
-                # All slot upgrades
-                [
-                    (IBWeaponAugmentType.SLOT_UPGRADE,      4),
-                ],
-            ],
-            11: [
-                # Start without slots
-                [
-                    (IBWeaponAugmentType.ATTACK_INCREASE,   2),
-                ],
-                [
-                    (IBWeaponAugmentType.ATTACK_INCREASE  , 1),
-                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
-                ],
-                [
-                    (IBWeaponAugmentType.AFFINITY_INCREASE, 3),
-                ],
-                # Add one slot upgrade
-                [
-                    (IBWeaponAugmentType.ATTACK_INCREASE,   1),
-                    (IBWeaponAugmentType.SLOT_UPGRADE,      1),
-                ],
-                [
-                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
-                    (IBWeaponAugmentType.SLOT_UPGRADE,      1),
-                ],
-                # All slot upgrades
-                [
-                    (IBWeaponAugmentType.SLOT_UPGRADE,      2),
-                ],
-            ],
-            12: [
-                # Start without slots
-                [
-                    (IBWeaponAugmentType.ATTACK_INCREASE, 2),
-                ],
-                [
-                    (IBWeaponAugmentType.ATTACK_INCREASE  , 1),
-                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
-                ],
-                [
-                    (IBWeaponAugmentType.AFFINITY_INCREASE, 2),
-                ],
-                # Add one slot upgrade
-                [
-                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
-                    (IBWeaponAugmentType.SLOT_UPGRADE,      1),
-                ],
-                # That's about all you can do.
-            ],
-        }
-
-    _MAXIMIZED_CONFIGS_WITHHEALTHREGEN = { # TODO: Consider automating this definition.
-            10: [
-                # Start without slots
-                [
-                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
-                    (IBWeaponAugmentType.ATTACK_INCREASE,   2),
-                ],
-                [
-                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
-                    (IBWeaponAugmentType.ATTACK_INCREASE,   1),
-                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
-                ],
-                [
-                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
-                    (IBWeaponAugmentType.AFFINITY_INCREASE, 3),
-                ],
-                # Add one slot upgrade
-                [
-                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
-                    (IBWeaponAugmentType.SLOT_UPGRADE,      1),
-                    (IBWeaponAugmentType.ATTACK_INCREASE,   1),
-                ],
-                [
-                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
-                    (IBWeaponAugmentType.SLOT_UPGRADE,      1),
-                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
-                ],
-                # Max out slot upgrade
-                [
-                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
-                    (IBWeaponAugmentType.SLOT_UPGRADE,      2),
-                ],
-            ],
-            11: [
-                # Start without slots
-                [
-                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
-                    (IBWeaponAugmentType.ATTACK_INCREASE,   1),
-                ],
-                [
-                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
-                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
-                ],
-                # Add a slot upgrade
-                [
-                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
-                    (IBWeaponAugmentType.SLOT_UPGRADE,      1),
-                ],
-                # Can't add more slot upgrades.
-            ],
-            12: [
-                # There's literally nothing else you can do
-                [
-                    (IBWeaponAugmentType.HEALTH_REGEN,      1),
-                    (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
-                ],
-            ],
-        }
 
     def __init__(self, rarity, auto_maximize=True):
         assert isinstance(rarity, int)
@@ -357,7 +205,7 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
         self._auto_maximize = auto_maximize
 
         self._rarity    = rarity
-        self._aug_level = 2
+        self._aug_level = self._IB_MAX_SLOT_LEVEL
         self._augments  = {} # {IBWeaponAugmentType: int}
 
         assert self._state_is_valid()
@@ -400,12 +248,28 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
         return ret
 
     def get_maximized_configs(self, health_regen_minimum=0):
-        if health_regen_minimum == 0:
-            return self._MAXIMIZED_CONFIGS_NOHEALTHREGEN[self._rarity]
-        elif health_regen_minimum == 1:
-            return self._MAXIMIZED_CONFIGS_WITHHEALTHREGEN[self._rarity]
-        else:
-            raise NotImplementedError("Other levels are not implemented yet.")
+        maximized_configs = []
+        
+        efr_augments = {
+                IBWeaponAugmentType.ATTACK_INCREASE,
+                IBWeaponAugmentType.AFFINITY_INCREASE,
+                IBWeaponAugmentType.SLOT_UPGRADE,
+            }
+
+        picks = [[(aug, x) for x in range(self._IB_AUGMENT_MAX_LEVEL + 1)] for aug in efr_augments]
+        # range() will go from 0 to 4. 0 will mean no augment, and 1-4 will be each level.
+
+        for augs in product(*picks):
+            config = [(aug, level) for (aug, level) in augs if (level > 0)]
+
+            assert IBWeaponAugmentType.HEALTH_REGEN not in set(x for (x, _) in config) # Assume it's not in yet.
+            if health_regen_minimum > 0:
+                config.append((IBWeaponAugmentType.HEALTH_REGEN, health_regen_minimum))
+
+            if self._is_valid_configuration(config, self._rarity, self._aug_level):
+                maximized_configs.append(config)
+
+        return maximized_configs
 
     def update_with_config(self, selected_config):
         assert isinstance(selected_config, list) # May accept dicts later.
@@ -436,19 +300,32 @@ class IBWeaponAugmentTracker(WeaponAugmentTracker):
         return f"[Augmentation Level: {self._aug_level}] " + ",".join(f"{k.name}_{v}" for (k, v) in self._augments.items())
 
     def _state_is_valid(self):
-        aug_maximum = self.IB_AUGMENTATION_SLOTS[self._rarity][self._aug_level]
-
-        aug_used = 0
-        for (augment, level) in self._augments.items():
-            if level > 0:
-                aug_used += self.IB_SLOT_CONSUMPTIONS_CUMULATIVE[augment][level - 1]
-                # IMPORTANT: Need to remember that the slot consumptions list starts at level 1.
+        config_list = list(self._augments.items())
 
         ret = all(isinstance(k, IBWeaponAugmentType) and isinstance(v, int) for (k, v) in self._augments.items()) \
                 and all((v >= 0) and (v <= 4) for (k, v) in self._augments.items()) \
                 and (IBWeaponAugmentType.AUGMENT_LEVEL not in self._augments.items()) \
-                and (aug_used <= aug_maximum)
+                and self._is_valid_configuration(config_list, self._rarity, self._aug_level)
         return ret
+
+    @classmethod
+    def _is_valid_configuration(cls, config_list, rarity, aug_level):
+        assert isinstance(config_list, list)
+        assert all(isinstance(aug, IBWeaponAugmentType) and isinstance(level, int) for (aug, level) in config_list)
+        assert all((level >= 0) and (level <= cls._IB_AUGMENT_MAX_LEVEL) for (_, level) in config_list)
+        assert len(config_list) == len(set(x for (x, _) in config_list))
+
+        slots_maximum = cls.IB_AUGMENTATION_SLOTS[rarity][aug_level]
+
+        slots_used = 0
+        for (aug, level) in config_list:
+            if level > 0:
+                slots_used += cls.IB_SLOT_CONSUMPTIONS_CUMULATIVE[aug][level - 1]
+                # IMPORTANT: Need to remember that the slot consumptions list starts at level 1.
+        if slots_used <= slots_maximum:
+            return True
+        else:
+            return False
 
 
 WeaponUpgradesContribution = namedtuple(
@@ -1035,17 +912,25 @@ def get_pruned_weapon_combos(weapon_class, health_regen_minimum):
         after = weapon_combinations
         diff = [x for x in before if (x not in after)]
         buf = []
+        assert len(diff) > 0
         for x in diff:
             superceding_set = None
+            effectively_equivalent = None
             for y in after:
-                if left_supercedes_right(y, x):
+                result = left_supercedes_right(y, x)
+                if result is True:
                     superceding_set = y
                     break
-            assert (superceding_set is not None)
+                elif result is None:
+                    effectively_equivalent = y
+            assert (superceding_set is not None) or (effectively_equivalent is not None)
             buf.append(x[0][0].name)
             buf.append(x[0][1].to_str_debugging())
             buf.append(x[0][2].to_str_debugging())
-            buf.append("<IS SUPERCEDED BY>")
+            if effectively_equivalent:
+                buf.append("<IS EQUIVALENT TO>")
+            else:
+                buf.append("<IS SUPERCEDED BY>")
             buf.append(y[0][0].name)
             buf.append(y[0][1].to_str_debugging())
             buf.append(y[0][2].to_str_debugging())
