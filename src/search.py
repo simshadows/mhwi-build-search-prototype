@@ -8,19 +8,21 @@ This file contains various queries and search algorithms.
 """
 
 import time
+import logging
 from copy import copy
 import multiprocessing as mp
 from queue import Empty
 
 from collections import defaultdict, Counter
 
-from .builds    import (Build,
-                       lookup_from_skills)
-from .serialize import (SearchParameters,
-                       readjson_search_parameters)
-from .utils     import (ExecutionProgress,
-                       grouper,
-                       interleaving_shuffle)
+from .builds       import (Build,
+                          lookup_from_skills)
+from .serialize    import (SearchParameters,
+                          readjson_search_parameters)
+from .utils        import (ExecutionProgress,
+                          grouper,
+                          interleaving_shuffle)
+from .loggingutils import log_appstats
 
 from .database_armour import ArmourSlot
 
@@ -34,6 +36,9 @@ from .query_skills      import (calculate_possible_set_bonus_combos,
                                calculate_set_bonus_skills)
 from .query_weapons     import (calculate_final_weapon_values,
                                get_pruned_weapon_combos)
+
+
+logger = logging.getLogger(__name__)
 
 
 def _split_armour_combos_into_batches(armour_combos, batch_size, batch_shuffle_rounds):
@@ -89,8 +94,6 @@ def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_s
     assert isinstance(required_skills, dict)
     # assert all(x in slots_available_counter for x in [1, 2, 3, 4]) # This isn't enforced anymore.
     # assert all(x in all_possible_decos for x in [1, 2, 3, 4]) # This isn't enforced anymore.
-    if not (len(slots_available_counter) <= 4):
-        print(slots_available_counter)
     assert len(slots_available_counter) <= 4
     assert len(all_possible_decos) > 0
 
@@ -299,7 +302,7 @@ def find_highest_efr_build(search_parameters_jsonstr):
                 if msg[1] == "PROGRESS":
                     assert msg[2] == 1
                     grandtotal_progress.ensure_total_progress_count(msg[4])
-                    grandtotal_progress.update_and_print_progress()
+                    grandtotal_progress.update_and_log_progress(logger)
                 elif msg[1] == "BUILD":
                     serial_data = msg[2]
                     intermediate_build = Build.deserialize(serial_data)
@@ -315,23 +318,23 @@ def find_highest_efr_build(search_parameters_jsonstr):
 
                         broadcast_new_best_efr(current_best_efr)
 
-                        print()
-                        print(f"{current_best_efr} EFR @ {current_best_affinity} affinity")
-                        print()
-                        current_best_build.print()
-                        print()
+                        logger.info("")
+                        logger.info(f"{current_best_efr} EFR @ {current_best_affinity} affinity")
+                        logger.info("")
+                        logger.info(current_best_build.get_humanreadable())
+                        logger.info("")
                 elif msg[1] == "WORKER_COMPLETE":
                     worker_number = msg[0]
                     workers_complete[worker_number] = True
                     if all(status for (_, status) in workers_complete.items()):
-                        print()
-                        print(f"Worker #{worker_number} finished. All workers have now concluded.")
-                        print()
+                        logger.info("")
+                        logger.info(f"Worker #{worker_number} finished. All workers have now concluded.")
+                        logger.info("")
                     else:
                         buf = ", ".join(str(i) for (i, status) in workers_complete.items() if (not status))
-                        print()
-                        print(f"Worker #{worker_number} finished. Still waiting on: {buf}")
-                        print()
+                        logger.info("")
+                        logger.info(f"Worker #{worker_number} finished. Still waiting on: {buf}")
+                        logger.info("")
                 else:
                     raise ValueError("Unknown message: " + str(msg))
             except Empty:
@@ -352,28 +355,28 @@ def find_highest_efr_build(search_parameters_jsonstr):
             best_build = build
 
     if best_build is None:
-        print()
-        print("No build was found within the constraints.")
-        print()
+        logger.info("")
+        logger.info("No build was found within the constraints.")
+        logger.info("")
     else:
         results = best_build.calculate_performance(skill_states)
-        print()
-        print("Final build:")
-        print()
-        print(f"{results.efr} EFR @ {results.affinity} affinity")
-        print()
-        best_build.print()
-        print()
+        logger.info("")
+        logger.info("Final build:")
+        logger.info("")
+        logger.info(f"{results.efr} EFR @ {results.affinity} affinity")
+        logger.info("")
+        logger.info(best_build.get_humanreadable())
+        logger.info("")
 
     end_time = time.time()
 
     search_time_min = int((end_time - start_time) // 60)
     search_time_sec = int((end_time - start_time) % 60)
 
-    print()
-    print(f"Total execution time (in real time): {search_time_min:02}:{search_time_sec:02}")
-    print(f"({end_time - start_time} seconds)")
-    print()
+    logger.info("")
+    logger.info(f"Total execution time (in real time): {search_time_min:02}:{search_time_sec:02}")
+    logger.info(f"({end_time - start_time} seconds)")
+    logger.info("")
 
     return
 
@@ -401,7 +404,7 @@ def _find_highest_efr_build_worker(args):
         queue_to_parent.put([worker_number, "BUILD", build_obj.serialize()])
         return
 
-    print_progress = (worker_number == 0)
+    print_info = (worker_number == 0)
 
     ########################################
     # STAGE 1: Determine Search Parameters #
@@ -454,11 +457,12 @@ def _find_highest_efr_build_worker(args):
     charms = get_charms_subset(skill_subset)
     charms = [None] if (len(charms) == 0) else list(charms)
 
-    print(worker_string + f"len(minimum_set_bonus_combos) = {len(minimum_set_bonus_combos)}")
-    print(worker_string + f"len(relaxed_minimum_set_bonus_combos) = {len(relaxed_minimum_set_bonus_combos)}")
-    print(worker_string + f"len(weapon_combos) = {len(weapon_combos)}")
-    print(worker_string + f"len(armour_combos) = {len(armour_combos)}")
-    print(worker_string + f"len(charms) = {len(charms)}")
+    if print_info:
+        log_appstats(worker_string + f"len(minimum_set_bonus_combos)", len(minimum_set_bonus_combos))
+        log_appstats(worker_string + f"len(relaxed_minimum_set_bonus_combos)", len(relaxed_minimum_set_bonus_combos))
+        log_appstats(worker_string + f"len(weapon_combos)", len(weapon_combos))
+        log_appstats(worker_string + f"len(armour_combos)", len(armour_combos))
+        log_appstats(worker_string + f"len(charms)", len(charms))
 
     ####################
     # STAGE 3: Search! #
@@ -490,7 +494,7 @@ def _find_highest_efr_build_worker(args):
             if weapon_configuration[4] > best_efr: # Check if the ceiling EFR is over the best EFR
                 new_weapon_configuration_list.append(weapon_configuration)
         weapon_combos = new_weapon_configuration_list
-        print(worker_string + f"New number of weapon configurations: {len(weapon_combos)} " + \
+        logger.info(worker_string + f"New number of weapon configurations: {len(weapon_combos)} " + \
                                     f"out of {debugging_num_initial_weapon_configs}")
         return
 
@@ -499,7 +503,7 @@ def _find_highest_efr_build_worker(args):
         new_batch_index = job_queue.get(block=True)
         if new_batch_index >= len(armour_combos_batches):
             break
-        print(worker_string + f"New batch number: {new_batch_index} of 0-{len(armour_combos_batches)-1}")
+        logger.info(worker_string + f"New batch number: {new_batch_index} of 0-{len(armour_combos_batches)-1}")
 
         armour_combos_sublist = armour_combos_batches[new_batch_index]
 

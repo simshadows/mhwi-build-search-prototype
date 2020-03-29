@@ -7,12 +7,14 @@ Author:   contact@simshadows.com
 This file provides the MHWI build optimizer script's armour database queries.
 """
 
+import logging
 from copy import copy
 from collections import namedtuple, defaultdict, Counter
 from itertools import product
 
-from .enums import Tier
-from .utils import ExecutionProgress, prune_by_superceding, lists_of_dicts_are_equal
+from .enums        import Tier
+from .utils        import ExecutionProgress, prune_by_superceding, lists_of_dicts_are_equal
+from .loggingutils import log_appstats
 
 from .database_decorations import skill_to_simple_deco_size
 from .database_skills import Skill, SetBonus
@@ -22,6 +24,9 @@ from .query_skills import calculate_set_bonus_skills
 from .database_armour import (ArmourSlot,
                              ArmourPieceInfo,
                              easyiterate_armour)
+
+
+logger = logging.getLogger(__name__)
 
 
 # Returns if p1 supercedes p2.
@@ -177,10 +182,10 @@ def _skills_and_slots_supercedes(p1_skills_and_setbonuses, p1_slots, p2_skills_a
 def prune_easyiterate_armour_db(selected_armour_tier, original_easyiterate_armour_db, skill_subset=None):
     assert isinstance(selected_armour_tier, Tier) or (selected_armour_tier is None)
 
-    print()
-    print()
-    print("======= Armour Pruning =======")
-    print()
+    logger.info("")
+    logger.info("")
+    logger.info("======= Armour Pruning =======")
+    logger.info("")
 
     intermediate = {}
     for (gear_slot, piece_list) in original_easyiterate_armour_db.items():
@@ -199,12 +204,12 @@ def prune_easyiterate_armour_db(selected_armour_tier, original_easyiterate_armou
     total_kept = sum(len(x) for (_, x) in intermediate.items())
     total_original = sum(len(x) for (_, x) in original_easyiterate_armour_db.items())
 
-    print("kept: " + str(total_kept))
-    print("pruned: " + str(total_original - total_kept))
-    print()
-    print("=============================")
-    print()
-    print()
+    log_appstats("armour pieces kept", total_kept)
+    log_appstats("armour pieces pruned", total_original - total_kept)
+    logger.info("")
+    logger.info("=============================")
+    logger.info("")
+    logger.info("")
 
     return intermediate
 
@@ -285,13 +290,13 @@ def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill
     assert isinstance(minimum_set_bonus_combos, list)
     #assert isinstance(required_set_bonus_skills, set) # We're getting rid of this
 
-    print()
-    print()
-    print("===== Armour Set Pruning =====")
-    print()
+    logger.info("")
+    logger.info("")
+    logger.info("===== Armour Set Pruning =====")
+    logger.info("")
 
     all_combinations = list(_armour_combination_iter(original_easyiterate_armour_db))
-    print(f"Number of armour combinations, before pruning: {len(all_combinations)}")
+    log_appstats("Number of armour combinations, before pruning", len(all_combinations))
 
     # We filter for only armour combinations that fulfil at least one set bonus combination.
     def fulfils_min_set_bonus_combos(x):
@@ -307,7 +312,7 @@ def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill
         return False
 
     all_combinations = [x for x in all_combinations if fulfils_min_set_bonus_combos(x)]
-    print(f"Number of armour combinations, after filtering by set bonus: {len(all_combinations)}")
+    log_appstats("Number of armour combinations, after filtering by set bonus", len(all_combinations))
 
     progress = ExecutionProgress("COMBINATION PRUNING", len(all_combinations), granularity=100)
 
@@ -325,16 +330,15 @@ def generate_and_prune_armour_combinations(original_easyiterate_armour_db, skill
                                                 skill_subset=skill_subset) 
 
     def update_progress():
-        progress.update_and_print_progress()
+        progress.update_and_log_progress(logger)
 
     best_combinations = prune_by_superceding(all_combinations, left_supercedes_right, execute_per_iteration=update_progress)
 
-    print()
-    print(f"Number of armour combinations, after pruning: {len(best_combinations)}")
-    print()
-    print("=============================")
-    print()
-    print()
+    log_appstats("Number of armour combinations, after pruning", len(best_combinations))
+    logger.info("")
+    logger.info("=============================")
+    logger.info("")
+    logger.info("")
 
     return [x[0] for x in best_combinations]
 

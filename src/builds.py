@@ -35,7 +35,7 @@ from .query_skills      import (RAW_BLUNDER_MULTIPLIER,
 from .query_weapons     import (WeaponAugmentTracker,
                                WeaponUpgradeTracker,
                                calculate_final_weapon_values,
-                               print_weapon_config)
+                               get_weapon_config_humanreadable)
 
 
 BuildValues = namedtuple(
@@ -363,30 +363,36 @@ class Build:
                 
         return transform_results_recursively(intermediate_results)
 
-    def print(self):
-        print_weapon_config("      ", self._weapon, self._weapon_augments_tracker, self._weapon_upgrades_tracker)
-        print()
+    def get_humanreadable(self):
+        buf = []
 
-        def print_armour_piece(slot, piece):
+        buf.append("Build:")
+        buf.append("")
+
+        s = get_weapon_config_humanreadable("      ", self._weapon, self._weapon_augments_tracker, self._weapon_upgrades_tracker)
+        buf.append(s)
+        buf.append("")
+
+        def append_armour_piece(slot, piece):
             armour_str = (slot.name.ljust(5) + ": " + piece.armour_set.set_name + " " + \
                                     piece.armour_set_variant.value.ascii_postfix).ljust(25)
             deco_str = " ".join(str(x) for x in piece.decoration_slots) if (len(piece.decoration_slots) > 0) else "(none)"
-            print(f"      {armour_str} slots: {deco_str}")
+            buf.append(f"      {armour_str} slots: {deco_str}")
             return
 
-        print_armour_piece(ArmourSlot.HEAD,  self._head)
-        print_armour_piece(ArmourSlot.CHEST, self._chest)
-        print_armour_piece(ArmourSlot.ARMS,  self._arms)
-        print_armour_piece(ArmourSlot.WAIST, self._waist)
-        print_armour_piece(ArmourSlot.LEGS,  self._legs)
+        append_armour_piece(ArmourSlot.HEAD,  self._head)
+        append_armour_piece(ArmourSlot.CHEST, self._chest)
+        append_armour_piece(ArmourSlot.ARMS,  self._arms)
+        append_armour_piece(ArmourSlot.WAIST, self._waist)
+        append_armour_piece(ArmourSlot.LEGS,  self._legs)
         
-        print()
-        print("      CHARM: " + self._charm.name)
+        buf.append("")
+        buf.append("      CHARM: " + self._charm.name)
 
-        print()
+        buf.append("")
         for (deco, level) in self._decos.items():
-            print(f"      x{level} {deco.value.name}")
-        return
+            buf.append(f"      x{level} {deco.value.name}")
+        return "\n".join(buf)
 
     def _get_armour_dict(self):
         return {

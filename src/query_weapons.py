@@ -684,7 +684,7 @@ class SafiWeaponUpgrades(WeaponUpgradeTracker):
                 self._MAXIMIZED_CONFIG_LEVEL_6_PICKS,
                 self._MAXIMIZED_CONFIG_REGULAR_PICKS,
                 self._MAXIMIZED_CONFIG_REGULAR_PICKS,
-                self._MAXIMIZED_CONFIG_REGULAR_PICKS,
+                self._MAXIMIZED_CONFIG_REGULAR_PICKS, # TODO: Make it so slot upgrades only work
                 self._MAXIMIZED_CONFIG_REGULAR_PICKS + self._MAXIMIZED_CONFIG_SET_BONUS_PICKS,
             )
         for tup in it:
@@ -959,17 +959,20 @@ def get_pruned_weapon_combos(weapon_class, health_regen_minimum):
     return weapon_combinations
 
 
-def print_weapon_config(linebegin, weapon, weapon_augments_tracker, weapon_upgrades_tracker):
-    print(linebegin + weapon.name)
+def get_weapon_config_humanreadable(linebegin, weapon, weapon_augments_tracker, weapon_upgrades_tracker):
+    buf = []
 
-    print()
+    buf.append(linebegin + weapon.name)
+
+    buf.append("")
     for (augment, level) in weapon_augments_tracker.get_config():
-        print(f"{linebegin}{augment.name} {level}")
+        buf.append(f"{linebegin}{augment.name} {level}")
     # TODO: Let the tracker print itself.
     if isinstance(weapon_upgrades_tracker, IBCWeaponUpgradeTracker):
         for (stage, upgrade) in enumerate(weapon_upgrades_tracker.get_config()):
-            print(f"{linebegin}Custom Upgrade: {upgrade.name} {stage+1}")
+            buf.append(f"{linebegin}Custom Upgrade: {upgrade.name} {stage+1}")
     elif isinstance(weapon_upgrades_tracker, SafiWeaponUpgrades):
         for (upgrade, level) in weapon_upgrades_tracker.get_config():
-            print(f"{linebegin}Safi Awakening: {upgrade.name} {level}")
-    return
+            buf.append(f"{linebegin}Safi Awakening: {upgrade.name} {level}")
+    return "\n".join(buf)
+

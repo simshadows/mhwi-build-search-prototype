@@ -11,9 +11,11 @@ In this version, we assume each level under maximum Handicraft will subtract sha
 """
 
 import sys
+import logging
 
 from collections import defaultdict
 
+from src.loggingutils import setup_logging, log_appstats
 from src.unit_testing import run_tests
 from src.search       import find_highest_efr_build
 from src.utils        import ENCODING
@@ -29,27 +31,26 @@ from src.database_weapons     import weapon_db
 from src.query_weapons import IBWeaponAugmentType
 
 
+setup_logging()
+logger = logging.getLogger(__name__)
+
+
 def print_debugging_statistics():
     armour_set_total = 0
     for (_, armour_set) in armour_db.items():
         armour_set_total += sum(len(v) for (k, v) in armour_set.variants.items())
 
-    print("=== Application Statistics ===")
-    print()
-    print("Number of skills: " + str(len(list(Skill))))
-    print()
-    print("Total number of armour pieces: " + str(armour_set_total))
-    print("Total number of weapons: " + str(len(weapon_db)))
-    print()
-    print("Number of decorations: " + str(len(list(Decoration))))
-    print("\n==============================\n")
+    log_appstats("Number of skills", len(list(Skill)))
+    log_appstats("Total number of armour pieces", armour_set_total)
+    log_appstats("Total number of weapons", len(weapon_db))
+    log_appstats("Number of decorations", len(list(Decoration)))
     return
 
 
 def search_command(search_parameters_filename):
     assert isinstance(search_parameters_filename, str)
 
-    print("Carrying out a pre-defined search.")
+    logger.info("Carrying out a pre-defined search.")
 
     with open(search_parameters_filename, encoding=ENCODING, mode="r") as f:
         search_parameters_jsonstr = f.read()

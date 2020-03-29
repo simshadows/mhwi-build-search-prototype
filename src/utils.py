@@ -80,7 +80,7 @@ class ExecutionProgress:
                                     f"we got {total_progress_segments}")
         return
 
-    def update_and_print_progress(self):
+    def update_and_log_progress(self, foreign_logger):
         assert self._total_progress_segments is not None
         self._curr_progress_segment += 1
 
@@ -104,7 +104,8 @@ class ExecutionProgress:
             estimate_seconds = int(seconds_estimate % 60) # This naming is so confusing lmao
             estimate_str = f"{estimate_minutes:02}:{estimate_seconds:02}"
 
-            print(f"[{self._msg} PROGRESS: {curr_progress_str}] elapsed {progress_real_time_str}, estimate {estimate_str}")
+            buf = f"[{self._msg} PROGRESS: {curr_progress_str}] elapsed {progress_real_time_str}, estimate {estimate_str}"
+            foreign_logger.info(buf)
         return
 
 

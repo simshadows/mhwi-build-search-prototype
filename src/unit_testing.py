@@ -7,6 +7,7 @@ Author:   contact@simshadows.com
 
 import sys
 from copy import copy
+import logging
 
 from collections import namedtuple, defaultdict, Counter
 
@@ -44,22 +45,28 @@ from .query_weapons     import (WeaponAugmentTracker,
                                SafiWeaponSetBonusUpgradeType)
 
 
+logger = logging.getLogger(__name__)
+
+
 def run_tests():
-    print("Running unit tests.")
+    logger.info("Running unit tests.")
 
     _run_tests_lookup()
     _run_tests_armour_pruning()
     _run_tests_serializing()
     _run_tests_deco_dict_generation()
 
-    print("\nUnit tests are all passed.")
-    print("\n==============================\n")
+    logger.info("")
+    logger.info("Unit tests are all passed.")
+    logger.info("")
+    logger.info("==============================")
+    logger.info("")
     return
 
 
 # Super-simple unit testing. Will probably switch to a testing framework if I have complex needs.
 def _run_tests_lookup():
-    print()
+    logger.info("")
 
     skills_dict = {} # Start with no skills
     skill_states_dict = {} # Start with no states
@@ -85,21 +92,21 @@ def _run_tests_lookup():
                 raise ValueError(f"EFR value mismatch for skill level {level}. Got EFR = {vals.efr}.")
         return
 
-    print("Incrementing Handicraft.")
+    logger.info("Incrementing Handicraft.")
     test_with_incrementing_skill(Skill.HANDICRAFT, 5, [366.00, 366.00, 366.00, 402.60, 402.60, 423.95])
     # We now have full Handicraft.
-    print("Incrementing Critical Boost with zero Affinity.")
+    logger.info("Incrementing Critical Boost with zero Affinity.")
     test_with_incrementing_skill(Skill.CRITICAL_BOOST, 3, [423.95, 423.95, 423.95, 423.95])
     # We now have full Handicraft and Critical Boost.
 
     weapon = weapon_db["ROYAL_VENUS_BLADE"]
 
-    print("Incrementing Critical Boost with non-zero Affinity.")
+    logger.info("Incrementing Critical Boost with non-zero Affinity.")
     test_with_incrementing_skill(Skill.CRITICAL_BOOST, 3, [411.01, 413.98, 416.95, 419.92])
-    print("Incrementing Critical Eye.")
+    logger.info("Incrementing Critical Eye.")
     test_with_incrementing_skill(Skill.CRITICAL_EYE, 7, [419.92, 427.84, 435.77, 443.69, 451.61, 459.53, 467.46, 483.30])
     # We now have full Handicraft, Critical Boost, and Critical Eye.
-    print("Incrementing Attack Boost.")
+    logger.info("Incrementing Attack Boost.")
     test_with_incrementing_skill(Skill.ATTACK_BOOST, 7, [483.30, 488.39, 493.48, 498.57, 511.91, 517.08, 522.25, 527.42])
     # We now have full Handicraft, Critical Boost, Critical Eye, and Attack Boost.
 
@@ -107,7 +114,7 @@ def _run_tests_lookup():
             Skill.WEAKNESS_EXPLOIT: 2,
         }
 
-    print("Incrementing Weakness Exploit on a wounded part.")
+    logger.info("Incrementing Weakness Exploit on a wounded part.")
     test_with_incrementing_skill(Skill.WEAKNESS_EXPLOIT, 3, [527.42, 552.94, 578.46, 595.48])
     # Last EFR should exceed 100% Affinity.
 
@@ -115,14 +122,14 @@ def _run_tests_lookup():
             Skill.WEAKNESS_EXPLOIT: 1,
         }
 
-    print("Incrementing Weakness Exploit on a weak point.")
+    logger.info("Incrementing Weakness Exploit on a weak point.")
     test_with_incrementing_skill(Skill.WEAKNESS_EXPLOIT, 3, [527.42, 544.44, 552.94, 578.46])
 
     skill_states_dict = {
             Skill.WEAKNESS_EXPLOIT: 0,
         }
 
-    print("Incrementing Weakness Exploit on a non-weak point.")
+    logger.info("Incrementing Weakness Exploit on a non-weak point.")
     test_with_incrementing_skill(Skill.WEAKNESS_EXPLOIT, 3, [527.42]*4)
     # We now have full Handicraft, Critical Boost, Critical Eye, Attack Boost, and Weakness Exploit.
 
@@ -131,7 +138,7 @@ def _run_tests_lookup():
             Skill.AGITATOR        : 0,
         }
 
-    print("Incrementing Agitator when monster is not enraged.")
+    logger.info("Incrementing Agitator when monster is not enraged.")
     test_with_incrementing_skill(Skill.AGITATOR, 5, [578.46]*6)
 
     skill_states_dict = {
@@ -139,7 +146,7 @@ def _run_tests_lookup():
             Skill.AGITATOR        : 1,
         }
 
-    print("Incrementing Agitator when monster is enraged.")
+    logger.info("Incrementing Agitator when monster is enraged.")
     test_with_incrementing_skill(Skill.AGITATOR, 5, [578.46, 594.64, 602.31, 613.52, 621.24, 634.40])
     # We now have full Handicraft, Critical Boost, Critical Eye, Attack Boost, Weakness Exploit, and Agitator.
     
@@ -149,9 +156,9 @@ def _run_tests_lookup():
             Skill.PEAK_PERFORMANCE: 1,
         }
 
-    print("Incrementing Peak Performance.")
+    logger.info("Incrementing Peak Performance.")
     test_with_incrementing_skill(Skill.PEAK_PERFORMANCE, 3, [634.40, 644.13, 653.86, 673.32])
-    print("Incrementing Non-elemental Boost with a raw weapon.")
+    logger.info("Incrementing Non-elemental Boost with a raw weapon.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [673.32, 700.56]) # Game does weird rounding.
 
     weapon = weapon_db["IMMOVABLE_DHARMA"]
@@ -175,24 +182,24 @@ def _run_tests_lookup():
     #   Waist: (anything)
     #   Legs:  Garuga Greaves Beta+
 
-    print("Incrementing Non-elemental Boost with a raw weapon again.")
+    logger.info("Incrementing Non-elemental Boost with a raw weapon again.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [476.59, 496.68])
 
     weapon = weapon_db["GREAT_DEMON_ROD"]
 
-    print("Incrementing Non-elemental Boost with an elemental weapon.")
+    logger.info("Incrementing Non-elemental Boost with an elemental weapon.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [456.12, 456.12])
 
     weapon = weapon_db["ROYAL_VENUS_BLADE"]
 
-    print("Testing without augments.")
+    logger.info("Testing without augments.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [478.17, 498.96])
 
     weapon_augments_config = [
             (IBWeaponAugmentType.ATTACK_INCREASE, 1),
         ]
 
-    print("Testing with Attack augment.")
+    logger.info("Testing with Attack augment.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [485.60, 506.39])
 
     weapon_augments_config = [
@@ -200,14 +207,14 @@ def _run_tests_lookup():
             (IBWeaponAugmentType.AFFINITY_INCREASE, 1),
         ]
 
-    print("Testing with Attack and Affinity augment.")
+    logger.info("Testing with Attack and Affinity augment.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [496.39, 517.64])
 
     weapon_augments_config = [
             (IBWeaponAugmentType.AFFINITY_INCREASE, 2),
         ]
 
-    print("Testing with two Affinity augments.")
+    logger.info("Testing with two Affinity augments.")
     test_with_incrementing_skill(Skill.NON_ELEMENTAL_BOOST, 1, [494.11, 515.59])
 
     def check_efr(expected_efr):
@@ -258,7 +265,7 @@ def _run_tests_lookup():
             #(IBWeaponAugmentType.AFFINITY_INCREASE, 1),
         ]
 
-    print("Testing with a bunch of varying Teostra pieces from different ranks.")
+    logger.info("Testing with a bunch of varying Teostra pieces from different ranks.")
     check_efr(421.08)
     check_skill("MASTERS_TOUCH", 1) # Set Bonus
     check_skill("BLAST_ATTACK", 4)
@@ -276,7 +283,7 @@ def _run_tests_lookup():
             ArmourSlot.LEGS:  ("Velkhana", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
         }
 
-    print("Testing with four Velkhana pieces.")
+    logger.info("Testing with four Velkhana pieces.")
     check_efr(411.51)
     check_skill("CRITICAL_ELEMENT", 1) # Set Bonus
     check_skill("FROSTCRAFT", 1) # Set Bonus
@@ -290,7 +297,7 @@ def _run_tests_lookup():
 
     decorations_list = ([Decoration.EXPERT] * 6) + ([Decoration.ATTACK] * 4) + [Decoration.TENDERIZER]
 
-    print("Testing with full size-1 decorations.")
+    logger.info("Testing with full size-1 decorations.")
     check_efr(478.37)
     check_skill("CRITICAL_ELEMENT", 1) # Set Bonus
     check_skill("FROSTCRAFT", 1) # Set Bonus
@@ -307,7 +314,7 @@ def _run_tests_lookup():
     decorations_list.append(Decoration.ATTACK)
 
     if __debug__:
-        print("Testing with just one more size-1 jewel to see if it catches the error.")
+        logger.info("Testing with just one more size-1 jewel to see if it catches the error.")
         try:
             check_efr(0)
         except:
@@ -322,7 +329,7 @@ def _run_tests_lookup():
             Skill.AGITATOR:         1,
         }
 
-    print("Testing with four size-4 decorations.")
+    logger.info("Testing with four size-4 decorations.")
     check_efr(476.63)
     check_skill("CRITICAL_ELEMENT", 1) # Set Bonus
     check_skill("FROSTCRAFT", 1) # Set Bonus
@@ -339,7 +346,7 @@ def _run_tests_lookup():
     decorations_list.append(Decoration.DEFENSE_X3)
 
     if __debug__:
-        print("Testing with just one more size-4 jewel to see if it catches the error.")
+        logger.info("Testing with just one more size-4 jewel to see if it catches the error.")
         try:
             check_efr(0)
         except:
@@ -353,7 +360,7 @@ def _run_tests_lookup():
             Skill.AGITATOR: 1,
         }
 
-    print("Testing to see if one indeterminate stateful skill get iterated.")
+    logger.info("Testing to see if one indeterminate stateful skill get iterated.")
     transformed_armour_dict = {k: armour_db[(v[0], v[1])].variants[v[2]][k] for (k, v) in armour_dict.items()}
     weapon_augments_tracker = WeaponAugmentTracker.get_instance(weapon)
     weapon_augments_tracker.update_with_config(weapon_augments_config)
@@ -394,7 +401,7 @@ def _run_tests_lookup():
 
     charm = charms_db["CRITICAL_CHARM"]
 
-    print("Testing without weapon upgrades.")
+    logger.info("Testing without weapon upgrades.")
     check_efr(467.98)
 
     weapon_augments_config = [
@@ -410,7 +417,7 @@ def _run_tests_lookup():
 
     check_efr(498.28)
 
-    print("Testing with weapon upgrades.")
+    logger.info("Testing with weapon upgrades.")
 
     weapon_upgrades_config = [
             IBCWeaponUpgradeType.ATTACK,
@@ -514,7 +521,7 @@ def _run_tests_lookup():
 
     check_efr(555.83)
 
-    print("Testing some Safi weapon builds.")
+    logger.info("Testing some Safi weapon builds.")
 
     weapon = weapon_db["SAFI_SHATTERSPLITTER"]
 
@@ -584,7 +591,7 @@ def _run_tests_lookup():
 
 
 def _run_tests_armour_pruning():
-    print()
+    logger.info("")
 
     def test_supercedes_common(gear_slot, p1_set_name, p1_discrim, p1_variant, p2_set_name, p2_discrim, p2_variant, **kwargs):
         gear_slot = ArmourSlot[gear_slot]
@@ -626,19 +633,19 @@ def _run_tests_armour_pruning():
         test_not_supercedes(*args, **kwargs)
         return
 
-    print("Checking that (head) Kaiser Beta always supercedes Kaiser Alpha.")
+    logger.info("Checking that (head) Kaiser Beta always supercedes Kaiser Alpha.")
     test_supercedes("HEAD", "Teostra", "HIGH_RANK", "HR_BETA", "Teostra", "HIGH_RANK", "HR_ALPHA")
     test_not_supercedes_in_reverse("HEAD", "Teostra", "HIGH_RANK", "HR_BETA", "Teostra", "HIGH_RANK", "HR_ALPHA")
 
-    print("Checking that (head) Kaiser Beta+ always supercedes Kaiser Alpha.")
+    logger.info("Checking that (head) Kaiser Beta+ always supercedes Kaiser Alpha.")
     test_supercedes("HEAD", "Teostra", "MASTER_RANK", "MR_BETA_PLUS", "Teostra", "HIGH_RANK", "HR_ALPHA")
     test_not_supercedes_in_reverse("HEAD", "Teostra", "MASTER_RANK", "MR_BETA_PLUS", "Teostra", "HIGH_RANK", "HR_ALPHA")
 
-    print("Checking that (head) Kaiser Beta+ never supercedes Kaiser Alpha.")
+    logger.info("Checking that (head) Kaiser Beta+ never supercedes Kaiser Alpha.")
     test_not_supercedes("HEAD", "Teostra", "MASTER_RANK", "MR_BETA_PLUS", "Teostra", "HIGH_RANK", "HR_GAMMA")
     test_not_supercedes_in_reverse("HEAD", "Teostra", "MASTER_RANK", "MR_BETA_PLUS", "Teostra", "HIGH_RANK", "HR_GAMMA")
 
-    print("Checking that (legs) Garuga Beta+ never supercedes Garuga Alpha+, even when filtering out Piercing Shots.")
+    logger.info("Checking that (legs) Garuga Beta+ never supercedes Garuga Alpha+, even when filtering out Piercing Shots.")
     test_not_supercedes("LEGS", "Yian Garuga", "MASTER_RANK", "MR_BETA_PLUS", "Yian Garuga", "MASTER_RANK", "MR_ALPHA_PLUS", \
                                 skill_subset={Skill.CRITICAL_EYE,})
     test_not_supercedes_in_reverse("LEGS", "Yian Garuga", "MASTER_RANK", "MR_BETA_PLUS", "Yian Garuga", "MASTER_RANK", \
@@ -648,8 +655,8 @@ def _run_tests_armour_pruning():
 
 
 def _run_tests_serializing():
-    print()
-    print("Testing serializing and deserializing of build data.")
+    logger.info("")
+    logger.info("Testing serializing and deserializing of build data.")
 
     weapon = weapon_db["ACID_SHREDDER_II"]
 
@@ -710,8 +717,8 @@ def _run_tests_serializing():
 
 
 def _run_tests_deco_dict_generation():
-    print()
-    print("Testing decoration dictionary generation.")
+    logger.info("")
+    logger.info("Testing decoration dictionary generation.")
 
     slots_available_counter = {
             1: 1,
