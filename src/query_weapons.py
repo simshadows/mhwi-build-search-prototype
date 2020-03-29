@@ -14,7 +14,8 @@ from itertools import accumulate, product, zip_longest
 from enum import Enum, auto
 from copy import copy
 
-from .utils import ENCODING, ensure_directory, prune_by_superceding
+from .utils        import prune_by_superceding
+from .loggingutils import dump_pruned_weapon_combos
 
 from .database_skills import SetBonus
 
@@ -23,10 +24,6 @@ from .database_weapons import (SHARPNESS_LEVEL_NAMES,
                               WeaponAugmentationScheme,
                               WeaponUpgradeScheme,
                               weapon_db)
-
-
-DEBUGGING_WEAPONS_PRUNED_DUMP_FILENAME = "debugging_dumps/weapons_pruned_dump.txt"
-DEBUGGING_WEAPONS_KEPT_DUMP_FILENAME = "debugging_dumps/weapons_kept_dump.txt"
 
 
 WeaponAugmentsContribution = namedtuple(
@@ -905,56 +902,14 @@ def get_pruned_weapon_combos(weapon_class, health_regen_minimum):
         return _weapon_combo_supercedes(weapon1[1], weapon2[1])
 
     if __debug__:
-        before = weapon_combinations
+        fordump_before = weapon_combinations
 
     weapon_combinations = prune_by_superceding(weapon_combinations, left_supercedes_right)
 
     if __debug__:
-        after = weapon_combinations
-        # First, we print weapons pruned.
-        diff = [x for x in before if (x not in after)]
-        buf = []
-        assert len(diff) > 0
-        for x in diff:
-            superceding_set = None
-            effectively_equivalent = None
-            for y in after:
-                result = left_supercedes_right(y, x)
-                if result is True:
-                    superceding_set = y
-                    break
-                elif result is None:
-                    effectively_equivalent = y
-            assert (superceding_set is not None) or (effectively_equivalent is not None)
-            buf.append(x[0][0].name)
-            buf.append(x[0][1].to_str_debugging())
-            buf.append(x[0][2].to_str_debugging())
-            if effectively_equivalent:
-                buf.append("<IS EQUIVALENT TO>")
-                buf.append(effectively_equivalent[0][0].name)
-                buf.append(effectively_equivalent[0][1].to_str_debugging())
-                buf.append(effectively_equivalent[0][2].to_str_debugging())
-            else:
-                buf.append("<IS SUPERCEDED BY>")
-                buf.append(superceding_set[0][0].name)
-                buf.append(superceding_set[0][1].to_str_debugging())
-                buf.append(superceding_set[0][2].to_str_debugging())
-            buf.append("\n")
-        ensure_directory(DEBUGGING_WEAPONS_PRUNED_DUMP_FILENAME)
-        with open(DEBUGGING_WEAPONS_PRUNED_DUMP_FILENAME, encoding=ENCODING, mode="w") as f:
-            f.write("\n".join(buf))
-        # Then, we print weapons kept.
-        buf = []
-        assert len(after) > 0
-        for x in after:
-            buf.append(x[0][0].name)
-            buf.append(x[0][1].to_str_debugging())
-            buf.append(x[0][2].to_str_debugging())
-            buf.append("\n")
-        ensure_directory(DEBUGGING_WEAPONS_KEPT_DUMP_FILENAME)
-        with open(DEBUGGING_WEAPONS_KEPT_DUMP_FILENAME, encoding=ENCODING, mode="w") as f:
-            f.write("\n".join(buf))
-    
+        fordump_after = weapon_combinations
+        dump_pruned_weapon_combos(fordump_before, fordump_after, left_supercedes_right)
+
     weapon_combinations = [x[0] for x in weapon_combinations]
     return weapon_combinations
 
