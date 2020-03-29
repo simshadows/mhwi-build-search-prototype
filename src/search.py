@@ -318,10 +318,7 @@ def find_highest_efr_build(search_parameters_jsonstr):
 
                         broadcast_new_best_efr(current_best_efr)
 
-                        logger.info("")
-                        logger.info(f"{current_best_efr} EFR @ {current_best_affinity} affinity")
-                        logger.info("")
-                        logger.info(current_best_build.get_humanreadable())
+                        logger.info(current_best_build.get_humanreadable(skill_states))
                         logger.info("")
                 elif msg[1] == "WORKER_COMPLETE":
                     worker_number = msg[0]
@@ -363,9 +360,7 @@ def find_highest_efr_build(search_parameters_jsonstr):
         logger.info("")
         logger.info("Final build:")
         logger.info("")
-        logger.info(f"{results.efr} EFR @ {results.affinity} affinity")
-        logger.info("")
-        logger.info(best_build.get_humanreadable())
+        logger.info(best_build.get_humanreadable(skill_states))
         logger.info("")
 
     end_time = time.time()

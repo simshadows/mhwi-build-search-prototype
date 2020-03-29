@@ -363,10 +363,15 @@ class Build:
                 
         return transform_results_recursively(intermediate_results)
 
-    def get_humanreadable(self):
+    def get_humanreadable(self, skill_states_dict):
+        performance = self.calculate_performance(skill_states_dict)
+
         buf = []
 
         buf.append("Build:")
+        buf.append("")
+
+        buf.append(f"{performance.efr} EFR @ {performance.affinity} affinity")
         buf.append("")
 
         s = get_weapon_config_humanreadable("      ", self._weapon, self._weapon_augments_tracker, self._weapon_upgrades_tracker)
