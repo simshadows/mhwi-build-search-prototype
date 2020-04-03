@@ -182,10 +182,7 @@ def _skills_and_slots_supercedes(p1_skills_and_setbonuses, p1_slots, p2_skills_a
 def prune_easyiterate_armour_db(selected_armour_tier, original_easyiterate_armour_db, skill_subset=None):
     assert isinstance(selected_armour_tier, Tier) or (selected_armour_tier is None)
 
-    logger.info("")
-    logger.info("")
-    logger.info("======= Armour Pruning =======")
-    logger.info("")
+    logger.info("Pruning armour pieces.")
 
     intermediate = {}
     for (gear_slot, piece_list) in original_easyiterate_armour_db.items():
@@ -201,15 +198,20 @@ def prune_easyiterate_armour_db(selected_armour_tier, original_easyiterate_armou
 
         intermediate[gear_slot] = prune_by_superceding(piece_list, left_supercedes_right)
 
-    total_kept = sum(len(x) for (_, x) in intermediate.items())
-    total_original = sum(len(x) for (_, x) in original_easyiterate_armour_db.items())
-
-    log_appstats("armour pieces kept", total_kept)
-    log_appstats("armour pieces pruned", total_original - total_kept)
-    logger.info("")
-    logger.info("=============================")
-    logger.info("")
-    logger.info("")
+    #total_kept = sum(len(x) for (_, x) in intermediate.items())
+    #total_original = sum(len(x) for (_, x) in original_easyiterate_armour_db.items())
+    #log_appstats("number of armour pieces, before pruning", total_original)
+    #log_appstats("number of armour pieces, after pruning", total_kept)
+    log_appstats("number of head pieces,  before pruning", len(original_easyiterate_armour_db[ArmourSlot.HEAD]))
+    log_appstats("number of chest pieces, before pruning", len(original_easyiterate_armour_db[ArmourSlot.CHEST]))
+    log_appstats("number of arms pieces,  before pruning", len(original_easyiterate_armour_db[ArmourSlot.ARMS]))
+    log_appstats("number of waist pieces, before pruning", len(original_easyiterate_armour_db[ArmourSlot.WAIST]))
+    log_appstats("number of leg pieces,   before pruning", len(original_easyiterate_armour_db[ArmourSlot.LEGS]))
+    log_appstats("number of head pieces,  after pruning", len(intermediate[ArmourSlot.HEAD]))
+    log_appstats("number of chest pieces, after pruning", len(intermediate[ArmourSlot.CHEST]))
+    log_appstats("number of arms pieces,  after pruning", len(intermediate[ArmourSlot.ARMS]))
+    log_appstats("number of waist pieces, after pruning", len(intermediate[ArmourSlot.WAIST]))
+    log_appstats("number of leg pieces,   after pruning", len(intermediate[ArmourSlot.LEGS]))
 
     return intermediate
 

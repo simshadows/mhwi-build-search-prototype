@@ -4,7 +4,7 @@
 Filename: loggingutils.py
 Author:   contact@simshadows.com
 
-Logging stuff.
+Logging and data-dumping utilities.
 """
 
 import logging
@@ -39,7 +39,7 @@ _appstats_logger = None
 def log_appstats(name, stat):
     global _appstats_logger
     assert isinstance(name, str)
-    assert isinstance(stat, int) # or float?
+    assert isinstance(stat, int) or isinstance(stat, float)
     _appstats_logger.info(f"{name} = {stat}")
     return
 

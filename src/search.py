@@ -12,6 +12,7 @@ import logging
 from copy import copy
 import multiprocessing as mp
 from queue import Empty
+from math import log10
 
 from collections import defaultdict, Counter
 
@@ -458,6 +459,13 @@ def _find_highest_efr_build_worker(args):
         log_appstats(worker_string + f"len(weapon_combos)", len(weapon_combos))
         log_appstats(worker_string + f"len(armour_combos)", len(armour_combos))
         log_appstats(worker_string + f"len(charms)", len(charms))
+        debugging_indicative_combinations = len(minimum_set_bonus_combos) \
+                                                * len(relaxed_minimum_set_bonus_combos) \
+                                                * len(weapon_combos) \
+                                                * len(armour_combos) \
+                                                * len(charms)
+        log_appstats(worker_string + f"indicative number of combinations", debugging_indicative_combinations)
+        log_appstats(worker_string + f"indicative number of combinations (log10)", log10(debugging_indicative_combinations))
 
     ####################
     # STAGE 3: Search! #

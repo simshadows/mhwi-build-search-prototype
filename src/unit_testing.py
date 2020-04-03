@@ -57,7 +57,7 @@ def run_tests():
     _run_tests_deco_dict_generation()
 
     logger.info("")
-    logger.info("Unit tests are all passed.")
+    logger.info("All unit tests passed.")
     logger.info("")
     logger.info("==============================")
     logger.info("")
