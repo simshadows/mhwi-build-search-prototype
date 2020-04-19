@@ -9,7 +9,8 @@ Logging and data-dumping utilities.
 
 import logging
 
-from .utils import ENCODING
+from .utils import (ENCODING,
+                   ensure_directory)
 
 LOGGER_LEVEL = logging.DEBUG
 LOGFILE_PATH = "debugging_dumps/mhwi-build-search.log"
@@ -96,6 +97,8 @@ def setup_logging():
     global _root_logger
     global logger
     global _appstats_logger
+
+    ensure_directory(LOGFILE_PATH)
 
     _root_logger = logging.getLogger(None)
     _root_logger.setLevel(LOGGER_LEVEL)

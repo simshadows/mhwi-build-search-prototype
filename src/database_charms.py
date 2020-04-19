@@ -90,3 +90,4 @@ def _obtain_charms_db():
     return charms_intermediate, index_by_skill_intermediate
 
 charms_db, charms_indexed_by_skill = _obtain_charms_db()
+

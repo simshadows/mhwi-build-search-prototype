@@ -30,3 +30,4 @@ def calculate_skills_dict_from_charm(charm_info, level):
     skills_dict = {skill: level for skill in charm_info.skills}
     assert all(isinstance(k, Skill) for (k, v) in skills_dict.items())
     return skills_dict
+
