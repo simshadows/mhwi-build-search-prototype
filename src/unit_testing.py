@@ -12,7 +12,8 @@ import logging
 from collections import namedtuple, defaultdict, Counter
 
 from .builds import (Build,
-                    lookup_from_skills)
+                    lookup_from_skills,
+                    lookup_from_skills_multiple_states)
 from .search import _generate_deco_dicts
 
 from .database_armour      import (ArmourDiscriminator,
@@ -87,9 +88,9 @@ def _run_tests_lookup():
             weapon_augments_tracker.update_with_config(weapon_augments_config)
             weapon_upgrades_tracker = WeaponUpgradeTracker.get_instance(weapon)
             weapon_upgrades_tracker.update_with_config(weapon_upgrades_config)
-            vals = lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_tracker, weapon_upgrades_tracker)
-            if round(vals.efr) != round(expected_efrs[level]):
-                raise ValueError(f"EFR value mismatch for skill level {level}. Got EFR = {vals.efr}.")
+            result = lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_tracker, weapon_upgrades_tracker)
+            if round(result.efr) != round(expected_efrs[level]):
+                raise ValueError(f"EFR value mismatch for skill level {level}. Got EFR = {result.efr}.")
         return
 
     logger.info("Incrementing Handicraft.")

@@ -123,6 +123,10 @@ def _calculate_efr(**kwargs):
     return efr
 
 
+def skill_states_are_fully_defined(skills_dict, skill_states_dict):
+    return all((lvl == 0) or (s.value.states is None) or (s in skill_states_dict) for (s, lvl) in skills_dict.items())
+
+
 LookupFromSkillsValues = namedtuple(
     "LookupFromSkillsValues",
     [
@@ -133,9 +137,6 @@ LookupFromSkillsValues = namedtuple(
         "skills",
     ],
 )
-# This function is recursive.
-# For each condition missing from skill_conditions_dict,
-# it will call itself again for each possible state of the skill.
 def lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_tracker, weapon_upgrades_tracker):
     #assert isinstance(weapon, namedtuple) # idk how to implement this assertion. # TODO: This.
     assert isinstance(skills_dict, dict)
@@ -145,84 +146,95 @@ def lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_t
 
     skills_dict = clipped_skills_defaultdict(skills_dict)
 
-    ret = None
+    # skills_dict and skill_states_dict layout assertions.
+    #assert all(lvl > 0 for (s, lvl) in skills_dict.items())
+    assert all(state >= 0 for (s, state) in skill_states_dict.items())
+    assert all(s.value.states is not None for (s, state) in skill_states_dict.items())
+    # Assert that all skill states provided have corresponding skills in skills_dict.
+    #assert all(s in skills_dict for (s, state) in skill_states_dict.items()) # We won't do this.
 
-    skill_states_missing = any(
-            (lvl > 0) and (s.value.states is not None) and (s not in skill_states_dict)
-            for (s, lvl) in skills_dict.items()
+    assert skill_states_are_fully_defined(skills_dict, skill_states_dict)
+
+    weapon_final_values = calculate_final_weapon_values(weapon, weapon_augments_tracker, weapon_upgrades_tracker)
+
+    maximum_sharpness_values = weapon.maximum_sharpness
+    from_skills = calculate_skills_contribution(
+            skills_dict,
+            skill_states_dict,
+            maximum_sharpness_values,
+            weapon.is_raw
         )
 
-    if skill_states_missing:
-        # We do recursion here.
+    handicraft_level = from_skills.handicraft_level
+    maximum_sharpness_values = weapon_final_values.maximum_sharpness
+    sharpness_values, highest_sharpness_level = _actual_sharpness_level_values(maximum_sharpness_values, handicraft_level)
 
-        if __debug__:
-            # Determine if skills_states_dict contains any skills not in skills_dict.
-            skills_keys = set(k for (k, v) in skills_dict.items())
-            skill_states_keys = set(k for (k, v) in skill_states_dict.items())
-            diff = skill_states_keys - skills_keys
-            if len(diff) > 0:
-                skills_str = " ".join(diff)
-                raise RuntimeError(f"skill_states_dict has skills not in skills_dict. \
-                        (Skills unique to skill_states_dict: {skills_str}.")
+    item_attack_power = POWERCHARM_ATTACK_POWER + POWERTALON_ATTACK_POWER
 
-        # We first determine the missing skill name from skill_states_dict that is earliest in alphabetical order.
+    kwargs = {}
+    kwargs["weapon_true_raw"]        = weapon_final_values.true_raw
+    kwargs["weapon_affinity"]        = weapon_final_values.affinity
+    kwargs["added_raw"]              = from_skills.added_attack_power + item_attack_power
+    kwargs["added_affinity"]         = from_skills.added_raw_affinity
+    kwargs["raw_sharpness_modifier"] = RAW_SHARPNESS_MODIFIERS[highest_sharpness_level]
+    kwargs["raw_crit_multiplier"]    = from_skills.raw_critical_multiplier
 
-        skill_to_iterate = None
+    kwargs["weapon_raw_multiplier"] = from_skills.weapon_base_attack_power_multiplier
 
-        for (skill, _) in skills_dict.items():
-            if (skill.value.states is not None) and (skill not in skill_states_dict):
-                if (skill_to_iterate is None) or (skill.value.name <= skill_to_iterate.value.name):
-                    assert (skill_to_iterate is None) or (skill.value.name != skill_to_iterate.value.name)
-                    skill_to_iterate = skill
+    ret = LookupFromSkillsValues(
+            efr               = _calculate_efr(**kwargs),
+            affinity          = kwargs["weapon_affinity"] + kwargs["added_affinity"],
+            sharpness_values  = sharpness_values,
 
-        assert skill_to_iterate is not None
-
-        ret = []
-        total_states = len(skill_to_iterate.value.states)
-        for level in range(total_states):
-            new_skill_states_dict = skill_states_dict.copy()
-            new_skill_states_dict[skill_to_iterate] = level
-            ret.append(lookup_from_skills(weapon, skills_dict, new_skill_states_dict, \
-                                                weapon_augments_tracker, weapon_upgrades_tracker))
-
-    else:
-        # We terminate recursion here.
-
-        weapon_final_values = calculate_final_weapon_values(weapon, weapon_augments_tracker, weapon_upgrades_tracker)
-
-        maximum_sharpness_values = weapon.maximum_sharpness
-        from_skills = calculate_skills_contribution(
-                skills_dict,
-                skill_states_dict,
-                maximum_sharpness_values,
-                weapon.is_raw
-            )
-
-        handicraft_level = from_skills.handicraft_level
-        maximum_sharpness_values = weapon_final_values.maximum_sharpness
-        sharpness_values, highest_sharpness_level = _actual_sharpness_level_values(maximum_sharpness_values, handicraft_level)
-
-        item_attack_power = POWERCHARM_ATTACK_POWER + POWERTALON_ATTACK_POWER
-
-        kwargs = {}
-        kwargs["weapon_true_raw"]        = weapon_final_values.true_raw
-        kwargs["weapon_affinity"]        = weapon_final_values.affinity
-        kwargs["added_raw"]              = from_skills.added_attack_power + item_attack_power
-        kwargs["added_affinity"]         = from_skills.added_raw_affinity
-        kwargs["raw_sharpness_modifier"] = RAW_SHARPNESS_MODIFIERS[highest_sharpness_level]
-        kwargs["raw_crit_multiplier"]    = from_skills.raw_critical_multiplier
-
-        kwargs["weapon_raw_multiplier"] = from_skills.weapon_base_attack_power_multiplier
-
-        ret = LookupFromSkillsValues(
-                efr               = _calculate_efr(**kwargs),
-                affinity          = kwargs["weapon_affinity"] + kwargs["added_affinity"],
-                sharpness_values  = sharpness_values,
-
-                skills = skills_dict,
-            )
-
+            skills = skills_dict,
+        )
     return ret
+
+
+# Alternative version that produces a tree of missing states.
+# TODO: Make this just produce a simple list. It's so unnecessarily complicated.
+def lookup_from_skills_multiple_states(weapon, skills_dict, skill_states_dict, weapon_augments_tracker, weapon_upgrades_tracker):
+    #assert isinstance(weapon, namedtuple) # idk how to implement this assertion. # TODO: This.
+    assert isinstance(skills_dict, dict)
+    assert isinstance(skill_states_dict, dict)
+    assert isinstance(weapon_augments_tracker, WeaponAugmentTracker)
+    assert isinstance(weapon_upgrades_tracker, WeaponUpgradeTracker)
+
+    skills_dict = clipped_skills_defaultdict(skills_dict)
+
+    # skills_dict and skill_states_dict layout assertions.
+    #assert all(lvl > 0 for (s, lvl) in skills_dict.items())
+    assert all(state >= 0 for (s, state) in skill_states_dict.items())
+    assert all(s.value.states is not None for (s, state) in skill_states_dict.items())
+    # Assert that all skill states provided have corresponding skills in skills_dict.
+    #assert all(s in skills_dict for (s, state) in skill_states_dict.items()) # We won't do this.
+
+    assert not skill_states_are_fully_defined(skills_dict, skill_states_dict)
+
+    # We first determine all missing skills.
+    stateful_skills = set(s for (s, _) in skills_dict.items() if (s.value.states is not None))
+    missing_skills = list(stateful_skills - set(skill_states_dict))
+
+    def generate_tree(new_skill_states_dict, missing_skills_remaining):
+        nonlocal missing_skills
+        if len(missing_skills_remaining) == 0:
+            return lookup_from_skills(weapon, skills_dict, new_skill_states_dict, weapon_augments_tracker, weapon_upgrades_tracker)
+        else:
+            missing_skills = copy(missing_skills)
+            curr_skill = missing_skills.pop(0)
+            num_states = len(curr_skill.value.states)
+            assert num_states > 1
+
+            intermediate_tree = []
+            for state in range(num_states):
+                arg_skill_states_dict = copy(new_skill_states_dict)
+                arg_skill_states_dict[curr_skill] = state
+                intermediate_tree.append(generate_tree(arg_skill_states_dict, missing_skills))
+            return intermediate_tree
+
+    results_tree = generate_tree(skill_states_dict, missing_skills)
+
+    return (results_tree, missing_skills)
 
 
 class Build:
@@ -343,25 +355,41 @@ class Build:
 
         skills_dict.update(skills_from_set_bonuses)
 
-        intermediate_results = lookup_from_skills(self._weapon, skills_dict, skill_states_dict, \
-                                                    self._weapon_augments_tracker, self._weapon_upgrades_tracker)
+        # TODO: I want to refactor out this monstrosity.
+        if skill_states_are_fully_defined(skills_dict, skill_states_dict):
+            result = lookup_from_skills(self._weapon, skills_dict, skill_states_dict, \
+                                                        self._weapon_augments_tracker, self._weapon_upgrades_tracker)
+            ret = BuildValues(
+                    efr                     = result.efr,
+                    affinity                = result.affinity,
+                    sharpness_values        = result.sharpness_values,
+                    
+                    skills                  = result.skills,
+                    
+                    usable_slots            = slots_available_counter,
+                )
+        else:
+            intermediate_results, _ = lookup_from_skills_multiple_states(self._weapon, skills_dict, skill_states_dict, \
+                                                        self._weapon_augments_tracker, self._weapon_upgrades_tracker)
 
-        def transform_results_recursively(obj):
-            if isinstance(obj, list):
-                return [transform_results_recursively(x) for x in obj]
-            else:
-                new_obj = BuildValues(
-                        efr                     = obj.efr,
-                        affinity                = obj.affinity,
-                        sharpness_values        = obj.sharpness_values,
-                        
-                        skills                  = obj.skills,
-                        
-                        usable_slots            = slots_available_counter,
-                    )
-                return new_obj
+            def transform_results_recursively(obj):
+                if isinstance(obj, list):
+                    return [transform_results_recursively(x) for x in obj]
+                else:
+                    new_obj = BuildValues(
+                            efr                     = obj.efr,
+                            affinity                = obj.affinity,
+                            sharpness_values        = obj.sharpness_values,
+                            
+                            skills                  = obj.skills,
+                            
+                            usable_slots            = slots_available_counter,
+                        )
+                    return new_obj
+
+            ret = transform_results_recursively(intermediate_results)
                 
-        return transform_results_recursively(intermediate_results)
+        return ret
 
     def get_humanreadable(self, skill_states_dict):
         performance = self.calculate_performance(skill_states_dict)
