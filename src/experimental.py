@@ -18,7 +18,7 @@ from itertools import product
 from collections import defaultdict, Counter
 
 from .enums        import Tier
-from .utils        import ExecutionProgress
+from .utils        import ExecutionProgress, counter_is_subset
 from .loggingutils import log_appstats
 from .serialize    import readjson_search_parameters
 
@@ -299,44 +299,127 @@ def _armour_and_charm_combo_iter(armour_collection, charms_list):
         yield ((head, chest, arms, waist, legs), charm, regular_skills, total_slots, total_set_bonuses)
 
 
+def _generate_deco_additions(deco_slots, regular_skills, possible_decos):
+    assert len(deco_slots) <= 3
+    assert isinstance(regular_skills, defaultdict)
+    assert isinstance(possible_decos, list)
+
+    yield (tuple(), regular_skills)
+    
+    if len(deco_slots) == 0:
+        return
+
+    # TODO: Try a different implementation later.
+    for selected_decos in product(possible_decos, repeat=len(deco_slots)):
+        
+        # First check to see if these decos fit.
+        assert len(selected_decos) == len(deco_slots)
+        if any(d.value.slot_size > s for (d, s) in zip(selected_decos, deco_slots)):
+            continue
+
+        new_skills = copy(regular_skills)
+        for deco in selected_decos:
+            for (skill, level) in deco.value.skills_dict.items():
+                new_skills[skill] += level
+
+        yield (selected_decos, new_skills)
+
+
+def _add_armour_slot(curr_collection, pieces_collection, decos):
+    assert isinstance(pieces_collection, list)
+    assert isinstance(decos, list)
+
+    progress = ExecutionProgress("COMBINATION PRUNING", len(curr_collection) * len(pieces_collection), granularity=4)
+
+    ret = [] # [(pieces, deco_counter, regular_skills, set_bonuses)]
+
+    for (pieces, deco_counter, regular_skills, set_bonuses) in curr_collection:
+
+        assert isinstance(pieces, list)
+        assert isinstance(deco_counter, Counter)
+        assert isinstance(regular_skills, defaultdict)
+        assert isinstance(set_bonuses, defaultdict)
+
+        for new_piece in pieces_collection:
+            assert isinstance(new_piece, ArmourPieceInfo)
+
+            new_pieces = pieces + [new_piece]
+            new_regular_skills = copy(regular_skills)
+            new_set_bonuses = copy(set_bonuses)
+
+            for (skill, level) in new_piece.skills.items():
+                new_regular_skills[skill] += level
+
+            new_set_bonus = new_piece.armour_set.set_bonus
+            if new_set_bonus is not None:
+                new_set_bonuses[new_set_bonus] += 1
+
+            deco_it = _generate_deco_additions(new_piece.decoration_slots, regular_skills, decos)
+            for (deco_additions, new_skills) in deco_it:
+                new_skills = clipped_skills_defaultdict(new_skills)
+                new_deco_counter = copy(deco_counter)
+
+                new_deco_counter.update(deco_additions)
+
+                # Now, we have to decide if it's worth keeping.
+                dont_keep = any(
+                        counter_is_subset(new_set_bonuses, s_set_bonuses) \
+                        and counter_is_subset(new_skills, s_skills)
+                        for (_, _, s_skills, s_set_bonuses) in ret
+                    )
+                if dont_keep:
+                    continue
+
+                # Now, we prune the existing seen_skillsets
+                prune = []
+                for (i, (_, _, s_skills, s_set_bonuses)) in enumerate(ret):
+                    if counter_is_subset(s_set_bonuses, new_set_bonuses) and counter_is_subset(s_skills, new_skills):
+                        prune.append(i)
+                for i in reversed(prune):
+                    del ret[i]
+
+                # And we add it!
+                ret.append((new_pieces, new_deco_counter, new_skills, new_set_bonuses))
+
+            progress.update_and_log_progress(logger)
+
+    return ret
+
+
 def _generate_combinations(armour_collection, charms_list, skill_subset, required_skills, minimum_set_bonus_combos):
-
-    armour_and_charm_combos = list(_armour_and_charm_combo_iter(armour_collection, charms_list))
-
-    log_appstats("Number of armour/charm/deco combinations to start with", len(armour_and_charm_combos))
-
-    # We filter for only armour combinations that fulfil at least one set bonus combination.
-    def fulfils_min_set_bonus_combos(x):
-        armour_set_bonuses = x[4]
-        for minimum_set_bonus_combo in minimum_set_bonus_combos:
-            fulfilled = True
-            for (set_bonus, min_pieces) in minimum_set_bonus_combo.items():
-                if armour_set_bonuses.get(set_bonus, 0) < min_pieces:
-                    fulfilled = False
-                    break
-            if fulfilled:
-                return True
-        return False
-
-    armour_and_charm_combos = [x for x in armour_and_charm_combos if fulfils_min_set_bonus_combos(x)]
-    log_appstats("Number of armour/charm/deco combinations, after filtering by set bonus", len(armour_and_charm_combos))
 
     ret = []
 
     decos = list(get_pruned_deco_set(set(skill_subset)))
 
-    progress = ExecutionProgress("NEW COMBINATION PRUNER", len(armour_and_charm_combos), granularity=10)
+    # We start by generating a list of charms.
+    for charm in charms_list:
+        skills = defaultdict(lambda : 0)
+        set_bonuses = defaultdict(lambda : 0)
+        skills.update(calculate_skills_dict_from_charm(charm, charm.max_level))
+        ret.append(([charm], Counter(), skills, set_bonuses))
 
-    for (armour, charm, skills, slots, set_bonuses) in armour_and_charm_combos:
-        for deco_dict in _generate_deco_dicts(slots, decos, skills, skill_subset=skill_subset, required_skills=required_skills):
+    log_appstats("Combination pruner, stage 1 (charms) final combo count", len(ret))
 
-            # We add the decoration skills
-            skills = copy(skills)
-            for (skill, level) in calculate_decorations_skills_contribution(deco_dict).items():
-                skills[skill] += level
-            
-            ret.append((armour, charm, deco_dict, skills, slots, set_bonuses))
-        progress.update_and_log_progress(logger)
+    ret = _add_armour_slot(ret, armour_collection[ArmourSlot.HEAD], decos)
+
+    log_appstats("Combination pruner, stage 2 (head) final combo count", len(ret))
+
+    ret = _add_armour_slot(ret, armour_collection[ArmourSlot.CHEST], decos)
+
+    log_appstats("Combination pruner, stage 3 (chest) final combo count", len(ret))
+
+    ret = _add_armour_slot(ret, armour_collection[ArmourSlot.ARMS], decos)
+
+    log_appstats("Combination pruner, stage 4 (arms) final combo count", len(ret))
+
+    ret = _add_armour_slot(ret, armour_collection[ArmourSlot.WAIST], decos)
+
+    log_appstats("Combination pruner, stage 5 (waist) final combo count", len(ret))
+
+    ret = _add_armour_slot(ret, armour_collection[ArmourSlot.LEGS], decos)
+
+    log_appstats("Combination pruner, stage 6 (legs) final combo count", len(ret))
 
     return ret
 

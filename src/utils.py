@@ -207,6 +207,16 @@ def lists_of_dicts_are_equal(a, b):
     return True
 
 
+# Determines if Counter a is a subset of Counter b.
+# Do note that this function can also accept dictionaries with data that act like Counters!
+def counter_is_subset(a, b):
+    assert isinstance(a, dict) and all(isinstance(v, int) for (_, v) in a.items())
+    assert isinstance(b, dict) and all(isinstance(v, int) for (_, v) in b.items())
+    if not (set(a) <= set(b)):
+        return False
+    return all(av <= b[ak] for (ak, av) in a.items())
+
+
 def dict_enumkey_intval_str(d):
     return "\n".join(f"{k.name}: {v}" for (k, v) in d.items())
 
