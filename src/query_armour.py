@@ -265,7 +265,7 @@ def _armour_combination_iter(original_easyiterate_armour_db):
         regular_skills = defaultdict(lambda : 0)
         total_slots = Counter()
 
-        total_set_bonuses = defaultdict(lambda : 0) # Don't use this after we update regular_skills.
+        total_set_bonuses = defaultdict(lambda : 0)
 
         # We fill the totals in this loop.
         for (gear_slot, piece) in combination.items():

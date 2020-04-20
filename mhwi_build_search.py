@@ -15,6 +15,7 @@ import logging
 
 from collections import defaultdict
 
+from src.experimental import run_experimental_stuff
 from src.loggingutils import setup_logging, log_appstats
 from src.unit_testing import run_tests
 from src.search       import find_highest_efr_build
@@ -44,6 +45,18 @@ def print_debugging_statistics():
     log_appstats("Total number of armour pieces", armour_set_total)
     log_appstats("Total number of weapons", len(weapon_db))
     log_appstats("Number of decorations", len(list(Decoration)))
+    return
+
+
+def experiment_command(search_parameters_filename):
+    assert isinstance(search_parameters_filename, str)
+
+    logger.info("Carrying out some experimental stuff.")
+
+    with open(search_parameters_filename, encoding=ENCODING, mode="r") as f:
+        search_parameters_jsonstr = f.read()
+
+    run_experimental_stuff(search_parameters_jsonstr)
     return
 
 
@@ -212,6 +225,9 @@ def run():
         if sys.argv[1].lower() == "search":
             search_parameters_filename = sys.argv[2]
             search_command(search_parameters_filename)
+        elif sys.argv[1].lower() == "experiment":
+            search_parameters_filename = sys.argv[2]
+            experiment_command(search_parameters_filename)
         else:
             weapon_name = sys.argv[1]
             lookup_command(weapon_name)
