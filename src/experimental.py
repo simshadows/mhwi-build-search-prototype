@@ -18,7 +18,7 @@ from itertools import product
 from collections import defaultdict, Counter
 
 from .enums        import Tier
-from .utils        import ExecutionProgress, counter_is_subset
+from .utils        import ExecutionProgress, counter_is_subset, get_humanreadable_from_enum_list
 from .loggingutils import log_appstats
 from .serialize    import readjson_search_parameters
 
@@ -302,32 +302,57 @@ def _armour_and_charm_combo_iter(armour_collection, charms_list):
 def _generate_deco_additions(deco_slots, regular_skills, possible_decos):
     assert len(deco_slots) <= 3
     assert isinstance(regular_skills, defaultdict)
-    assert isinstance(possible_decos, list)
+    assert isinstance(possible_decos, tuple) and (len(possible_decos) == 4)
 
     yield (tuple(), regular_skills)
     
     if len(deco_slots) == 0:
         return
 
-    # TODO: Try a different implementation later.
-    for selected_decos in product(possible_decos, repeat=len(deco_slots)):
+    product_args = []
+    for deco_slot in deco_slots:
+        product_args.append(possible_decos[deco_slot - 1])
+
+    for selected_decos in product(*product_args):
         
         # First check to see if these decos fit.
         assert len(selected_decos) == len(deco_slots)
-        if any(d.value.slot_size > s for (d, s) in zip(selected_decos, deco_slots)):
-            continue
+        assert all(d.value.slot_size <= s for (d, s) in zip(selected_decos, deco_slots))
 
         new_skills = copy(regular_skills)
+        skip_deco_combo = False
         for deco in selected_decos:
             for (skill, level) in deco.value.skills_dict.items():
                 new_skills[skill] += level
+                extended_limit = skill.value.extended_limit if skill.value.extended_limit is not None else 0
+                if new_skills[skill] > skill.value.limit + extended_limit:
+                    skip_deco_combo = True
+                    break
 
-        yield (selected_decos, new_skills)
+        if not skip_deco_combo:
+            yield (selected_decos, new_skills)
 
 
 def _add_armour_slot(curr_collection, pieces_collection, decos):
     assert isinstance(pieces_collection, list)
     assert isinstance(decos, list)
+
+    decos_for_size1 = [x for x in decos if (x.value.slot_size == 1)]
+    decos_for_size2 = [x for x in decos if (x.value.slot_size == 2)] + decos_for_size1
+    decos_for_size3 = [x for x in decos if (x.value.slot_size == 3)] + decos_for_size2
+
+    decos_for_size4 = [x for x in decos if (x.value.slot_size == 4)]
+    # Now, we should also add smaller decos that don't contain skill subsets of any size-4 decos.
+    for deco in decos_for_size3:
+        if not any(counter_is_subset(deco.value.skills_dict, d.value.skills_dict) for d in decos_for_size4):
+            decos_for_size4.append(deco)
+
+    assert set(decos_for_size4) | set(decos_for_size3) == set(decos)
+    assert len(decos_for_size1) > 0 # These conditions are not sufficiently dealt with yet.
+    assert len(decos_for_size2) > 0
+    assert len(decos_for_size3) > 0
+    assert len(decos_for_size4) > 0
+    decos = (decos_for_size1, decos_for_size2, decos_for_size3, decos_for_size4)
 
     progress = ExecutionProgress("COMBINATION PRUNING", len(curr_collection) * len(pieces_collection), granularity=4)
 

@@ -220,3 +220,9 @@ def counter_is_subset(a, b):
 def dict_enumkey_intval_str(d):
     return "\n".join(f"{k.name}: {v}" for (k, v) in d.items())
 
+
+def get_humanreadable_from_enum_counter(d):
+    return "\n".join(f"{k.name}: {v}" for (k, v) in d.items())
+def get_humanreadable_from_enum_list(x):
+    return "\n".join(f"{v.name}" for v in x)
+
