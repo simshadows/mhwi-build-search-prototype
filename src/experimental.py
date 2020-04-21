@@ -335,9 +335,11 @@ def _generate_deco_additions(deco_slots, regular_skills, possible_decos):
             yield (selected_decos, new_skills)
 
 
-def _add_power_set(skill_counter, set_bonuses_counter, seen_set):
+def _add_power_set(skill_counter, set_bonuses_counter, combo_map, seen_set):
     h = (convert_skills_dict_to_tuple(skill_counter), convert_set_bonuses_dict_to_tuple(set_bonuses_counter))
     if h in seen_set:
+        if h in combo_map:
+            del combo_map[h]
         return
     seen_set.add(h)
     for (skill, level) in skill_counter.items():
@@ -346,14 +348,14 @@ def _add_power_set(skill_counter, set_bonuses_counter, seen_set):
             new_skills[skill] = level - 1
         else:
             del new_skills[skill]
-        _add_power_set(new_skills, set_bonuses_counter, seen_set)
+        _add_power_set(new_skills, set_bonuses_counter, combo_map, seen_set)
     for (set_bonus, pieces) in set_bonuses_counter.items():
         new_set_bonuses = copy(set_bonuses_counter)
         if pieces > 1:
             new_set_bonuses[set_bonus] = pieces - 1
         else:
             del new_set_bonuses[set_bonus]
-        _add_power_set(skill_counter, new_set_bonuses, seen_set)
+        _add_power_set(skill_counter, new_set_bonuses, combo_map, seen_set)
     return
 
 
@@ -380,7 +382,7 @@ def _add_armour_slot(curr_collection, pieces_collection, decos, skill_subset, se
 
     progress = ExecutionProgress("COMBINATION PRUNING", len(curr_collection) * len(pieces_collection), granularity=200)
 
-    ret = [] # [(pieces, deco_counter, regular_skills, set_bonuses)]
+    combo_map = {}
     seen_set = set()
 
     for (pieces, deco_counter, regular_skills, set_bonuses) in curr_collection:
@@ -422,12 +424,12 @@ def _add_armour_slot(curr_collection, pieces_collection, decos, skill_subset, se
                     continue
 
                 # And we add it!
-                ret.append((new_pieces, new_deco_counter, new_skills, new_set_bonuses))
-                _add_power_set(new_skills, new_set_bonuses, seen_set)
+                combo_map[h] = (new_pieces, new_deco_counter, new_skills, new_set_bonuses)
+                _add_power_set(new_skills, new_set_bonuses, combo_map, seen_set)
 
             progress.update_and_log_progress(logger)
 
-    return ret
+    return [v for (k, v) in combo_map.items()]
 
 
 def _generate_combinations(armour_collection, charms_list, skill_subset, required_skills, minimum_set_bonus_combos):
