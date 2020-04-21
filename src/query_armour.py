@@ -13,8 +13,10 @@ from collections import namedtuple, defaultdict, Counter
 from itertools import product
 
 from .enums        import Tier
-from .utils        import ExecutionProgress, prune_by_superceding, lists_of_dicts_are_equal
-from .loggingutils import log_appstats
+from .utils        import prune_by_superceding, lists_of_dicts_are_equal
+from .loggingutils import (ExecutionProgress,
+                          log_appstats,
+                          log_appstats_reduction)
 
 from .database_decorations import skill_to_simple_deco_size
 from .database_skills import Skill, SetBonus
@@ -198,20 +200,21 @@ def prune_easyiterate_armour_db(selected_armour_tier, original_easyiterate_armou
 
         intermediate[gear_slot] = prune_by_superceding(piece_list, left_supercedes_right)
 
-    #total_kept = sum(len(x) for (_, x) in intermediate.items())
-    #total_original = sum(len(x) for (_, x) in original_easyiterate_armour_db.items())
-    #log_appstats("number of armour pieces, before pruning", total_original)
-    #log_appstats("number of armour pieces, after pruning", total_kept)
-    log_appstats("number of head pieces,  before pruning", len(original_easyiterate_armour_db[ArmourSlot.HEAD]))
-    log_appstats("number of chest pieces, before pruning", len(original_easyiterate_armour_db[ArmourSlot.CHEST]))
-    log_appstats("number of arms pieces,  before pruning", len(original_easyiterate_armour_db[ArmourSlot.ARMS]))
-    log_appstats("number of waist pieces, before pruning", len(original_easyiterate_armour_db[ArmourSlot.WAIST]))
-    log_appstats("number of leg pieces,   before pruning", len(original_easyiterate_armour_db[ArmourSlot.LEGS]))
-    log_appstats("number of head pieces,  after pruning", len(intermediate[ArmourSlot.HEAD]))
-    log_appstats("number of chest pieces, after pruning", len(intermediate[ArmourSlot.CHEST]))
-    log_appstats("number of arms pieces,  after pruning", len(intermediate[ArmourSlot.ARMS]))
-    log_appstats("number of waist pieces, after pruning", len(intermediate[ArmourSlot.WAIST]))
-    log_appstats("number of leg pieces,   after pruning", len(intermediate[ArmourSlot.LEGS]))
+    head_pre  = len(original_easyiterate_armour_db[ArmourSlot.HEAD])
+    chest_pre = len(original_easyiterate_armour_db[ArmourSlot.CHEST])
+    arms_pre  = len(original_easyiterate_armour_db[ArmourSlot.ARMS])
+    waist_pre = len(original_easyiterate_armour_db[ArmourSlot.WAIST])
+    legs_pre  = len(original_easyiterate_armour_db[ArmourSlot.LEGS])
+    head_post  = len(intermediate[ArmourSlot.HEAD])
+    chest_post = len(intermediate[ArmourSlot.CHEST])
+    arms_post  = len(intermediate[ArmourSlot.ARMS])
+    waist_post = len(intermediate[ArmourSlot.WAIST])
+    legs_post  = len(intermediate[ArmourSlot.LEGS])
+    log_appstats_reduction("head  slot pruning", head_pre,  head_post)
+    log_appstats_reduction("chest slot pruning", chest_pre, chest_post)
+    log_appstats_reduction("arms  slot pruning", arms_pre,  arms_post)
+    log_appstats_reduction("waist slot pruning", waist_pre, waist_post)
+    log_appstats_reduction("legs  slot pruning", legs_pre,  legs_post)
 
     return intermediate
 

@@ -20,10 +20,10 @@ from .builds       import (Build,
                           lookup_from_skills)
 from .serialize    import (SearchParameters,
                           readjson_search_parameters)
-from .utils        import (ExecutionProgress,
-                          grouper,
+from .utils        import (grouper,
                           interleaving_shuffle)
-from .loggingutils import log_appstats
+from .loggingutils import (ExecutionProgress,
+                          log_appstats)
 
 from .database_armour import ArmourSlot
 

@@ -8,7 +8,6 @@ Contains general utility stuff.
 """
 
 import os
-import time
 import json
 from enum import Enum, auto
 from math import floor, ceil
@@ -48,65 +47,6 @@ def json_dumps_formatted(data):
 #    with open(relfilepath, encoding=ENCODING, mode="w") as f:
 #        f.write(json.dumps(data, sort_keys=True, indent=4))
 #    return
-
-
-class ExecutionProgress:
-
-    __slots__ = [
-            "_msg",
-            "_total_progress_segments",
-            "_curr_progress_segment",
-            "_start_time",
-            "_granularity",
-        ]
-
-    def __init__(self, msg, total_progress_segments, granularity=1):
-        assert isinstance(msg, str) and (len(msg.strip()) > 0)
-        assert (isinstance(total_progress_segments, int) and (total_progress_segments > 0)) or (total_progress_segments is None)
-        assert isinstance(granularity, int) and (granularity > 0)
-
-        self._msg = msg
-        self._total_progress_segments = total_progress_segments # If this is none, we update later.
-        self._curr_progress_segment = 0
-        self._start_time = time.time()
-        self._granularity = granularity
-        return
-
-    def ensure_total_progress_count(self, total_progress_segments):
-        if self._total_progress_segments is None:
-            self._total_progress_segments = total_progress_segments
-        elif self._total_progress_segments != total_progress_segments:
-            raise RuntimeError(f"Progress segment mismatch! Expected {self._total_progress_segments}, " \
-                                    f"we got {total_progress_segments}")
-        return
-
-    def update_and_log_progress(self, foreign_logger):
-        assert self._total_progress_segments is not None
-        self._curr_progress_segment += 1
-
-        if (self._granularity == 1) or (self._curr_progress_segment % (self._granularity - 1) == 0) \
-                or (self._curr_progress_segment == 1) \
-                or (self._curr_progress_segment == self._total_progress_segments):
-            progress_segment_size = 1 / self._total_progress_segments
-
-            curr_progress = self._curr_progress_segment * progress_segment_size
-            curr_progress_percent_rnd = round(curr_progress * 100, 2)
-            curr_progress_str = f"{curr_progress_percent_rnd:.02f}%"
-
-            progress_real_time = time.time() - self._start_time
-            progress_real_time_minutes = int(progress_real_time // 60)
-            progress_real_time_seconds = int(progress_real_time % 60)
-            progress_real_time_str = f"{progress_real_time_minutes:02}:{progress_real_time_seconds:02}"
-
-            seconds_per_segment = progress_real_time / self._curr_progress_segment
-            seconds_estimate = seconds_per_segment * self._total_progress_segments
-            estimate_minutes = int(seconds_estimate // 60)
-            estimate_seconds = int(seconds_estimate % 60) # This naming is so confusing lmao
-            estimate_str = f"{estimate_minutes:02}:{estimate_seconds:02}"
-
-            buf = f"[{self._msg} PROGRESS: {curr_progress_str}] elapsed {progress_real_time_str}, estimate {estimate_str}"
-            foreign_logger.info(buf)
-        return
 
 
 # Recipe from Python 3.8 Itertools documentation.
