@@ -34,7 +34,9 @@ from .query_decorations import (get_pruned_deco_set,
                                calculate_decorations_skills_contribution)
 from .query_skills      import (calculate_possible_set_bonus_combos,
                                relax_set_bonus_combos,
-                               clipped_skills_defaultdict)
+                               clipped_skills_defaultdict,
+                               convert_skills_dict_to_tuple,
+                               convert_set_bonuses_dict_to_tuple)
 
 
 logger = logging.getLogger(__name__)
@@ -354,9 +356,10 @@ def _add_armour_slot(curr_collection, pieces_collection, decos):
     assert len(decos_for_size4) > 0
     decos = (decos_for_size1, decos_for_size2, decos_for_size3, decos_for_size4)
 
-    progress = ExecutionProgress("COMBINATION PRUNING", len(curr_collection) * len(pieces_collection), granularity=4)
+    progress = ExecutionProgress("COMBINATION PRUNING", len(curr_collection) * len(pieces_collection), granularity=100)
 
     ret = [] # [(pieces, deco_counter, regular_skills, set_bonuses)]
+    seen_set = set()
 
     for (pieces, deco_counter, regular_skills, set_bonuses) in curr_collection:
 
@@ -387,24 +390,13 @@ def _add_armour_slot(curr_collection, pieces_collection, decos):
                 new_deco_counter.update(deco_additions)
 
                 # Now, we have to decide if it's worth keeping.
-                dont_keep = any(
-                        counter_is_subset(new_set_bonuses, s_set_bonuses) \
-                        and counter_is_subset(new_skills, s_skills)
-                        for (_, _, s_skills, s_set_bonuses) in ret
-                    )
-                if dont_keep:
+                h = (convert_skills_dict_to_tuple(new_skills), convert_set_bonuses_dict_to_tuple(new_set_bonuses))
+                if h in seen_set:
                     continue
-
-                # Now, we prune the existing seen_skillsets
-                prune = []
-                for (i, (_, _, s_skills, s_set_bonuses)) in enumerate(ret):
-                    if counter_is_subset(s_set_bonuses, new_set_bonuses) and counter_is_subset(s_skills, new_skills):
-                        prune.append(i)
-                for i in reversed(prune):
-                    del ret[i]
 
                 # And we add it!
                 ret.append((new_pieces, new_deco_counter, new_skills, new_set_bonuses))
+                seen_set.add(h)
 
             progress.update_and_log_progress(logger)
 

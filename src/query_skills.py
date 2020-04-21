@@ -266,15 +266,15 @@ def calculate_skills_contribution(skills_dict, skill_states_dict, maximum_sharpn
     return ret
 
 
-## Useful for hashing
-#def convert_skills_dict_to_tuple(d):
-#    assert all(isinstance(k, Skill) and isinstance(v, int) and (v > 0) for (k, v) in d.items())
-#    return tuple(sorted(d.items(), key=lambda e : e[0].name))
+# Useful for hashing
+def convert_skills_dict_to_tuple(d):
+    assert all(isinstance(k, Skill) and isinstance(v, int) and (v > 0) for (k, v) in d.items())
+    return tuple(sorted(d.items(), key=lambda e : e[0].name))
 
 
-## Also useful for hashing
-#def convert_set_bonuses_dict_to_tuple(d):
-#    assert all(isinstance(k, SetBonus) and isinstance(v, int) and (v > 0) for (k, v) in d.items())
-#    return tuple(sorted(d.items(), key=lambda e : e[0].name))
+# Also useful for hashing
+def convert_set_bonuses_dict_to_tuple(d):
+    assert all(isinstance(k, SetBonus) and isinstance(v, int) and (v > 0) for (k, v) in d.items())
+    return tuple(sorted(d.items(), key=lambda e : e[0].name))
 
 
