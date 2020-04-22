@@ -172,6 +172,8 @@ def get_humanreadable_from_enum_counter(d):
     return "\n".join(f"{k.name}: {v}" for (k, v) in d.items())
 def get_humanreadable_from_enum_list(x):
     return "\n".join(f"{v.name}" for v in x)
+def get_humanreadable_from_list_of_enum_counter(x):
+    return "\n\n".join("\n".join(f"{k.name}: {v}" for (k, v) in d.items()) for d in x)
 
 
 def list_obeys_sort_order(l, key=lambda x : x, reverse=False):

@@ -58,6 +58,9 @@ skills_with_implemented_features = {
 def clipped_skills_defaultdict(skills_dict):
     assert all(level >= 0 for (_, level) in skills_dict.items()) # We shouldn't be seeing negative skill levels.
     return defaultdict(lambda : 0, {skill: min(level, skill.value.limit) for (skill, level) in skills_dict.items()})
+def clipped_skills_defaultdict_includesecret(skills_dict):
+    assert all(level >= 0 for (_, level) in skills_dict.items()) # We shouldn't be seeing negative skill levels.
+    return defaultdict(lambda : 0, {skill: min(level, (skill.value.extended_limit if (skill.value.extended_limit is not None) else skill.value.limit)) for (skill, level) in skills_dict.items()})
 
 
 # From a set of skills attainable from set bonuses, this function calculates all possible

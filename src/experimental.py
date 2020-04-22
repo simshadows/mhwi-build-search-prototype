@@ -20,7 +20,9 @@ from collections import defaultdict, Counter
 
 from .enums        import Tier
 from .utils        import (counter_is_subset,
+                          get_humanreadable_from_enum_counter,
                           get_humanreadable_from_enum_list,
+                          get_humanreadable_from_list_of_enum_counter,
                           list_obeys_sort_order)
 from .loggingutils import (ExecutionProgress,
                           log_appstats,
@@ -40,7 +42,8 @@ from .query_decorations import (get_pruned_deco_set,
                                get_skill_from_simple_deco)
 from .query_skills      import (calculate_possible_set_bonus_combos,
                                relax_set_bonus_combos,
-                               clipped_skills_defaultdict,
+                               #clipped_skills_defaultdict,
+                               clipped_skills_defaultdict_includesecret,
                                convert_skills_dict_to_tuple,
                                convert_set_bonuses_dict_to_tuple,
                                get_highest_skill_limit)
@@ -115,7 +118,7 @@ def _armour_and_charm_combo_iter(armour_collection, charms_list):
         for (skill, level) in charm_skills.items():
             regular_skills[skill] += level
 
-        regular_skills = clipped_skills_defaultdict(regular_skills)
+        regular_skills = clipped_skills_defaultdict_includesecret(regular_skills)
         yield ((head, chest, arms, waist, legs), charm, regular_skills, total_slots, total_set_bonuses)
 
 
@@ -217,8 +220,8 @@ class SeenSetBySSB:
             return
 
         # And we add it!
-        self._combo_map[h] = object_to_store
         self._add_power_set(skills_counter, set_bonuses_counter)
+        self._combo_map[h] = object_to_store
         return
 
     def items_as_list(self):
@@ -249,7 +252,7 @@ class SeenSetBySSB:
 
 
 def _add_armour_slot(curr_collection, pieces_collection, decos, skill_subset, minimum_set_bonus_combos, \
-                                minimum_set_bonus_distance, *, progress_msg):
+                                minimum_set_bonus_distance, *, progress_msg_slot):
     assert isinstance(pieces_collection, list)
     assert isinstance(decos, list)
 
@@ -269,15 +272,50 @@ def _add_armour_slot(curr_collection, pieces_collection, decos, skill_subset, mi
 
     decos = [decos_maxsize1, decos_maxsize2, decos_maxsize3, decos_maxsize4]
 
-    # Statistics stuff
-    total_pre_deco_combos = len(curr_collection) * len(pieces_collection)
-    progress = ExecutionProgress(progress_msg, total_pre_deco_combos, granularity=400)
-    removed_pre_deco_combos = 0
-    post_deco_combos_seen = 0
+    ##
+    ## Stage 1: Generate a list of combinations of just this armour slot + decos.
+    ##
 
-    #combo_map = {}
-    #seen_set = set()
     seen_set = SeenSetBySSB()
+
+    # STATISTICS
+    progress = ExecutionProgress(f"GENERATING {progress_msg_slot} PIECE COMBINATIONS -", len(pieces_collection))
+    stage1_pre = 0
+
+    for piece in pieces_collection:
+        assert isinstance(piece, ArmourPieceInfo)
+
+        skills = defaultdict(lambda : 0, piece.skills)
+        set_bonus = piece.armour_set.set_bonus
+        assert None not in set_bonus_subset
+        set_bonuses = {set_bonus: 1} if (set_bonus in set_bonus_subset) else {}
+
+        deco_it = list(_generate_deco_additions(piece.decoration_slots, skills, decos))
+        stage1_pre += len(deco_it) # STATISTICS
+        for (deco_additions, new_skills) in deco_it:
+            new_skills = clipped_skills_defaultdict_includesecret(new_skills)
+
+            # Now, we have to decide if it's worth keeping.
+            new_skills = defaultdict(lambda : 0, ((k, v) for (k, v) in new_skills.items() if (k in skill_subset)))
+
+            t = (piece, deco_additions, new_skills, set_bonus)
+            seen_set.add(new_skills, set_bonuses, t)
+
+        progress.update_and_log_progress(logger) # STATISTICS
+
+    # STATISTICS
+    piece_combos = seen_set.items_as_list()
+    stage1_post = len(piece_combos)
+
+    ##
+    ## Stage 2: Merge these piece+decos combos in with the other combos!
+    ##
+
+    seen_set = SeenSetBySSB()
+
+    # STATISTICS
+    stage2_pre = len(curr_collection) * len(piece_combos)
+    progress = ExecutionProgress(f"COMBINING {progress_msg_slot} PIECES -", stage2_pre, granularity=5000)
 
     for (pieces, deco_counter, regular_skills, set_bonuses) in curr_collection:
 
@@ -289,49 +327,50 @@ def _add_armour_slot(curr_collection, pieces_collection, decos, skill_subset, mi
         assert all((k in skill_subset) for (k, v) in regular_skills.items()) # Only skills in the subset are considered
         assert all((k in set_bonus_subset) for (k, v) in set_bonuses.items()) # Only set bonuses in the subset are considered
 
-        for new_piece in pieces_collection:
-            assert isinstance(new_piece, ArmourPieceInfo)
+        for (pc_piece, pc_decos, pc_skills, pc_set_bonus) in piece_combos:
+            assert isinstance(pc_piece, ArmourPieceInfo)
+            assert isinstance(pc_decos, list)
+            assert isinstance(pc_skills, dict)
+            assert (pc_set_bonus is None) or isinstance(pc_set_bonus, SetBonus)
 
-            new_pieces = pieces + [new_piece]
+            new_pieces = pieces + [pc_piece]
+            new_deco_counter = copy(deco_counter)
             new_regular_skills = copy(regular_skills)
             new_set_bonuses = copy(set_bonuses)
 
-            for (skill, level) in new_piece.skills.items():
+            new_deco_counter.update(pc_decos)
+
+            for (skill, level) in pc_skills.items():
                 if skill in skill_subset:
                     new_regular_skills[skill] += level
 
-            new_set_bonus = new_piece.armour_set.set_bonus
-            if (new_set_bonus is not None) and (new_set_bonus in set_bonus_subset):
-                new_set_bonuses[new_set_bonus] += 1
+            if (pc_set_bonus is not None) and (pc_set_bonus in set_bonus_subset):
+                new_set_bonuses[pc_set_bonus] += 1
 
             set_bonus_distance = _distance_to_nearest_target_set_bonus_combo(new_set_bonuses, minimum_set_bonus_combos)
             if set_bonus_distance > minimum_set_bonus_distance:
                 progress.update_and_log_progress(logger) # Statistics Stuff
-                removed_pre_deco_combos += 1 # Statistics Stuff
                 continue
 
-            deco_it = list(_generate_deco_additions(new_piece.decoration_slots, regular_skills, decos))
-            post_deco_combos_seen += len(deco_it) # Statistics Stuff
-            for (deco_additions, new_skills) in deco_it:
-                new_skills = clipped_skills_defaultdict(new_skills)
-                new_deco_counter = copy(deco_counter)
+            # Now, we have to decide if it's worth keeping.
+            new_regular_skills = defaultdict(lambda : 0, ((k, v) for (k, v) in new_regular_skills.items() if (k in skill_subset)))
+            new_regular_skills = clipped_skills_defaultdict_includesecret(new_regular_skills)
 
-                new_deco_counter.update(deco_additions)
-
-                # Now, we have to decide if it's worth keeping.
-                new_skills = defaultdict(lambda : 0, ((k, v) for (k, v) in new_skills.items() if (k in skill_subset)))
-
-                t = (new_pieces, new_deco_counter, new_skills, new_set_bonuses)
-                seen_set.add(new_skills, new_set_bonuses, t)
+            t = (new_pieces, new_deco_counter, new_regular_skills, new_set_bonuses)
+            seen_set.add(new_regular_skills, new_set_bonuses, t)
 
             progress.update_and_log_progress(logger) # Statistics Stuff
 
     ret = seen_set.items_as_list()
 
     # Statistics stuff
-    final_pre_deco_combos = total_pre_deco_combos - removed_pre_deco_combos
-    log_appstats_reduction("Set bonus filtering reduction", total_pre_deco_combos, final_pre_deco_combos)
-    log_appstats_reduction("Skill and set bonus filtering reduction", post_deco_combos_seen, len(ret))
+    stage2_post = len(ret)
+
+    log_appstats_reduction(f"{progress_msg_slot} piece+deco combination reduction", stage1_pre, stage1_post)
+    log_appstats_reduction(f"{progress_msg_slot} full combining reduction", stage2_pre, stage2_post)
+
+    #log_appstats_reduction("Set bonus filtering reduction", total_pre_deco_combos, final_pre_deco_combos)
+    #log_appstats_reduction("Skill and set bonus filtering reduction", post_deco_combos_seen, len(ret))
 
     return ret
 
@@ -352,19 +391,19 @@ def _experimental_search(armour_collection, charms_list, skill_subset, required_
     log_appstats("Charms", len(ret))
 
     ret = _add_armour_slot(ret, armour_collection[ArmourSlot.HEAD], decos, skill_subset, minimum_set_bonus_combos, 5, \
-                                    progress_msg="ADDING HEAD PIECES -")
+                                    progress_msg_slot="HEAD")
 
     ret = _add_armour_slot(ret, armour_collection[ArmourSlot.CHEST], decos, skill_subset, minimum_set_bonus_combos, 4, \
-                                    progress_msg="ADDING CHEST PIECES -")
+                                    progress_msg_slot="CHEST")
 
     ret = _add_armour_slot(ret, armour_collection[ArmourSlot.ARMS], decos, skill_subset, minimum_set_bonus_combos, 3, \
-                                    progress_msg="ADDING ARM PIECES -")
+                                    progress_msg_slot="ARM")
 
     ret = _add_armour_slot(ret, armour_collection[ArmourSlot.WAIST], decos, skill_subset, minimum_set_bonus_combos, 2, \
-                                    progress_msg="ADDING WAIST PIECES -")
+                                    progress_msg_slot="WAIST")
 
     ret = _add_armour_slot(ret, armour_collection[ArmourSlot.LEGS], decos, skill_subset, minimum_set_bonus_combos, 1, \
-                                    progress_msg="ADDING LEG PIECES -")
+                                    progress_msg_slot="LEG")
 
     return ret
 
