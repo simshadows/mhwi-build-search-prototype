@@ -173,3 +173,17 @@ def get_humanreadable_from_enum_counter(d):
 def get_humanreadable_from_enum_list(x):
     return "\n".join(f"{v.name}" for v in x)
 
+
+def list_obeys_sort_order(l, key=lambda x : x, reverse=False):
+    assert isinstance(l, list)
+    assert callable(key)
+    if reverse:
+        for i in range(len(l) - 1):
+            if key(l[i]) < key(l[i + 1]):
+                return False
+    else:
+        for i in range(len(l) - 1):
+            if key(l[i]) > key(l[i + 1]):
+                return False
+    return True
+

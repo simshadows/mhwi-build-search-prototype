@@ -278,3 +278,12 @@ def convert_set_bonuses_dict_to_tuple(d):
     return tuple(sorted(d.items(), key=lambda e : e[0].name))
 
 
+# TODO: Refactor so we don't need this function.
+def get_highest_skill_limit(skill):
+    extended_limit = skill.value.extended_limit
+    if extended_limit is None:
+        return skill.value.limit
+    else:
+        return extended_limit
+
+

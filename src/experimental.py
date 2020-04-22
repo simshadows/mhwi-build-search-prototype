@@ -14,11 +14,14 @@ This does not take into account weapons. That will need to be done elsewhere!
 
 import logging
 from copy import copy
+from math import ceil
 from itertools import product
 from collections import defaultdict, Counter
 
 from .enums        import Tier
-from .utils        import counter_is_subset, get_humanreadable_from_enum_list
+from .utils        import (counter_is_subset,
+                          get_humanreadable_from_enum_list,
+                          list_obeys_sort_order)
 from .loggingutils import (ExecutionProgress,
                           log_appstats,
                           log_appstats_reduction)
@@ -33,12 +36,14 @@ from .query_armour      import prune_easyiterate_armour_db
 from .query_charms      import (get_charms_subset,
                                calculate_skills_dict_from_charm)
 from .query_decorations import (get_pruned_deco_set,
-                               calculate_decorations_skills_contribution)
+                               calculate_decorations_skills_contribution,
+                               get_skill_from_simple_deco)
 from .query_skills      import (calculate_possible_set_bonus_combos,
                                relax_set_bonus_combos,
                                clipped_skills_defaultdict,
                                convert_skills_dict_to_tuple,
-                               convert_set_bonuses_dict_to_tuple)
+                               convert_set_bonuses_dict_to_tuple,
+                               get_highest_skill_limit)
 
 
 logger = logging.getLogger(__name__)
@@ -115,149 +120,6 @@ def run_experimental_stuff(search_parameters_jsonstr):
 ###############################################################################
 
 
-def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_skills, skill_subset=None, required_skills={}):
-    assert isinstance(slots_available_counter, Counter)
-    assert isinstance(all_possible_decos, list)
-    assert isinstance(existing_skills, defaultdict)
-    assert isinstance(required_skills, dict)
-    # assert all(x in slots_available_counter for x in [1, 2, 3, 4]) # This isn't enforced anymore.
-    # assert all(x in all_possible_decos for x in [1, 2, 3, 4]) # This isn't enforced anymore.
-    assert len(slots_available_counter) <= 4
-    assert len(all_possible_decos) > 0
-
-    # TODO: We should turn it into a list before even passing it into the function.
-    initial_slots_available_list = list(sorted(slots_available_counter.elements()))
-    assert initial_slots_available_list[0] <= initial_slots_available_list[-1] # Quick sanity check on order.
-
-    # We split the deco list into decos with any of the required skills, and deco list without required skills.
-    decos_with_required_skills = set()
-    decos_without_required_skills = set()
-    for deco in all_possible_decos:
-        if any((skill in required_skills) for (skill, _) in deco.value.skills_dict.items()):
-            decos_with_required_skills.add(deco)
-        else:
-            decos_without_required_skills.add(deco)
-    assert len(decos_with_required_skills) + len(decos_without_required_skills) == len(all_possible_decos)
-
-    intermediate = [(defaultdict(lambda : 0), initial_slots_available_list, copy(existing_skills))]
-
-    def process_decos(deco_set, required_skills):
-        nonlocal intermediate
-
-        assert isinstance(deco_set, set)
-
-        if len(deco_set) == 0:
-            return
-
-        for deco in deco_set:
-            next_intermediate = []
-            deco_size = deco.value.slot_size
-
-            for (trial_deco_dict, trial_slots_available, trial_skill_dict) in intermediate:
-                assert deco not in trial_deco_dict
-                assert isinstance(trial_deco_dict, dict)
-                assert isinstance(trial_skill_dict, dict)
-
-                trial_deco_dict = copy(trial_deco_dict)
-                trial_slots_available = copy(trial_slots_available)
-                trial_skill_dict = copy(trial_skill_dict)
-
-                # First we "add zero"
-
-                next_intermediate.append((copy(trial_deco_dict), copy(trial_slots_available), copy(trial_skill_dict)))
-
-                # Now, we add the deco incrementally.
-
-                if __debug__:
-                    debugging_num_added = 0
-                
-                while True:
-
-                    if __debug__:
-                        debugging_num_added += 1
-                        debugging_slots_initsize = len(trial_slots_available)
-
-                    # Trivial case for Step 3. (See below.) # Uncomment it later and measure performance impact.
-                    #if len(trial_slots_available) == 0:
-                    #    break # LOOP EXIT POINT
-
-                    # Step 1: Increment the deco count
-                    trial_deco_dict[deco] += 1
-                    assert trial_deco_dict[deco] == debugging_num_added
-
-                    # Step 2: Check if we will overflow a skill. If not, we add the decoration and increment the skill levels.
-                    will_overflow = False
-                    for (skill, levels_granted_by_deco) in deco.value.skills_dict.items():
-                        if (skill_subset is not None) and (skill not in skill_subset):
-                            # We're technically considering this to be an overflowing of a skill we limit to zero.
-                            # This should help prune the combinations by ignoring skills we don't really care about.
-                            # TODO: Consider removing this restriction, to allow "bonus skills" to be added to builds.
-                            will_overflow = True
-                            break
-                        new_skill_level = trial_skill_dict[skill] + levels_granted_by_deco
-                        if new_skill_level > skill.value.limit:
-                            will_overflow = True
-                            break
-                        trial_skill_dict[skill] = new_skill_level # We update the skill dictionary here
-                    if will_overflow:
-                        break # LOOP EXIT POINT
-
-                    # Step 3: Remove an available deco slot if possible. If not, we break.
-                    # We have already checked for the trivial case.
-                    slot_was_consumed = False
-                    new_trial_slots_available = []
-                    while len(trial_slots_available) > 0:
-                        candidate_slot_size = trial_slots_available.pop(0)
-                        if candidate_slot_size >= deco_size:
-                            # We "consume" the candidate slot and append the rest of the list.
-                            new_trial_slots_available += trial_slots_available
-                            slot_was_consumed = True
-                            break
-                        else:
-                            new_trial_slots_available.append(candidate_slot_size)
-                    if not slot_was_consumed:
-                        break # LOOP EXIT POINT
-                    assert (debugging_slots_initsize == 0) or (debugging_slots_initsize == len(new_trial_slots_available) + 1)
-                    trial_slots_available = new_trial_slots_available
-
-                    # Step 4: Add back to the intermediate list :)
-                    next_intermediate.append((copy(trial_deco_dict), copy(trial_slots_available), copy(trial_skill_dict)))
-
-            intermediate = next_intermediate
-        
-        # If we're processing with required skills, we'll need to filter out results
-        if required_skills is not None:
-            next_intermediate = []
-            for tup in intermediate:
-                assert len(tup) == 3
-                trial_deco_dict = tup[0]
-                trial_skills = tup[2]
-
-                keep_this = True
-                for skill, required_level in required_skills.items():
-                    if trial_skills[skill] < required_level:
-                        keep_this = False
-                        break
-                if keep_this:
-                    next_intermediate.append(tup)
-            intermediate = next_intermediate
-        return
-
-    process_decos(decos_with_required_skills, required_skills)
-
-    # TODO: Should I be exiting early? My algorithm seems to handle these rare cases fine.
-    #if len(intermediate) == 0:
-    #    return []
-
-    process_decos(decos_without_required_skills, None)
-    
-    ret = [x[0] for x in intermediate if (len(x[1]) == 0)]
-    if len(ret) == 0:
-        return [x[0] for x in intermediate] # We return everything since we can't utilize all slots anyway.
-    else:
-        return ret # We return the subset where all slots are consumed.
-
-
 def _armour_and_charm_combo_iter(armour_collection, charms_list):
     assert isinstance(armour_collection, dict)
     assert isinstance(charms_list, list)
@@ -303,38 +165,72 @@ def _armour_and_charm_combo_iter(armour_collection, charms_list):
         yield ((head, chest, arms, waist, legs), charm, regular_skills, total_slots, total_set_bonuses)
 
 
-def _generate_deco_additions(deco_slots, regular_skills, possible_decos):
-    assert len(deco_slots) <= 3
+def _generate_deco_additions(deco_slots, regular_skills, decos):
     assert isinstance(regular_skills, defaultdict)
-    assert isinstance(possible_decos, tuple) and (len(possible_decos) == 4)
+    assert isinstance(decos, list) and (len(decos) == 4)
 
-    yield (tuple(), regular_skills)
-    
+    # We expect pre-sorted deco sublists
+    assert all((x.value.slot_size == 1) for x in decos[0])
+    assert list_obeys_sort_order(decos[1], key=lambda x : x.value.slot_size, reverse=True)
+    assert list_obeys_sort_order(decos[2], key=lambda x : x.value.slot_size, reverse=True)
+    assert list_obeys_sort_order(decos[3], key=lambda x : x.value.slot_size, reverse=True)
+    assert decos[1][0].value.slot_size >= decos[1][-1].value.slot_size # More sanity checks
+    assert decos[2][0].value.slot_size >= decos[2][-1].value.slot_size
+    assert decos[3][0].value.slot_size >= decos[3][-1].value.slot_size
+
     if len(deco_slots) == 0:
-        return
+        return [([], regular_skills)]
 
-    product_args = []
-    for deco_slot in deco_slots:
-        product_args.append(possible_decos[deco_slot - 1])
+    # Sort deco slots from biggest to smallest.
+    deco_slots = sorted(deco_slots, reverse=True)
+    assert len(deco_slots) <= 3
+    assert deco_slots[0] >= deco_slots[-1]
+    assert all((x > 0) and (x <= 4) for x in deco_slots)
 
-    for selected_decos in product(*product_args):
-        
-        # First check to see if these decos fit.
-        assert len(selected_decos) == len(deco_slots)
-        assert all(d.value.slot_size <= s for (d, s) in zip(selected_decos, deco_slots))
+    incomplete_deco_combos = [([], deco_slots, regular_skills)] # [(decos, slots, skills)]
+    complete_deco_combos = [] # same format
 
-        new_skills = copy(regular_skills)
-        skip_deco_combo = False
-        for deco in selected_decos:
-            for (skill, level) in deco.value.skills_dict.items():
-                new_skills[skill] += level
-                extended_limit = skill.value.extended_limit if skill.value.extended_limit is not None else 0
-                if new_skills[skill] > skill.value.limit + extended_limit:
-                    skip_deco_combo = True
-                    break
+    decos_sublist = decos[deco_slots[0] - 1]
+    for deco in decos_sublist:
 
-        if not skip_deco_combo:
-            yield (selected_decos, new_skills)
+        deco_skills = deco.value.skills_dict
+        deco_size = deco.value.slot_size
+
+        new_incomplete = copy(incomplete_deco_combos)
+
+        for (curr_decos, curr_slots, curr_skills) in incomplete_deco_combos:
+
+            max_to_add = ceil(max(
+                    (get_highest_skill_limit(skill) - curr_skills.get(skill, 0)) / level
+                    for (skill, level) in deco_skills.items()
+                ))
+
+            if max_to_add > 0:
+                for _ in range(max_to_add):
+                    assert len(curr_slots) > 0 # We assume anything in incomplete_deco_combos has slots.
+
+                    if curr_slots[0] < deco_size:
+                        break
+
+                    curr_decos = copy(curr_decos)
+                    curr_slots = copy(curr_slots)
+                    curr_skills = copy(curr_skills)
+
+                    curr_decos.append(deco)
+                    curr_slots.pop(0)
+                    for (skill, level) in deco_skills.items():
+                        curr_skills[skill] += level
+
+                    t = (curr_decos, curr_slots, curr_skills)
+                    if len(curr_slots) == 0:
+                        complete_deco_combos.append(t)
+                        break
+                    else:
+                        new_incomplete.append(t)
+
+        incomplete_deco_combos = new_incomplete
+
+    return [(x[0], x[2]) for x in complete_deco_combos + incomplete_deco_combos]
 
 
 def _distance_to_nearest_target_set_bonus_combo(set_bonus_combo, target_set_bonus_combos):
@@ -381,22 +277,17 @@ def _add_armour_slot(curr_collection, pieces_collection, decos, skill_subset, mi
     for set_bonus_combo in minimum_set_bonus_combos:
         set_bonus_subset.update(set(set_bonus_combo))
 
-    decos_for_size1 = [x for x in decos if (x.value.slot_size == 1)]
-    decos_for_size2 = [x for x in decos if (x.value.slot_size == 2)] + decos_for_size1
-    decos_for_size3 = [x for x in decos if (x.value.slot_size == 3)] + decos_for_size2
+    decos_maxsize1 = [x for x in decos if (x.value.slot_size == 1)]
+    decos_maxsize2 = [x for x in decos if (x.value.slot_size == 2)] + decos_maxsize1
+    decos_maxsize3 = [x for x in decos if (x.value.slot_size == 3)] + decos_maxsize2
+    decos_maxsize4 = [x for x in decos if (x.value.slot_size == 4)] + decos_maxsize3
+    # An important feature of these lists it that they are sorted by decoration size!
+    assert list_obeys_sort_order(decos_maxsize1, key=lambda x : x.value.slot_size, reverse=True)
+    assert list_obeys_sort_order(decos_maxsize2, key=lambda x : x.value.slot_size, reverse=True)
+    assert list_obeys_sort_order(decos_maxsize3, key=lambda x : x.value.slot_size, reverse=True)
+    assert list_obeys_sort_order(decos_maxsize4, key=lambda x : x.value.slot_size, reverse=True)
 
-    decos_for_size4 = [x for x in decos if (x.value.slot_size == 4)]
-    # Now, we should also add smaller decos that don't contain skill subsets of any size-4 decos.
-    for deco in decos_for_size3:
-        if not any(counter_is_subset(deco.value.skills_dict, d.value.skills_dict) for d in decos_for_size4):
-            decos_for_size4.append(deco)
-
-    assert set(decos_for_size4) | set(decos_for_size3) == set(decos)
-    assert len(decos_for_size1) > 0 # These conditions are not sufficiently dealt with yet.
-    assert len(decos_for_size2) > 0
-    assert len(decos_for_size3) > 0
-    assert len(decos_for_size4) > 0
-    decos = (decos_for_size1, decos_for_size2, decos_for_size3, decos_for_size4)
+    decos = [decos_maxsize1, decos_maxsize2, decos_maxsize3, decos_maxsize4]
 
     # Statistics stuff
     total_pre_deco_combos = len(curr_collection) * len(pieces_collection)

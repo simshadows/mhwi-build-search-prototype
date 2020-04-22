@@ -138,3 +138,12 @@ def calculate_decorations_skills_contribution(decorations_counter):
             skills[skill] += level * total
     return skills
 
+
+def get_skill_from_simple_deco(d):
+    assert isinstance(d, Decoration)
+    skills = d.value.skills_dict
+    assert len(skills) == 1
+    (skill, level) = skills.items()[0]
+    assert level == 1
+    return skill
+
