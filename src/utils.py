@@ -147,6 +147,13 @@ def lists_of_dicts_are_equal(a, b):
     return True
 
 
+# Determines if Counter a is equal to Counter b.
+def counters_are_equal(a, b):
+    assert isinstance(a, dict) and all(isinstance(v, int) for (_, v) in a.items())
+    assert isinstance(b, dict) and all(isinstance(v, int) for (_, v) in b.items())
+    return (set(a) == set(b)) and all(av == b[ak] for (ak, av) in a.items())
+
+
 # Determines if Counter a is a subset of Counter b.
 # Do note that this function can also accept dictionaries with data that act like Counters!
 def counter_is_subset(a, b):
