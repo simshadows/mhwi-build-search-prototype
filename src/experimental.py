@@ -49,51 +49,6 @@ from .query_skills      import (calculate_possible_set_bonus_combos,
 logger = logging.getLogger(__name__)
 
 
-# We cache a single collection of sets.
-_cache_data = None
-_cache_selected_armour_tier = None
-_cache_skill_subset = None
-_cache_required_skills = None
-_cache_minimum_set_bonus_combos = None
-
-
-def get_combinations(selected_armour_tier, skill_subset, required_skills, minimum_set_bonus_combos):
-    assert isinstance(selected_armour_tier, Tier) or (selected_armour_tier is None)
-    assert isinstance(skill_subset, set) or (skill_subset is None)
-    assert isinstance(required_skills, dict)
-    assert all(isinstance(k, Skill) and isinstance(v, int) for (k, v) in required_skills.items())
-    assert isinstance(minimum_set_bonus_combos, list)
-
-    global _cache_data
-    global _cache_selected_armour_tier
-    global _cache_skill_subset
-    global _cache_required_skills
-    global _cache_minimum_set_bonus_combos
-
-    # Check the cache first.
-    if (_cache_data is not None) \
-            and (selected_armour_tier is _cache_selected_armour_tier) \
-            and (skill_subset == _cache_skill_subset) \
-            and lists_of_dicts_are_equal(required_skills, _cache_required_skills) \
-            and lists_of_dicts_are_equal(minimum_set_bonus_combos, _cache_minimum_set_bonus_combos):
-        return _cache_data
-
-    # If it's not cached, we generate it.
-    pruned_armour_db = prune_easyiterate_armour_db(selected_armour_tier, easyiterate_armour, skill_subset=skill_subset)
-    pruned_charms_list = list(get_charms_subset(skill_subset))
-    pruned_combinations = _generate_combinations(pruned_armour_db, pruned_charms_list, skill_subset, required_skills, \
-                                                        minimum_set_bonus_combos)
-
-    # Save to the cache
-    _cache_data = pruned_combinations
-    _cache_selected_armour_tier = selected_armour_tier
-    _cache_skill_subset = skill_subset
-    _cache_required_skills = required_skills
-    _cache_minimum_set_bonus_combos = minimum_set_bonus_combos
-
-    return copy(pruned_combinations)
-
-
 def run_experimental_stuff(search_parameters_jsonstr):
     search_parameters = readjson_search_parameters(search_parameters_jsonstr)
 
@@ -106,13 +61,12 @@ def run_experimental_stuff(search_parameters_jsonstr):
     minimum_set_bonus_combos = calculate_possible_set_bonus_combos(required_set_bonus_skills)
     relaxed_minimum_set_bonus_combos = relax_set_bonus_combos(minimum_set_bonus_combos)
 
-    # EXPERIMENTAL
-    x = get_combinations(
-            search_parameters.selected_armour_tier,
-            skill_subset,
-            skills_with_minimum_levels,
-            relaxed_minimum_set_bonus_combos,
-        )
+    pruned_armour_db = prune_easyiterate_armour_db(search_parameters.selected_armour_tier, easyiterate_armour, \
+                                                            skill_subset=skill_subset)
+    pruned_charms_list = list(get_charms_subset(skill_subset))
+
+    _experimental_search(pruned_armour_db, pruned_charms_list, skill_subset, skills_with_minimum_levels, \
+                                relaxed_minimum_set_bonus_combos)
 
     return
 
@@ -244,28 +198,54 @@ def _distance_to_nearest_target_set_bonus_combo(set_bonus_combo, target_set_bonu
         )
 
 
-def _add_power_set(skill_counter, set_bonuses_counter, combo_map, seen_set):
-    h = (convert_skills_dict_to_tuple(skill_counter), convert_set_bonuses_dict_to_tuple(set_bonuses_counter))
-    if h in seen_set:
-        if h in combo_map:
-            del combo_map[h]
+# "Seen-set, by skills and set bonuses"
+class SeenSetBySSB:
+
+    __slots__ = [
+            "_seen_set",
+            "_combo_map"
+        ]
+
+    def __init__(self):
+        self._seen_set = set()
+        self._combo_map = {}
         return
-    seen_set.add(h)
-    for (skill, level) in skill_counter.items():
-        new_skills = copy(skill_counter)
-        if level > 1:
-            new_skills[skill] = level - 1
-        else:
-            del new_skills[skill]
-        _add_power_set(new_skills, set_bonuses_counter, combo_map, seen_set)
-    for (set_bonus, pieces) in set_bonuses_counter.items():
-        new_set_bonuses = copy(set_bonuses_counter)
-        if pieces > 1:
-            new_set_bonuses[set_bonus] = pieces - 1
-        else:
-            del new_set_bonuses[set_bonus]
-        _add_power_set(skill_counter, new_set_bonuses, combo_map, seen_set)
-    return
+
+    def add(self, skills_counter, set_bonuses_counter, object_to_store):
+        h = (convert_skills_dict_to_tuple(skills_counter), convert_set_bonuses_dict_to_tuple(set_bonuses_counter))
+        if h in self._seen_set:
+            return
+
+        # And we add it!
+        self._combo_map[h] = object_to_store
+        self._add_power_set(skills_counter, set_bonuses_counter)
+        return
+
+    def items_as_list(self):
+        return [v for (k, v) in self._combo_map.items()]
+
+    def _add_power_set(self, skill_counter, set_bonuses_counter):
+        h = (convert_skills_dict_to_tuple(skill_counter), convert_set_bonuses_dict_to_tuple(set_bonuses_counter))
+        if h in self._seen_set:
+            if h in self._combo_map:
+                del self._combo_map[h]
+            return
+        self._seen_set.add(h)
+        for (skill, level) in skill_counter.items():
+            new_skills = copy(skill_counter)
+            if level > 1:
+                new_skills[skill] = level - 1
+            else:
+                del new_skills[skill]
+            self._add_power_set(new_skills, set_bonuses_counter)
+        for (set_bonus, pieces) in set_bonuses_counter.items():
+            new_set_bonuses = copy(set_bonuses_counter)
+            if pieces > 1:
+                new_set_bonuses[set_bonus] = pieces - 1
+            else:
+                del new_set_bonuses[set_bonus]
+            self._add_power_set(skill_counter, new_set_bonuses)
+        return
 
 
 def _add_armour_slot(curr_collection, pieces_collection, decos, skill_subset, minimum_set_bonus_combos, \
@@ -295,8 +275,9 @@ def _add_armour_slot(curr_collection, pieces_collection, decos, skill_subset, mi
     removed_pre_deco_combos = 0
     post_deco_combos_seen = 0
 
-    combo_map = {}
-    seen_set = set()
+    #combo_map = {}
+    #seen_set = set()
+    seen_set = SeenSetBySSB()
 
     for (pieces, deco_counter, regular_skills, set_bonuses) in curr_collection:
 
@@ -339,17 +320,13 @@ def _add_armour_slot(curr_collection, pieces_collection, decos, skill_subset, mi
 
                 # Now, we have to decide if it's worth keeping.
                 new_skills = defaultdict(lambda : 0, ((k, v) for (k, v) in new_skills.items() if (k in skill_subset)))
-                h = (convert_skills_dict_to_tuple(new_skills), convert_set_bonuses_dict_to_tuple(new_set_bonuses))
-                if h in seen_set:
-                    continue
 
-                # And we add it!
-                combo_map[h] = (new_pieces, new_deco_counter, new_skills, new_set_bonuses)
-                _add_power_set(new_skills, new_set_bonuses, combo_map, seen_set)
+                t = (new_pieces, new_deco_counter, new_skills, new_set_bonuses)
+                seen_set.add(new_skills, new_set_bonuses, t)
 
             progress.update_and_log_progress(logger) # Statistics Stuff
 
-    ret = [v for (k, v) in combo_map.items()]
+    ret = seen_set.items_as_list()
 
     # Statistics stuff
     final_pre_deco_combos = total_pre_deco_combos - removed_pre_deco_combos
@@ -359,7 +336,7 @@ def _add_armour_slot(curr_collection, pieces_collection, decos, skill_subset, mi
     return ret
 
 
-def _generate_combinations(armour_collection, charms_list, skill_subset, required_skills, minimum_set_bonus_combos):
+def _experimental_search(armour_collection, charms_list, skill_subset, required_skills, minimum_set_bonus_combos):
 
     ret = []
 
