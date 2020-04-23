@@ -54,6 +54,12 @@ def log_appstats_reduction(name, pre, post):
     _appstats_logger.info(f"{name}: {pre} --> {post} ({prop}% kept)")
     return
 
+def log_appstats_generic(msg):
+    global _appstats_logger
+    assert isinstance(msg, str)
+    _appstats_logger.info(msg)
+    return
+
 
 # This function is specifically intended for query_weapons.py get_pruned_weapon_combos().
 def dump_pruned_weapon_combos(before_combos, after_combos, left_supercedes_right):

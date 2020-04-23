@@ -12,6 +12,7 @@ Creates (and caches) a list of combinations of:
 This does not take into account weapons. That will need to be done elsewhere!
 """
 
+import time
 import logging
 from copy import copy
 from math import ceil
@@ -19,15 +20,17 @@ from itertools import product
 from collections import defaultdict, Counter
 
 from .enums        import Tier
+from .loggingutils import (ExecutionProgress,
+                          log_appstats,
+                          log_appstats_reduction,
+                          log_appstats_generic)
 from .utils        import (counter_is_subset,
                           get_humanreadable_from_enum_counter,
                           get_humanreadable_from_enum_list,
                           get_humanreadable_from_list_of_enum_counter,
                           list_obeys_sort_order)
-from .loggingutils import (ExecutionProgress,
-                          log_appstats,
-                          log_appstats_reduction)
-from .serialize    import readjson_search_parameters
+from .serialize    import (SearchParameters,
+                          readjson_search_parameters)
 
 from .database_armour import (ArmourSlot,
                              ArmourPieceInfo,
@@ -55,21 +58,19 @@ logger = logging.getLogger(__name__)
 def run_experimental_stuff(search_parameters_jsonstr):
     search_parameters = readjson_search_parameters(search_parameters_jsonstr)
 
-    skills_with_minimum_levels = {k: v for (k, v) in search_parameters.selected_skills.items() if (v > 0)}
-    skill_subset = set(search_parameters.selected_skills) # Get all the keys
+    # STATISTICS STUFF
+    start_time = time.time()
 
-    required_set_bonus_skills = search_parameters.selected_set_bonus_skills
-    # IMPORTANT: We're not checking yet if these skills are actually attainable via. set bonus.
+    _experimental_search(search_parameters)
 
-    minimum_set_bonus_combos = calculate_possible_set_bonus_combos(required_set_bonus_skills)
-    relaxed_minimum_set_bonus_combos = relax_set_bonus_combos(minimum_set_bonus_combos)
-
-    pruned_armour_db = prune_easyiterate_armour_db(search_parameters.selected_armour_tier, easyiterate_armour, \
-                                                            skill_subset=skill_subset)
-    pruned_charms_list = list(get_charms_subset(skill_subset))
-
-    _experimental_search(pruned_armour_db, pruned_charms_list, skill_subset, skills_with_minimum_levels, \
-                                relaxed_minimum_set_bonus_combos)
+    # STATISTICS STUFF
+    end_time = time.time()
+    search_time_min = int((end_time - start_time) // 60)
+    search_time_sec = int((end_time - start_time) % 60)
+    log_appstats_generic("")
+    log_appstats_generic(f"Total execution time (in real time): {search_time_min:02}:{search_time_sec:02}")
+    log_appstats_generic(f"({end_time - start_time} seconds)")
+    log_appstats_generic("")
 
     return
 
@@ -375,34 +376,65 @@ def _add_armour_slot(curr_collection, pieces_collection, decos, skill_subset, mi
     return ret
 
 
-def _experimental_search(armour_collection, charms_list, skill_subset, required_skills, minimum_set_bonus_combos):
+def _experimental_search(s):
+    assert isinstance(s, SearchParameters)
 
     ret = []
+
+    ####################################
+    # STAGE 1: Read search parameters. #
+    ####################################
+
+    skills_with_minimum_levels = {k: v for (k, v) in s.selected_skills.items() if (v > 0)}
+    skill_subset = set(s.selected_skills) # Get all the keys
+
+    required_set_bonus_skills = s.selected_set_bonus_skills
+    # IMPORTANT: We're not checking if these skills are actually attainable via. set bonus.
+    minimum_set_bonus_combos = calculate_possible_set_bonus_combos(required_set_bonus_skills)
+    relaxed_minimum_set_bonus_combos = relax_set_bonus_combos(minimum_set_bonus_combos)
+
+    #######################################
+    # STAGE 2: Generate some collections. #
+    #######################################
+
+    armour = prune_easyiterate_armour_db(s.selected_armour_tier, easyiterate_armour, skill_subset=skill_subset)
+    charms = list(get_charms_subset(skill_subset))
 
     decos = list(get_pruned_deco_set(set(skill_subset)))
 
     # We start by generating a list of charms.
-    for charm in charms_list:
+    for charm in charms:
         skills = defaultdict(lambda : 0)
         set_bonuses = defaultdict(lambda : 0)
         skills.update((k, v) for (k, v) in calculate_skills_dict_from_charm(charm, charm.max_level).items() if (k in skill_subset))
         ret.append(([charm], Counter(), skills, set_bonuses))
 
+    ## We also generate weapon combinations.
+    #weapon_combos = get_pruned_weapon_combos(desired_weapon_class, minimum_health_regen_augment)
+    #all_skills_max_except_free_elem = {skill: skill.value.limit for skill in skill_subset}
+    #weapon_combos = _extend_weapon_combos_tuples(weapon_combos, all_skills_max_except_free_elem, skill_states)
+    #weapon_combos.sort(key=lambda x : x[4], reverse=True)
+    #assert weapon_combos[0][4] >= weapon_combos[-1][4]
+
+    #######################################
+    # STAGE 3: Combine these collections. #
+    #######################################
+
     log_appstats("Charms", len(ret))
 
-    ret = _add_armour_slot(ret, armour_collection[ArmourSlot.HEAD], decos, skill_subset, minimum_set_bonus_combos, 5, \
+    ret = _add_armour_slot(ret, armour[ArmourSlot.HEAD], decos, skill_subset, relaxed_minimum_set_bonus_combos, 5, \
                                     progress_msg_slot="HEAD")
 
-    ret = _add_armour_slot(ret, armour_collection[ArmourSlot.CHEST], decos, skill_subset, minimum_set_bonus_combos, 4, \
+    ret = _add_armour_slot(ret, armour[ArmourSlot.CHEST], decos, skill_subset, relaxed_minimum_set_bonus_combos, 4, \
                                     progress_msg_slot="CHEST")
 
-    ret = _add_armour_slot(ret, armour_collection[ArmourSlot.ARMS], decos, skill_subset, minimum_set_bonus_combos, 3, \
+    ret = _add_armour_slot(ret, armour[ArmourSlot.ARMS], decos, skill_subset, relaxed_minimum_set_bonus_combos, 3, \
                                     progress_msg_slot="ARM")
 
-    ret = _add_armour_slot(ret, armour_collection[ArmourSlot.WAIST], decos, skill_subset, minimum_set_bonus_combos, 2, \
+    ret = _add_armour_slot(ret, armour[ArmourSlot.WAIST], decos, skill_subset, relaxed_minimum_set_bonus_combos, 2, \
                                     progress_msg_slot="WAIST")
 
-    ret = _add_armour_slot(ret, armour_collection[ArmourSlot.LEGS], decos, skill_subset, minimum_set_bonus_combos, 1, \
+    ret = _add_armour_slot(ret, armour[ArmourSlot.LEGS], decos, skill_subset, relaxed_minimum_set_bonus_combos, 1, \
                                     progress_msg_slot="LEG")
 
     return ret
