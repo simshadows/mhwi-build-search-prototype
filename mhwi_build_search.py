@@ -15,11 +15,12 @@ import logging
 
 from collections import defaultdict
 
-from src.experimental import run_experimental_stuff
+from src.search       import run_search
 from src.loggingutils import setup_logging, log_appstats
 from src.unit_testing import run_tests
-from src.search       import find_highest_efr_build
 from src.utils        import ENCODING
+
+from src.search_legacyimplementation import find_highest_efr_build_legacyimpl
 
 from src.database_armour      import (ArmourDiscriminator,
                                      ArmourVariant,
@@ -48,19 +49,7 @@ def print_debugging_statistics():
     return
 
 
-def experiment_command(search_parameters_filename):
-    assert isinstance(search_parameters_filename, str)
-
-    logger.info("Carrying out some experimental stuff.")
-
-    with open(search_parameters_filename, encoding=ENCODING, mode="r") as f:
-        search_parameters_jsonstr = f.read()
-
-    run_experimental_stuff(search_parameters_jsonstr)
-    return
-
-
-def search_command(search_parameters_filename):
+def legacy_command(search_parameters_filename):
     assert isinstance(search_parameters_filename, str)
 
     logger.info("Carrying out a pre-defined search.")
@@ -68,7 +57,19 @@ def search_command(search_parameters_filename):
     with open(search_parameters_filename, encoding=ENCODING, mode="r") as f:
         search_parameters_jsonstr = f.read()
 
-    find_highest_efr_build(search_parameters_jsonstr)
+    find_highest_efr_build_legacyimpl(search_parameters_jsonstr)
+    return
+
+
+def search_command(search_parameters_filename):
+    assert isinstance(search_parameters_filename, str)
+
+    logger.info("Carrying out some experimental stuff.")
+
+    with open(search_parameters_filename, encoding=ENCODING, mode="r") as f:
+        search_parameters_jsonstr = f.read()
+
+    run_search(search_parameters_jsonstr)
     return
 
 
@@ -225,9 +226,9 @@ def run():
         if sys.argv[1].lower() == "search":
             search_parameters_filename = sys.argv[2]
             search_command(search_parameters_filename)
-        elif sys.argv[1].lower() == "experiment":
+        elif sys.argv[1].lower() == "legacy":
             search_parameters_filename = sys.argv[2]
-            experiment_command(search_parameters_filename)
+            legacy_command(search_parameters_filename)
         else:
             weapon_name = sys.argv[1]
             lookup_command(weapon_name)

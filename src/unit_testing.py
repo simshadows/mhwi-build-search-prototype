@@ -15,7 +15,7 @@ from collections import namedtuple, defaultdict, Counter
 from .builds       import (Build,
                           lookup_from_skills,
                           lookup_from_skills_multiple_states)
-from .experimental import _generate_deco_additions
+from .search       import _generate_deco_additions
 from .utils        import subtract_deco_slots
 
 from .database_armour      import (ArmourDiscriminator,
