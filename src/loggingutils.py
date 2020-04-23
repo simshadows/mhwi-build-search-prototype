@@ -139,9 +139,11 @@ class ExecutionProgress:
                                     f"we got {total_progress_segments}")
         return
 
-    def update_and_log_progress(self, foreign_logger):
+    def update_and_log_progress(self, foreign_logger, skip=1):
         assert self._total_progress_segments is not None
-        self._curr_progress_segment += 1
+        assert isinstance(skip, int) and (skip >= 1)
+
+        self._curr_progress_segment += skip
 
         if (self._granularity == 1) or (self._curr_progress_segment % (self._granularity - 1) == 0) \
                 or (self._curr_progress_segment == 1) \
