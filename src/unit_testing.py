@@ -7,8 +7,8 @@ Author:   contact@simshadows.com
 
 import time
 import sys
-from copy import copy
 import logging
+from copy import copy
 
 from collections import namedtuple, defaultdict, Counter
 
@@ -16,6 +16,7 @@ from .builds       import (Build,
                           lookup_from_skills,
                           lookup_from_skills_multiple_states)
 from .experimental import _generate_deco_additions
+from .utils        import subtract_deco_slots
 
 from .database_armour      import (ArmourDiscriminator,
                                   ArmourVariant,
@@ -588,6 +589,65 @@ def _run_tests_lookup():
 
     check_efr(688.88)
     check_skill("MASTERS_TOUCH", 1) # Set Bonus
+
+    return True
+
+
+def _run_tests_utils():
+    logger.info("")
+    logger.info("Running tests on subtract_deco_slots().")
+
+    def test_subtract(sample):
+        result = subtract_deco_slots(a, b)
+        if sample is None:
+            if result is None:
+                return
+            else:
+                raise ValueError(f"Test failed. {a} - {b} is impossible, but the function returned {result}.")
+        elif result is None:
+            raise ValueError(f"Test failed. The correct answer is {a} - {b} = {sample}, but the function claims it's impossible.")
+        elif (len(sample) != 3) or (len(result) != 3) or any(x != y for (x, y) in zip(sample, result)):
+            raise ValueError(f"Test failed. The correct answer is {a} - {b} = {sample}, but instead we got {result}.")
+        return
+
+    a = [1,1,1]
+    b = [1,1,1]
+    test_subtract([0,0,0])
+    a = [1,1,1]
+    b = [1,1,2]
+    test_subtract(None)
+    a = [1,1,2]
+    b = [1,1,1]
+    test_subtract([0,0,1])
+
+    a = [3,4,5]
+    b = [2,1,3]
+    test_subtract([1,3,2])
+
+    a = [3,1,5]
+    b = [2,1,3]
+    test_subtract([1,0,2])
+    a = [3,0,5] # Changed size-2 to 0
+    b = [2,1,3]
+    test_subtract([1,0,1])
+    a = [1,0,5] # Changed size-1 to 1
+    b = [2,1,3]
+    test_subtract([0,0,0])
+    a = [1,0,5]
+    b = [3,1,3] # Changed size-1 to 3
+    test_subtract(None)
+    a = [1,0,6] # Added a size-3 slot
+    b = [3,1,3]
+    test_subtract([0,0,0])
+
+    a = [0,0,7]
+    b = [4,0,0]
+    test_subtract([0,0,3])
+    a = [7,0,0]
+    b = [0,0,4]
+    test_subtract(None)
+
+    # TODO: Find more corner-cases?
 
     return True
 

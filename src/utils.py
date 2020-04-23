@@ -9,6 +9,7 @@ Contains general utility stuff.
 
 import os
 import json
+from copy import copy
 from enum import Enum, auto
 from math import floor, ceil
 from itertools import zip_longest
@@ -125,6 +126,78 @@ def prune_by_superceding(iterable, left_supercedes_right, execute_per_iteration=
             ret.append(right)
         execute_per_iteration()
     return ret
+## Alternative, but currently untested/unused version. Maybe try this some time?
+#def prune_by_superceding(iterable, left_supercedes_right, execute_per_iteration=lambda : None):
+#    assert callable(left_supercedes_right)
+#
+#    li = list(iterable)
+#
+#    i = 0
+#    while i < len(li) - 1: # We intentionally stop just before the last element.
+#        pivot_element = li[i]
+#        delete_pivot = False
+#
+#        j = i + 1 # We start scanning just after the pivot element.
+#        while j < len(li):
+#            test_element = li[j]
+#
+#            x = left_supercedes_right(test_element, pivot_element)
+#            y = left_supercedes_right(pivot_element, test_element)
+#            if (x is True) or (x is None):
+#                # We have to delete the pivot.
+#                #assert ((x is None) and (y is None)) or ((x is True) and (y is False))
+#                delete_pivot = True
+#                break
+#            elif (y is True):
+#                # We have to delete the test element.
+#                # (Since we delete li[j], we don't increment j.)
+#                del li[j]
+#                execute_per_iteration() # Deletion counts as an iteration.
+#            else:
+#                # We move to the next test element.
+#                j += 1
+#
+#        execute_per_iteration()
+#        if delete_pivot:
+#            del li[i]
+#        else:
+#            i += 1
+#    return li
+
+
+# Subtracts decoration slots in b from slots in a.
+# Effectively "a minus b".
+# Returns None if a cannot be subtracted by b.
+def subtract_deco_slots(a, b):
+    assert len(a) == 3
+    assert len(b) == 3
+
+    # (We could try being more algorithmic, but doing a cascade of if-statements will work for this small set of sizes.)
+
+    a = copy(a)
+    b = copy(b)
+
+    if a[0] >= b[0]:
+        a[0] -= b[0]
+    else:
+        b[1] += b[0] - a[0]
+        a[0] = 0
+    # Don't care about b[0] anymore.
+
+    if a[1] >= b[1]:
+        a[1] -= b[1]
+    else:
+        b[2] += b[1] - a[1]
+        a[1] = 0
+    # Don't care about b[1] anymore.
+
+    if a[2] >= b[2]:
+        a[2] -= b[2]
+    else:
+        return None # We return here since we know we don't have enough p1_available decoration slots.
+    # Don't care about b[2] anymore.
+
+    return a
 
 
 def lists_of_dicts_are_equal(a, b):

@@ -13,7 +13,9 @@ from collections import namedtuple, defaultdict, Counter
 from itertools import product
 
 from .enums        import Tier
-from .utils        import prune_by_superceding, lists_of_dicts_are_equal
+from .utils        import (prune_by_superceding,
+                          subtract_deco_slots,
+                          lists_of_dicts_are_equal)
 from .loggingutils import (ExecutionProgress,
                           log_appstats,
                           log_appstats_reduction)
@@ -121,50 +123,16 @@ def _skills_and_slots_supercedes(p1_skills_and_setbonuses, p1_slots, p2_skills_a
     p2_available = list(p2_slots_overest)
     p1_available = list(p1_slots_underest)
 
-    # Subtracts slots in b from slots in a.
-    # Effectively "a minus b".
-    # Returns None if a cannot be subtracted by b.
-    def subtract_slots(a, b):
-        assert len(a) == 3
-        assert len(b) == 3
-
-        # (We could try being more algorithmic, but doing a cascade of if-statements will work for this small set of sizes.)
-
-        a = copy(a)
-        b = copy(b)
-
-        if a[0] >= b[0]:
-            a[0] -= b[0]
-        else:
-            b[1] += b[0] - a[0]
-            a[0] = 0
-        # Don't care about b[0] anymore.
-
-        if a[1] >= b[1]:
-            a[1] -= b[1]
-        else:
-            b[2] += b[1] - a[1]
-            a[1] = 0
-        # Don't care about b[1] anymore.
-
-        if a[2] >= b[2]:
-            a[2] -= b[2]
-        else:
-            return None # We return here since we know we don't have enough p1_available decoration slots.
-        # Don't care about b[2] anymore.
-
-        return a
-
     p1_initialy_has_decos = any(x > 0 for x in p1_available)
 
-    p1_available = subtract_slots(p1_available, p2_available)
+    p1_available = subtract_deco_slots(p1_available, p2_available)
 
     p1_has_more_decos = any(x > 0 for x in p1_available) if (p1_available is not None) else NotImplemented
 
     if p1_available is None:
         return False # p1 cannot supercede p2 because p1 effectively has less slots than p2
 
-    p1_available = subtract_slots(p1_available, p2_required)
+    p1_available = subtract_deco_slots(p1_available, p2_required)
 
     if p1_available is None:
         return False # p1 cannot supercede p2 because p1 isn't guaranteed to be able to also recreate p2's skills.
