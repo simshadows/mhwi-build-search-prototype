@@ -84,6 +84,67 @@ def run_search(search_parameters_jsonstr):
 ###############################################################################
 
 
+def _get_grouped_and_pruned_weapon_combos(weapon_class, health_regen_minimum, skill_subset, set_bonuses_subset, skill_states):
+
+    # TODO: This doesn't actually exclude free element yet...
+    all_skills_max_except_free_elem = {skill: skill.value.limit for skill in skill_subset}
+
+    combos = get_pruned_weapon_combos(weapon_class, health_regen_minimum)
+
+    weapon_groups = defaultdict(lambda : [])
+    
+    for (weapon, augments_tracker, upgrades_tracker) in combos:
+        combination_values = calculate_final_weapon_values(weapon, augments_tracker, upgrades_tracker)
+
+        results = lookup_from_skills(weapon, all_skills_max_except_free_elem, skill_states, augments_tracker, upgrades_tracker)
+        ceiling_efr = results.efr
+
+
+        # Sort deco slots from biggest to smallest.
+        sorted_deco_slots = tuple(sorted(combination_values.slots, reverse=True))
+        assert len(sorted_deco_slots) <= 3
+        assert sorted_deco_slots[0] >= sorted_deco_slots[-1]
+        assert all((x > 0) and (x <= 4) for x in sorted_deco_slots)
+
+        assert None not in set_bonuses_subset
+        set_bonus = combination_values.set_bonus if (combination_values.set_bonus in set_bonuses_subset) else None
+        assert (set_bonus is None) or isinstance(set_bonus, SetBonus)
+
+        hashable = (set_bonus, sorted_deco_slots)
+
+        tup = (weapon, augments_tracker, upgrades_tracker, combination_values, ceiling_efr)
+        weapon_groups[hashable].append(tup)
+
+    ret = []
+    
+    for (group_identification, combo_list) in weapon_groups.items():
+
+        # We sort because we want the weapons with the highest potential at the front, for pruning purposes!
+        combo_list.sort(key=lambda x : x[4], reverse=True)
+        assert combo_list[0][4] >= combo_list[-1][4]
+
+        ret.append((group_identification, combo_list))
+
+    return ret
+
+
+def _reprune_weapon_combos(weapon_combo_groups, *, minimum_efr_noninclusive):
+    assert isinstance(weapon_combo_groups, list)
+    assert isinstance(minimum_efr_noninclusive, float)
+
+    new_list = []
+
+    for (group_identification, combo_list) in weapon_combo_groups:
+        combo_list = [x for x in combo_list if (x[4] > minimum_efr_noninclusive)]
+
+        if len(combo_list) == 0:
+            continue
+
+        new_list.append((group_identification, combo_list))
+
+    return new_list
+
+
 def _extend_weapon_combos_tuples(weapon_combos, skills_for_ceiling_efr, skill_states_dict):
     assert isinstance(weapon_combos, list)
     assert isinstance(skills_for_ceiling_efr, dict)
@@ -338,7 +399,7 @@ def _add_armour_slot(curr_collection, piece_combos, skill_subset, minimum_set_bo
 
     # STATISTICS
     stage2_pre = len(curr_collection) * len(piece_combos)
-    progress = ExecutionProgress(f"COMBINING {progress_msg_slot} PIECES -", stage2_pre, granularity=5000)
+    progress = ExecutionProgress(f"COMBINING {progress_msg_slot} PIECES -", stage2_pre, granularity=10000)
 
     for (pieces, deco_counter, regular_skills, set_bonuses) in curr_collection:
 
@@ -441,14 +502,9 @@ def _find_highest_efr_build(s):
     decos = [decos_maxsize1, decos_maxsize2, decos_maxsize3, decos_maxsize4]
 
     # We also generate weapon combinations.
-    weapon_combos = get_pruned_weapon_combos(desired_weapon_class, min_health_regen_augment_level)
-    all_skills_max_except_free_elem = {skill: skill.value.limit for skill in skill_subset}
-    weapon_combos = _extend_weapon_combos_tuples(weapon_combos, all_skills_max_except_free_elem, skill_states)
-    # We sort because we want the weapons with the highest potential at the front, for pruning purposes!
-    weapon_combos.sort(key=lambda x : x[4], reverse=True)
-    assert weapon_combos[0][4] >= weapon_combos[-1][4]
-
-    num_weapon_combos = len(weapon_combos)
+    grouped_weapon_combos = _get_grouped_and_pruned_weapon_combos(desired_weapon_class, min_health_regen_augment_level, \
+                                                                    skill_subset, set_bonus_subset, skill_states)
+    num_weapon_combos = sum(len(x) for (_, x) in grouped_weapon_combos)
     log_appstats("Weapon combinations", num_weapon_combos)
 
     ##############################################
@@ -486,24 +542,28 @@ def _find_highest_efr_build(s):
     c = _add_armour_slot(c, piece_combos, skill_subset, relaxed_minimum_set_bonus_combos, 5, seen_set=c_seen_set, **kwargs)
 
     check_combination_size(2)
+    #c_seen_set = SeenSetBySSB() # Uncomment to force it to reset
 
     kwargs = {"progress_msg_slot": "CHEST"}
     piece_combos = _generate_slot_combinations(armour[ArmourSlot.CHEST], decos, skill_subset, set_bonus_subset, **kwargs)
     c = _add_armour_slot(c, piece_combos, skill_subset, relaxed_minimum_set_bonus_combos, 4, seen_set=c_seen_set, **kwargs)
 
     check_combination_size(3)
+    #c_seen_set = SeenSetBySSB() # Uncomment to force it to reset
 
     kwargs = {"progress_msg_slot": "ARM"}
     piece_combos = _generate_slot_combinations(armour[ArmourSlot.ARMS], decos, skill_subset, set_bonus_subset, **kwargs)
     c = _add_armour_slot(c, piece_combos, skill_subset, relaxed_minimum_set_bonus_combos, 3, seen_set=c_seen_set, **kwargs)
 
     check_combination_size(4)
+    #c_seen_set = SeenSetBySSB() # Uncomment to force it to reset
 
     kwargs = {"progress_msg_slot": "WAIST"}
     piece_combos = _generate_slot_combinations(armour[ArmourSlot.WAIST], decos, skill_subset, set_bonus_subset, **kwargs)
     c = _add_armour_slot(c, piece_combos, skill_subset, relaxed_minimum_set_bonus_combos, 2, seen_set=c_seen_set, **kwargs)
 
     check_combination_size(5)
+    #c_seen_set = SeenSetBySSB() # Uncomment to force it to reset
 
     kwargs = {"progress_msg_slot": "LEGS"}
     piece_combos = _generate_slot_combinations(armour[ArmourSlot.LEGS], decos, skill_subset, set_bonus_subset, **kwargs)
@@ -519,71 +579,69 @@ def _find_highest_efr_build(s):
     associated_affinity = None
     associated_build = None
 
-    stats_combos_explored = 0
-    progress = ExecutionProgress(f"COMBINING WEAPONS -", len(c) * len(weapon_combos), granularity=1000)
+    #stats_combos_explored = 0
+    progress = ExecutionProgress(f"COMBINING WEAPONS -", len(c), granularity=200)
 
     for (c_pieces, c_deco_counter, c_regular_skills, c_set_bonuses) in c:
         (c_charm, c_head, c_chest, c_arms, c_waist, c_legs) = c_pieces
 
         regenerate_weapon_list = False
 
-        for (weapon, w_augments_tracker, w_upgrades_tracker, w_combo_values, _) in weapon_combos:
+        for ((wg_set_bonus, wg_sorted_deco_slots), weapon_combos) in grouped_weapon_combos:
 
-            w_set_bonus = w_combo_values.set_bonus if (w_combo_values.set_bonus in set_bonus_subset) else None
-            w_set_bonus_skills = calculate_set_bonus_skills(c_set_bonuses, w_set_bonus)
-            if not all((w_set_bonus_skills.get(x, 0) > 0) for x in required_set_bonus_skills):
-                progress.update_and_log_progress(logger) # STATISTICS
+            if wg_set_bonus not in set_bonus_subset:
+                wg_set_bonus = None
+            wg_set_bonus_skills = calculate_set_bonus_skills(c_set_bonuses, wg_set_bonus)
+            if not all((wg_set_bonus_skills.get(x, 0) == 1) for x in required_set_bonus_skills):
                 continue # We prune combinations that don't fulfill the required set bonus skills here.
 
-            w_deco_slots = w_combo_values.slots
-
-            deco_it = list(_generate_deco_additions(w_deco_slots, c_regular_skills, decos))
-            stats_combos_explored += len(deco_it) # STATISTICS
+            deco_it = list(_generate_deco_additions(wg_sorted_deco_slots, c_regular_skills, decos))
+            #stats_combos_explored += len(deco_it) # STATISTICS
             for (deco_additions, d_regular_skills) in deco_it:
 
-                d_all_skills = defaultdict(lambda : 0, ((k, v) for (k, v) in d_regular_skills.items() if (k in skill_subset)))
-                d_all_skills = clipped_skills_defaultdict_includesecret(d_all_skills)
-                d_all_skills.update(w_set_bonus_skills) # TODO: Add set bonus skills earlier somehow?
+                # TODO: Do I need to filter and clip here?
+                d_regular_skills = defaultdict(lambda : 0, ((k, v) for (k, v) in d_regular_skills.items() if (k in skill_subset)))
+                d_regular_skills = clipped_skills_defaultdict_includesecret(d_regular_skills)
 
-                if not all((d_all_skills.get(k, 0) >= v) for (k, v) in skills_with_minimum_levels.items()):
+                if not all((d_regular_skills.get(k, 0) >= v) for (k, v) in skills_with_minimum_levels.items()):
                     continue # We prune combinations that don't fulfill the required skill minimums here.
 
                 d_deco_counter = copy(c_deco_counter)
                 d_deco_counter.update(deco_additions)
 
-                results = lookup_from_skills(weapon, d_all_skills, skill_states, w_augments_tracker, w_upgrades_tracker)
+                for (weapon, w_augments_tracker, w_upgrades_tracker, w_combo_values, _) in weapon_combos:
 
-                if results.efr > best_efr:
-                    armour_dict = {
-                            ArmourSlot.HEAD:  c_head,
-                            ArmourSlot.CHEST: c_chest,
-                            ArmourSlot.ARMS:  c_arms,
-                            ArmourSlot.WAIST: c_waist,
-                            ArmourSlot.LEGS:  c_legs,
-                        }
+                    results = lookup_from_skills(weapon, d_regular_skills, skill_states, w_augments_tracker, w_upgrades_tracker)
 
-                    best_efr = results.efr
-                    associated_affinity = results.affinity
-                    associated_build = Build(weapon, armour_dict, c_charm, w_augments_tracker, w_upgrades_tracker, \
-                                                    d_deco_counter)
+                    if results.efr > best_efr:
+                        armour_dict = {
+                                ArmourSlot.HEAD:  c_head,
+                                ArmourSlot.CHEST: c_chest,
+                                ArmourSlot.ARMS:  c_arms,
+                                ArmourSlot.WAIST: c_waist,
+                                ArmourSlot.LEGS:  c_legs,
+                            }
 
-                    regenerate_weapon_list = True
+                        best_efr = results.efr
+                        associated_affinity = results.affinity
+                        associated_build = Build(weapon, armour_dict, c_charm, w_augments_tracker, w_upgrades_tracker, \
+                                                        d_deco_counter)
+                        assert results.efr == associated_build.calculate_performance(skill_states).efr
 
-                    logger.info("")
-                    logger.info(associated_build.get_humanreadable(skill_states))
-                    logger.info("")
+                        regenerate_weapon_list = True
 
-            progress.update_and_log_progress(logger) # STATISTICS
+                        logger.info("")
+                        logger.info(associated_build.get_humanreadable(skill_states))
+                        logger.info("")
+
+        progress.update_and_log_progress(logger) # STATISTICS
 
         # Prune away weapon combinations whose ceiling EFRs are less than our best EFR.
         if regenerate_weapon_list:
-            old_count = len(weapon_combos)
-            weapon_combos = [x for x in weapon_combos if (x[4] > best_efr)]
-            new_count = len(weapon_combos)
+            #old_count = len(weapon_combos)
+            grouped_weapon_combos = _reprune_weapon_combos(grouped_weapon_combos, minimum_efr_noninclusive=best_efr)
+            new_count = sum(len(x) for (_, x) in grouped_weapon_combos)
             logger.info(f"New number of weapon configurations: {new_count} out of {num_weapon_combos}")
-            removed = old_count - new_count
-            if removed > 0:
-                progress.update_and_log_progress(logger, skip=removed)
 
     return associated_build
 
