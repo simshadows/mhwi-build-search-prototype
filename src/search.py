@@ -119,11 +119,14 @@ def _get_grouped_and_pruned_weapon_combos(weapon_class, health_regen_minimum, sk
     
     for (group_identification, combo_list) in weapon_groups.items():
 
-        # We sort because we want the weapons with the highest potential at the front, for pruning purposes!
-        combo_list.sort(key=lambda x : x[4], reverse=True)
-        assert combo_list[0][4] >= combo_list[-1][4]
+        ## We sort because we want the weapons with the highest potential at the front, for pruning purposes!
+        #combo_list.sort(key=lambda x : x[4], reverse=True)
+        #assert combo_list[0][4] >= combo_list[-1][4]
 
         ret.append((group_identification, combo_list))
+
+    ## Sorting again for better pruning!
+    #ret.sort(key=lambda x : max(y[4] for y in x[1]), reverse=True)
 
     return ret
 
@@ -570,6 +573,17 @@ def _find_highest_efr_build(s):
     c = _add_armour_slot(c, piece_combos, skill_subset, relaxed_minimum_set_bonus_combos, 1, seen_set=c_seen_set, **kwargs)
 
     check_combination_size(6)
+
+    # We sort by number of skills within the skill subset for better pruning!
+    # We assume here that the best builds tend to be the ones that fit the most skills into it.
+    assert all(
+            all(
+                (skill in skill_subset) and (level > 0) and (level <= get_highest_skill_limit(skill))
+                for (skill, level) in x[2].items()
+            )
+            for x in c
+        )
+    c.sort(key=(lambda x : sum(level for (_, level) in x[2].items())), reverse=True)
 
     ######################################################################
     # STAGE 4: We now try weapon combinations to find our optimal build! #
