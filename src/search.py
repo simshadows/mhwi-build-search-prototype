@@ -279,32 +279,24 @@ class SeenSetBySSB:
         return
 
 
-def _add_armour_slot(curr_collection, pieces_collection, decos, skill_subset, minimum_set_bonus_combos, \
-                                minimum_set_bonus_distance, *, progress_msg_slot):
-    assert isinstance(pieces_collection, list)
-    assert isinstance(decos, list)
-
-    set_bonus_subset = set() # A little bit redundant?
-    for set_bonus_combo in minimum_set_bonus_combos:
-        set_bonus_subset.update(set(set_bonus_combo))
+def _generate_slot_combinations(slot_pieces, possible_decos, skill_subset, set_bonus_subset, *, progress_msg_slot):
+    assert isinstance(slot_pieces, list)
+    assert isinstance(possible_decos, list)
+    assert isinstance(skill_subset, set)
+    assert isinstance(set_bonus_subset, set)
 
     # An important feature of these lists it that they are sorted by decoration size!
-    assert list_obeys_sort_order(decos[0], key=lambda x : x.value.slot_size, reverse=True)
-    assert list_obeys_sort_order(decos[1], key=lambda x : x.value.slot_size, reverse=True)
-    assert list_obeys_sort_order(decos[2], key=lambda x : x.value.slot_size, reverse=True)
-    assert list_obeys_sort_order(decos[3], key=lambda x : x.value.slot_size, reverse=True)
-
-    ##
-    ## Stage 1: Generate a list of combinations of just this armour slot + decos.
-    ##
+    assert list_obeys_sort_order(possible_decos[0], key=lambda x : x.value.slot_size, reverse=True)
+    assert list_obeys_sort_order(possible_decos[1], key=lambda x : x.value.slot_size, reverse=True)
+    assert list_obeys_sort_order(possible_decos[2], key=lambda x : x.value.slot_size, reverse=True)
+    assert list_obeys_sort_order(possible_decos[3], key=lambda x : x.value.slot_size, reverse=True)
 
     seen_set = SeenSetBySSB()
 
     # STATISTICS
-    progress = ExecutionProgress(f"GENERATING {progress_msg_slot} PIECE COMBINATIONS -", len(pieces_collection))
-    stage1_pre = 0
+    stats_pre = 0
 
-    for piece in pieces_collection:
+    for piece in slot_pieces:
         assert isinstance(piece, ArmourPieceInfo)
 
         skills = defaultdict(lambda : 0, piece.skills)
@@ -312,8 +304,8 @@ def _add_armour_slot(curr_collection, pieces_collection, decos, skill_subset, mi
         assert None not in set_bonus_subset
         set_bonuses = {set_bonus: 1} if (set_bonus in set_bonus_subset) else {}
 
-        deco_it = list(_generate_deco_additions(piece.decoration_slots, skills, decos))
-        stage1_pre += len(deco_it) # STATISTICS
+        deco_it = list(_generate_deco_additions(piece.decoration_slots, skills, possible_decos))
+        stats_pre += len(deco_it) # STATISTICS
         for (deco_additions, new_skills) in deco_it:
             new_skills = clipped_skills_defaultdict_includesecret(new_skills)
 
@@ -323,17 +315,26 @@ def _add_armour_slot(curr_collection, pieces_collection, decos, skill_subset, mi
             t = (piece, deco_additions, new_skills, set_bonus)
             seen_set.add(new_skills, set_bonuses, t)
 
-        progress.update_and_log_progress(logger) # STATISTICS
+    piece_combos = seen_set.items_as_list()
 
     # STATISTICS
-    piece_combos = seen_set.items_as_list()
-    stage1_post = len(piece_combos)
+    stats_post = len(piece_combos)
+    log_appstats_reduction(f"{progress_msg_slot} piece+deco combination reduction", stats_pre, stats_post)
 
-    ##
-    ## Stage 2: Merge these piece+decos combos in with the other combos!
-    ##
+    return piece_combos
 
-    seen_set = SeenSetBySSB()
+
+def _add_armour_slot(curr_collection, piece_combos, skill_subset, minimum_set_bonus_combos, \
+                                minimum_set_bonus_distance, *, seen_set, progress_msg_slot):
+    assert isinstance(curr_collection, list)
+    assert isinstance(piece_combos, list)
+    assert isinstance(skill_subset, set)
+    assert isinstance(minimum_set_bonus_combos, list)
+    assert isinstance(seen_set, SeenSetBySSB)
+
+    set_bonus_subset = set() # A little bit redundant?
+    for set_bonus_combo in minimum_set_bonus_combos:
+        set_bonus_subset.update(set(set_bonus_combo))
 
     # STATISTICS
     stage2_pre = len(curr_collection) * len(piece_combos)
@@ -388,7 +389,6 @@ def _add_armour_slot(curr_collection, pieces_collection, decos, skill_subset, mi
     # Statistics stuff
     stage2_post = len(ret)
 
-    log_appstats_reduction(f"{progress_msg_slot} piece+deco combination reduction", stage1_pre, stage1_post)
     log_appstats_reduction(f"{progress_msg_slot} full combining reduction", stage2_pre, stage2_post)
 
     #log_appstats_reduction("Set bonus filtering reduction", total_pre_deco_combos, final_pre_deco_combos)
@@ -421,9 +421,9 @@ def _find_highest_efr_build(s):
 
     skill_states = s.skill_states
 
-    #######################################
-    # STAGE 2: Generate some collections. #
-    #######################################
+    #########################################
+    # STAGE 2.1: Generate some collections. #
+    #########################################
 
     armour = prune_easyiterate_armour_db(s.selected_armour_tier, easyiterate_armour, skill_subset=skill_subset)
     charms = list(get_charms_subset(skill_subset))
@@ -440,45 +440,76 @@ def _find_highest_efr_build(s):
     assert list_obeys_sort_order(decos_maxsize4, key=lambda x : x.value.slot_size, reverse=True)
     decos = [decos_maxsize1, decos_maxsize2, decos_maxsize3, decos_maxsize4]
 
-    c = []
-
-    # We start by generating a list of charms.
-    for charm in charms:
-        skills = defaultdict(lambda : 0)
-        set_bonuses = defaultdict(lambda : 0)
-        skills.update((k, v) for (k, v) in calculate_skills_dict_from_charm(charm, charm.max_level).items() if (k in skill_subset))
-        c.append(([charm], Counter(), skills, set_bonuses))
-
-    log_appstats("Charms", len(c))
-
     # We also generate weapon combinations.
     weapon_combos = get_pruned_weapon_combos(desired_weapon_class, min_health_regen_augment_level)
     all_skills_max_except_free_elem = {skill: skill.value.limit for skill in skill_subset}
     weapon_combos = _extend_weapon_combos_tuples(weapon_combos, all_skills_max_except_free_elem, skill_states)
+    # We sort because we want the weapons with the highest potential at the front, for pruning purposes!
     weapon_combos.sort(key=lambda x : x[4], reverse=True)
     assert weapon_combos[0][4] >= weapon_combos[-1][4]
 
     num_weapon_combos = len(weapon_combos)
     log_appstats("Weapon combinations", num_weapon_combos)
 
+    ##############################################
+    # STAGE 2.2: We make some reusable functions #
+    ##############################################
+
+    def check_combination_size(expected_size):
+        if not all((len(pieces) == expected_size) for (pieces, _, _, _) in c):
+            raise RuntimeError("We have retained at least one combination from a previous armour-combining stage. " \
+                               "This code is not yet equipped to handle this case since we're " \
+                               "assuming that all previous combinations can be improved on. " \
+                               "This error might occur if we've maxed out on skills before combining all armour pieces, " \
+                               "or in other weird cases. (We'll deal with this error when we find these cases!)")
+        return
+
     ###########################################################################
     # STAGE 3: We combine armour, charms, and decorations, pruning in stages. #
     ###########################################################################
 
-    c = _add_armour_slot(c, armour[ArmourSlot.HEAD], decos, skill_subset, relaxed_minimum_set_bonus_combos, 5, \
-                                    progress_msg_slot="HEAD")
+    c = []
+    c_seen_set = SeenSetBySSB()
 
-    c = _add_armour_slot(c, armour[ArmourSlot.CHEST], decos, skill_subset, relaxed_minimum_set_bonus_combos, 4, \
-                                    progress_msg_slot="CHEST")
+    # We first generate a list of just charms.
+    for charm in charms:
+        skills = defaultdict(lambda : 0)
+        set_bonuses = defaultdict(lambda : 0)
+        skills.update((k, v) for (k, v) in calculate_skills_dict_from_charm(charm, charm.max_level).items() if (k in skill_subset))
+        c.append(([charm], Counter(), skills, set_bonuses))
+    check_combination_size(1)
 
-    c = _add_armour_slot(c, armour[ArmourSlot.ARMS], decos, skill_subset, relaxed_minimum_set_bonus_combos, 3, \
-                                    progress_msg_slot="ARM")
+    log_appstats("Charms", len(c))
+    
+    kwargs = {"progress_msg_slot": "HEAD"}
+    piece_combos = _generate_slot_combinations(armour[ArmourSlot.HEAD], decos, skill_subset, set_bonus_subset, **kwargs)
+    c = _add_armour_slot(c, piece_combos, skill_subset, relaxed_minimum_set_bonus_combos, 5, seen_set=c_seen_set, **kwargs)
 
-    c = _add_armour_slot(c, armour[ArmourSlot.WAIST], decos, skill_subset, relaxed_minimum_set_bonus_combos, 2, \
-                                    progress_msg_slot="WAIST")
+    check_combination_size(2)
 
-    c = _add_armour_slot(c, armour[ArmourSlot.LEGS], decos, skill_subset, relaxed_minimum_set_bonus_combos, 1, \
-                                    progress_msg_slot="LEG")
+    kwargs = {"progress_msg_slot": "CHEST"}
+    piece_combos = _generate_slot_combinations(armour[ArmourSlot.CHEST], decos, skill_subset, set_bonus_subset, **kwargs)
+    c = _add_armour_slot(c, piece_combos, skill_subset, relaxed_minimum_set_bonus_combos, 4, seen_set=c_seen_set, **kwargs)
+
+    check_combination_size(3)
+
+    kwargs = {"progress_msg_slot": "ARM"}
+    piece_combos = _generate_slot_combinations(armour[ArmourSlot.ARMS], decos, skill_subset, set_bonus_subset, **kwargs)
+    c = _add_armour_slot(c, piece_combos, skill_subset, relaxed_minimum_set_bonus_combos, 3, seen_set=c_seen_set, **kwargs)
+
+    check_combination_size(4)
+
+    kwargs = {"progress_msg_slot": "WAIST"}
+    piece_combos = _generate_slot_combinations(armour[ArmourSlot.WAIST], decos, skill_subset, set_bonus_subset, **kwargs)
+    c = _add_armour_slot(c, piece_combos, skill_subset, relaxed_minimum_set_bonus_combos, 2, seen_set=c_seen_set, **kwargs)
+
+    check_combination_size(5)
+
+    kwargs = {"progress_msg_slot": "LEGS"}
+    piece_combos = _generate_slot_combinations(armour[ArmourSlot.LEGS], decos, skill_subset, set_bonus_subset, **kwargs)
+    c = _add_armour_slot(c, piece_combos, skill_subset, relaxed_minimum_set_bonus_combos, 1, seen_set=c_seen_set, **kwargs)
+
+    check_combination_size(6)
 
     ######################################################################
     # STAGE 4: We now try weapon combinations to find our optimal build! #
