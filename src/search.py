@@ -312,15 +312,15 @@ class SeenSetBySSB:
             return
 
         # And we add it!
-        self._add_power_set(skills_counter, set_bonuses_counter)
+        self._add_power_set(skills_counter, set_bonuses_counter, h[0], h[1])
         self._combo_map[h] = object_to_store
         return
 
     def items_as_list(self):
         return [v for (k, v) in self._combo_map.items()]
 
-    def _add_power_set(self, skill_counter, set_bonuses_counter):
-        h = (convert_skills_dict_to_tuple(skill_counter), convert_set_bonuses_dict_to_tuple(set_bonuses_counter))
+    def _add_power_set(self, skill_counter, set_bonuses_counter, sc_h, sbc_h):
+        h = (sc_h, sbc_h)
         if h in self._seen_set:
             if h in self._combo_map:
                 del self._combo_map[h]
@@ -333,7 +333,7 @@ class SeenSetBySSB:
                 new_skills[skill] = level - 1
             else:
                 del new_skills[skill]
-            self._add_power_set(new_skills, set_bonuses_counter)
+            self._add_power_set(new_skills, set_bonuses_counter, convert_skills_dict_to_tuple(new_skills), sbc_h)
             new_skills[skill] = level
 
         new_set_bonuses = copy(set_bonuses_counter)
@@ -342,7 +342,7 @@ class SeenSetBySSB:
                 new_set_bonuses[set_bonus] = pieces - 1
             else:
                 del new_set_bonuses[set_bonus]
-            self._add_power_set(skill_counter, new_set_bonuses)
+            self._add_power_set(skill_counter, new_set_bonuses, sc_h, convert_set_bonuses_dict_to_tuple(new_set_bonuses))
             new_set_bonuses[set_bonus] = pieces
 
         return
