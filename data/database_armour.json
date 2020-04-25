@@ -1,7 +1,7 @@
 {
     "naming_schemes": {
         "BUFF_BODY_SCHEME": [
-            "(invalid)",
+            "(INVALID HEAD)",
             "Chest",
             "Arms",
             "Waist",
@@ -35,6 +35,34 @@
             "Tassets",
             "Greaves"
         ],
+        "COMMON_SCHEME_5": [
+            "Headgear",
+            "Mail",
+            "Vambraces",
+            "Coil",
+            "Greaves"
+        ],
+        "COMMON_SCHEME_6": [
+            "Headpiece",
+            "Mail",
+            "Vambraces",
+            "Coil",
+            "Greaves"
+        ],
+        "COMMON_SCHEME_7": [
+            "Hat",
+            "Mail",
+            "Vambraces",
+            "Coil",
+            "Greaves"
+        ],
+        "COMMON_SCHEME_8": [
+            "Hat",
+            "Mail",
+            "Braces",
+            "Coil",
+            "Greaves"
+        ],
         "DRACHEN_SCHEME": [
             "Armet",
             "Mail",
@@ -48,6 +76,55 @@
             "Vambraces",
             "Belt",
             "Boots"
+        ],
+        "BARNOS_SCHEME": [
+            "(INVALID HEAD)",
+            "Jacket",
+            "(INVALID ARMS)",
+            "(INVALID WAIST)",
+            "(INVALID LEGS)"
+        ],
+        "CORTOS_SCHEME": [
+            "(INVALID HEAD)",
+            "Cape",
+            "(INVALID ARMS)",
+            "(INVALID WAIST)",
+            "(INVALID LEGS)"
+        ],
+        "GAJAU_SCHEME": [
+            "(INVALID HEAD)",
+            "(INVALID CHEST)",
+            "(INVALID ARMS)",
+            "(INVALID WAIST)",
+            "Boots"
+        ],
+        "GASTODON_SCHEME": [
+            "Horn",
+            "(INVALID CHEST)",
+            "(INVALID ARMS)",
+            "(INVALID WAIST)",
+            "(INVALID LEGS)"
+        ],
+        "KESTODON_SCHEME": [
+            "(INVALID HEAD)",
+            "(INVALID CHEST)",
+            "Guards",
+            "(INVALID WAIST)",
+            "(INVALID LEGS)"
+        ],
+        "SHAMOS_SCHEME": [
+            "Goggles",
+            "(INVALID CHEST)",
+            "(INVALID ARMS)",
+            "(INVALID WAIST)",
+            "(INVALID LEGS)"
+        ],
+        "WULG_SCHEME": [
+            "Scarf",
+            "(INVALID CHEST)",
+            "(INVALID ARMS)",
+            "(INVALID WAIST)",
+            "(INVALID LEGS)"
         ]
     },
     "armour": [
@@ -99,6 +176,575 @@
                 "ARMS" : [[2,2], {"CRITICAL_EYE":   2, "ATTACK_BOOST":    1}],
                 "WAIST": [[3],   {"CRITICAL_EYE":   2, "POWER_PROLONGER": 1}],
                 "LEGS" : [[2],   {"ATTACK_BOOST":   2, "CRITICAL_BOOST":  1}]
+            }
+        },
+        {
+            "set": "Bone",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Bone",
+            "naming_scheme": "COMMON_SCHEME_1",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[3], {"HEALTH_BOOST": 2, "PARTBREAKER":  1}],
+                "CHEST": [[2], {"ATTACK_BOOST": 2, "HEALTH_BOOST": 1}],
+                "ARMS" : [[2], {"SLUGGER":      2, "ATTACK_BOOST": 1}],
+                "WAIST": [[3], {"HORN_MAESTRO": 1, "PARTBREAKER":  1}],
+                "LEGS" : [[3], {"SLUGGER":      1, "HORN_MAESTRO": 1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4],   {"HEALTH_BOOST": 1, "PARTBREAKER":  1}],
+                "CHEST": [[4,1], {"ATTACK_BOOST": 1                   }],
+                "ARMS" : [[4,1], {"SLUGGER":      1                   }],
+                "WAIST": [[4,1], {"HORN_MAESTRO": 1                   }],
+                "LEGS" : [[4],   {"SLUGGER":      1                   }]
+            }
+        },
+        {
+            "set": "Alloy",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Alloy",
+            "naming_scheme": "COMMON_SCHEME_1",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2], {"WINDPROOF":         2, "DEFENSE_BOOST":    1}],
+                "CHEST": [[3], {"WATER_RESISTANCE":  2, "DEFENSE_BOOST":    1}],
+                "ARMS" : [[3], {"DEFENSE_BOOST":     2, "SPEED_SHARPENING": 1}],
+                "WAIST": [[3], {"POISON_RESISTANCE": 2, "WINDPROOF":        1}],
+                "LEGS" : [[3], {"SPEED_SHARPENING":  2, "WINDPROOF":        1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1], {"WINDPROOF":         1                       }],
+                "CHEST": [[4,1], {"WATER_RESISTANCE":  1                       }],
+                "ARMS" : [[4,1], {"DEFENSE_BOOST":     1                       }],
+                "WAIST": [[4,1], {"POISON_RESISTANCE": 1, "WINDPROOF":        1}],
+                "LEGS" : [[4,1], {"SPEED_SHARPENING":  1, "WINDPROOF":        1}]
+            }
+        },
+        {
+            "set": "Vespoid",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Vespoid",
+            "naming_scheme": "COMMON_SCHEME_1",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[3],   {"QUICK_SHEATH":         1, "PARALYSIS_ATTACK":     1}],
+                "CHEST": [[2,1], {"WINDPROOF":            2                           }],
+                "ARMS" : [[3],   {"PARALYSIS_ATTACK":     2, "QUICK_SHEATH":         1}],
+                "WAIST": [[3],   {"PARALYSIS_RESISTANCE": 2, "QUICK_SHEATH":         1}],
+                "LEGS" : [[3],   {"CRITICAL_DRAW":        1, "PARALYSIS_RESISTANCE": 1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1], {"QUICK_SHEATH":         1                           }],
+                "CHEST": [[4,1], {"WINDPROOF":            1                           }],
+                "ARMS" : [[4,1], {"PARALYSIS_ATTACK":     1                           }],
+                "WAIST": [[4,1], {"PARALYSIS_RESISTANCE": 1                           }],
+                "LEGS" : [[4,1], {"CRITICAL_DRAW":        1                           }]
+            }
+        },
+        {
+            "set": "Hornetaur",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Hornetaur",
+            "naming_scheme": "COMMON_SCHEME_1",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2],   {"WEAKNESS_EXPLOIT": 1, "DRAGON_ATTACK":     2}],
+                "CHEST": [[2,1], {"EFFLUVIAL_EXPERT": 1, "HUNGER_RESISTANCE": 2}],
+                "ARMS" : [[3],   {"FREE_MEAL":        1, "HANDICRAFT":        1}],
+                "WAIST": [[2],   {"WEAKNESS_EXPLOIT": 1, "HUNGER_RESISTANCE": 1}],
+                "LEGS" : [[2,1], {"HANDICRAFT":       1, "DRAGON_ATTACK":     1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4],     {"WEAKNESS_EXPLOIT": 1, "DRAGON_ATTACK":     1}],
+                "CHEST": [[4,2,1], {"EFFLUVIAL_EXPERT": 1                        }],
+                "ARMS" : [[4,2],   {"FREE_MEAL":        1                        }],
+                "WAIST": [[4,1],   {"WEAKNESS_EXPLOIT": 1                        }],
+                "LEGS" : [[4,1],   {"HANDICRAFT":       1                        }]
+            }
+        },
+        {
+            "set": "Kestodon",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Kestodon",
+            "naming_scheme": "KESTODON_SCHEME",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "ARMS" : [[1,1], {"AFFINITY_SLIDING": 1, "FOCUS": 2}]
+            },
+            "MR_BETA_PLUS": {
+                "ARMS" : [[4,1], {"AFFINITY_SLIDING": 1, "FOCUS": 1}]
+            }
+        },
+        {
+            "set": "Gajau",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Gajau",
+            "naming_scheme": "GAJAU_SCHEME",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "LEGS" : [[2,1], {"AQUATIC_POLAR_MOBILITY": 2}]
+            },
+            "MR_BETA_PLUS": {
+                "LEGS" : [[4,1], {"AQUATIC_POLAR_MOBILITY": 1}]
+            }
+        },
+        {
+            "set": "Shamos",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Shamos",
+            "naming_scheme": "SHAMOS_SCHEME",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2,1], {"DETECTOR": 1, "GEOLOGIST": 2}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1], {"DETECTOR": 1, "GEOLOGIST": 1}]
+            }
+        },
+        {
+            "set": "Gastodon",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Gastodon",
+            "naming_scheme": "GASTODON_SCHEME",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[1], {"FLINCH_FREE": 2, "BLAST_RESISTANCE": 1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1], {"FLINCH_FREE": 1, "BLAST_RESISTANCE": 1}]
+            }
+        },
+        {
+            "set": "Barnos",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Barnos",
+            "naming_scheme": "BARNOS_SCHEME",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "CHEST" : [[2,2], {"HEAT_GUARD": 1, "IRON_SKIN": 2}]
+            },
+            "MR_BETA_PLUS": {
+                "CHEST" : [[4,2], {"HEAT_GUARD": 1, "IRON_SKIN": 1}]
+            }
+        },
+        {
+            "set": "Wulg",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Wulg",
+            "naming_scheme": "WULG_SCHEME",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2,1], {"ICE_RESISTANCE": 2, "MASTER_MOUNTER": 1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1], {"ICE_RESISTANCE": 1, "MASTER_MOUNTER": 1}]
+            }
+        },
+        {
+            "set": "Cortos",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Cortos",
+            "naming_scheme": "CORTOS_SCHEME",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "CHEST" : [[1,1], {"HUNGER_RESISTANCE": 2, "JUMP_MASTER": 1}]
+            },
+            "MR_BETA_PLUS": {
+                "CHEST" : [[4], {"HUNGER_RESISTANCE": 1, "JUMP_MASTER": 1}]
+            }
+        },
+        {
+            "set": "Jagras",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Jagras",
+            "naming_scheme": "COMMON_SCHEME_1",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2],   {"SPEED_EATING":   2, "ATTACK_BOOST": 2}],
+                "CHEST": [[3],   {"EVADE_EXTENDER": 1, "ATTACK_BOOST": 2}],
+                "ARMS" : [[2],   {"EVADE_EXTENDER": 2, "RECOVERY_UP":  1}],
+                "WAIST": [[2,1], {"RECOVERY_UP":    1, "SPEED_EATING": 1}],
+                "LEGS" : [[2,1], {"FREE_MEAL":      1, "RECOVERY_UP":  1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1], {"SPEED_EATING":   1, "ATTACK_BOOST": 1}],
+                "CHEST": [[4],   {"EVADE_EXTENDER": 1, "ATTACK_BOOST": 1}],
+                "ARMS" : [[4],   {"EVADE_EXTENDER": 1, "RECOVERY_UP":  1}],
+                "WAIST": [[4,1], {"RECOVERY_UP":    1                   }],
+                "LEGS" : [[4,1], {"FREE_MEAL":      1                   }]
+            }
+        },
+        {
+            "set": "Tzitzi",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Tzitzi",
+            "naming_scheme": "COMMON_SCHEME_5",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2,1], {"FREE_ELEM_AMMO_UP": 1, "STUN_RESISTANCE": 1}],
+                "CHEST": [[1,1], {"CONSTITUTION":      2, "WATER_ATTACK":    2}],
+                "ARMS" : [[2],   {"STUN_RESISTANCE":   2, "WIDE_RANGE":      2}],
+                "WAIST": [[2],   {"WIDE_RANGE":        2, "WATER_ATTACK":    2}],
+                "LEGS" : [[3],   {"SLEEP_RESISTANCE":  2, "WIDE_RANGE":      1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1], {"FREE_ELEM_AMMO_UP": 1                      }],
+                "CHEST": [[4,1], {"CONSTITUTION":      1, "WATER_ATTACK":    1}],
+                "ARMS" : [[4],   {"STUN_RESISTANCE":   2, "WIDE_RANGE":      1}],
+                "WAIST": [[4,1], {"WIDE_RANGE":        2                      }],
+                "LEGS" : [[4],   {"SLEEP_RESISTANCE":  1, "WIDE_RANGE":      1}]
+            }
+        },
+        {
+            "set": "Girros",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Girros",
+            "naming_scheme": "COMMON_SCHEME_5",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2], {"HORN_MAESTRO":         2, "PARALYSIS_RESISTANCE": 1}],
+                "CHEST": [[2], {"PARALYSIS_RESISTANCE": 2, "FREE_ELEM_AMMO_UP":    1}],
+                "ARMS" : [[1], {"FREE_ELEM_AMMO_UP":    1, "EFFLUVIA_RESISTANCE":  2}],
+                "WAIST": [[3], {"EFFLUVIAL_EXPERT":     1, "PARALYSIS_ATTACK":     2}],
+                "LEGS" : [[1], {"PARALYSIS_ATTACK":     2, "FREE_ELEM_AMMO_UP":    1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4],   {"HORN_MAESTRO":         2                           }],
+                "CHEST": [[4,2], {"PARALYSIS_RESISTANCE": 2                           }],
+                "ARMS" : [[4],   {"FREE_ELEM_AMMO_UP":    1, "EFFLUVIA_RESISTANCE":  1}],
+                "WAIST": [[4,2], {"EFFLUVIAL_EXPERT":     1                           }],
+                "LEGS" : [[4],   {"PARALYSIS_ATTACK":     2                           }]
+            }
+        },
+        {
+            "set": "Dodogama",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Dodogama",
+            "naming_scheme": "COMMON_SCHEME_1",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[3],   {"BLAST_RESISTANCE": 2, "BOMBARDIER":       1}],
+                "CHEST": [[2],   {"BLAST_ATTACK":     2, "ARTILLERY":        1}],
+                "ARMS" : [[2],   {"BOMBARDIER":       2, "BLAST_ATTACK":     1}],
+                "WAIST": [[2,1], {"ARTILLERY":        2, "BLAST_RESISTANCE": 1}],
+                "LEGS" : [[2,1], {"CAPACITY_BOOST":   1, "BLAST_ATTACK":     1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4],   {"BLAST_RESISTANCE": 2                       }],
+                "CHEST": [[4],   {"BLAST_ATTACK":     2                       }],
+                "ARMS" : [[4],   {"BOMBARDIER":       1, "BLAST_ATTACK":     1}],
+                "WAIST": [[4,1], {"ARTILLERY":        2                       }],
+                "LEGS" : [[4,1], {"CAPACITY_BOOST":   1                       }]
+            }
+        },
+        {
+            "set": "Kulu",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Kulu",
+            "naming_scheme": "COMMON_SCHEME_6",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[1],   {"SLINGER_CAPACITY": 2, "CAPACITY_BOOST":  1}],
+                "CHEST": [[2],   {"STAMINA_SURGE":    1, "CRITICAL_EYE":    2}],
+                "ARMS" : [[1,1], {"CRITICAL_BOOST":   1, "PRO_TRANSPORTER": 1}],
+                "WAIST": [[3],   {"ITEM_PROLONGER":   2, "CRITICAL_EYE":    1}],
+                "LEGS" : [[2],   {"CRITICAL_EYE":     2, "ITEM_PROLONGER":  1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4],   {"SLINGER_CAPACITY": 2                      }],
+                "CHEST": [[4],   {"STAMINA_SURGE":    1, "CRITICAL_EYE":    1}],
+                "ARMS" : [[4],   {"CRITICAL_BOOST":   1                      }],
+                "WAIST": [[4,1], {"ITEM_PROLONGER":   2                      }],
+                "LEGS" : [[4],   {"CRITICAL_EYE":     1, "ITEM_PROLONGER":  1}]
+            }
+        },
+        {
+            "set": "Pukei",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Pukei",
+            "naming_scheme": "COMMON_SCHEME_7",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2,2], {"POISON_RESISTANCE": 1                       }],
+                "CHEST": [[2],   {"ITEM_PROLONGER":    2, "PEAK_PERFORMANCE": 1}],
+                "ARMS" : [[1],   {"PEAK_PERFORMANCE":  2                       }],
+                "WAIST": [[3],   {"POISON_ATTACK":     2, "ITEM_PROLONGER":   1}],
+                "LEGS" : [[3],   {"POISON_RESISTANCE": 2, "POISON_ATTACK":    2}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1,1], {                                             }],
+                "CHEST": [[4],     {"ITEM_PROLONGER":    1, "PEAK_PERFORMANCE": 1}],
+                "ARMS" : [[4],     {"PEAK_PERFORMANCE":  1                       }],
+                "WAIST": [[4,1],   {"POISON_ATTACK":     1, "ITEM_PROLONGER":   1}],
+                "LEGS" : [[4,2],   {"POISON_RESISTANCE": 2                       }]
+            }
+        },
+        {
+            "set": "Coral Pukei",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Pukei Lagoon",
+            "naming_scheme": "COMMON_SCHEME_8",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[1], {"CRITICAL_DRAW":   2, "ITEM_PROLONGER":  1}],
+                "CHEST": [[2], {"POWER_PROLONGER": 1, "CRITICAL_DRAW":   1}],
+                "ARMS" : [[1], {"PARTBREAKER":     1, "POWER_PROLONGER": 1}],
+                "WAIST": [[2], {"WATER_ATTACK":    2, "PARTBREAKER":     1}],
+                "LEGS" : [[1], {"ITEM_PROLONGER":  2, "WATER_ATTACK":    2}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4],   {"CRITICAL_DRAW":   1, "ITEM_PROLONGER":  1}],
+                "CHEST": [[4,1], {"POWER_PROLONGER": 1                      }],
+                "ARMS" : [[4,1], {"PARTBREAKER":     1                      }],
+                "WAIST": [[4],   {"WATER_ATTACK":    1, "PARTBREAKER":     1}],
+                "LEGS" : [[4,1], {"ITEM_PROLONGER":  2                      }]
+            }
+        },
+        {
+            "set": "Barroth",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Barroth",
+            "naming_scheme": "COMMON_SCHEME_1",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2],   {"GUARD":           2, "MARATHON_RUNNER": 1}],
+                "CHEST": [[1,1], {"STAMINA_THIEF":   2, "AGITATOR":        1}],
+                "ARMS" : [[3,1], {"MARATHON_RUNNER": 1, "GUARD":           1}],
+                "WAIST": [[1],   {"AGITATOR":        2, "GUARD":           1}],
+                "LEGS" : [[3,1], {"STUN_RESISTANCE": 2, "MARATHON_RUNNER": 1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1],   {"GUARD":           2}],
+                "CHEST": [[4,1],   {"STAMINA_THIEF":   2}],
+                "ARMS" : [[4,2],   {"MARATHON_RUNNER": 1}],
+                "WAIST": [[4],     {"AGITATOR":        2}],
+                "LEGS" : [[4,2,1], {"STUN_RESISTANCE": 2}]
+            }
+        },
+        {
+            "set": "Jyura",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Jyura",
+            "naming_scheme": "COMMON_SCHEME_1",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[1,1], {"LATENT_POWER":   2, "FOCUS":          1}],
+                "CHEST": [[2],   {"LATENT_POWER":   1, "WATER_ATTACK":   2}],
+                "ARMS" : [[2,1], {"WATER_ATTACK":   2, "ICE_RESISTANCE": 1}],
+                "WAIST": [[3],   {"ICE_RESISTANCE": 2, "LATENT_POWER":   1}],
+                "LEGS" : [[2],   {"FOCUS":          2, "WATER_ATTACK":   1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1], {"LATENT_POWER":   1, "FOCUS":          1}],
+                "CHEST": [[4],   {"LATENT_POWER":   1, "WATER_ATTACK":   1}],
+                "ARMS" : [[4,2], {"WATER_ATTACK":   2                     }],
+                "WAIST": [[4,1], {"ICE_RESISTANCE": 2                     }],
+                "LEGS" : [[4,1], {"FOCUS":          1, "WATER_ATTACK":   1}]
+            }
+        },
+        {
+            "set": "Beo",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Beo",
+            "naming_scheme": "COMMON_SCHEME_1",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2], {"AQUATIC_POLAR_MOBILITY": 2, "EARPLUGS":     1}],
+                "CHEST": [[3], {"STAMINA_SURGE":          1, "ICE_ATTACK":   2}],
+                "ARMS" : [[3], {"ICE_ATTACK":             2, "HEALTH_BOOST": 1}],
+                "WAIST": [[2], {"HEALTH_BOOST":           2, "EARPLUGS":     2}],
+                "LEGS" : [[2], {"EARPLUGS":               2, "ICE_ATTACK":   1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1], {"AQUATIC_POLAR_MOBILITY": 2                   }],
+                "CHEST": [[4,2], {"STAMINA_SURGE":          1                   }],
+                "ARMS" : [[4],   {"ICE_ATTACK":             2                   }],
+                "WAIST": [[4,1], {"HEALTH_BOOST":           2, "EARPLUGS":     1}],
+                "LEGS" : [[4],   {"EARPLUGS":               2                   }]
+            }
+        },
+        {
+            "set": "Kadachi",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Kadachi",
+            "naming_scheme": "COMMON_SCHEME_7",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2],   {"CONSTITUTION":       2, "EVADE_EXTENDER":     1}],
+                "CHEST": [[2,1], {"JUMP_MASTER":        1, "CONSTITUTION":       1}],
+                "ARMS" : [[2],   {"EVADE_EXTENDER":     2, "THUNDER_ATTACK":     2}],
+                "WAIST": [[3,1], {"THUNDER_ATTACK":     2, "THUNDER_RESISTANCE": 1}],
+                "LEGS" : [[3,1], {"THUNDER_RESISTANCE": 2, "CONSTITUTION":       1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1],   {"CONSTITUTION":       1, "EVADE_EXTENDER":     1}],
+                "CHEST": [[4,2],   {"JUMP_MASTER":        1                         }],
+                "ARMS" : [[4,2],   {"EVADE_EXTENDER":     1, "THUNDER_ATTACK":     2}],
+                "WAIST": [[4,1],   {"THUNDER_ATTACK":     2                         }],
+                "LEGS" : [[4,1,1], {"THUNDER_RESISTANCE": 2                         }]
+            }
+        },
+        {
+            "set": "Viper Kadachi",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Viper Kadachi",
+            "naming_scheme": "COMMON_SCHEME_8",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[1],   {"EVADE_EXTENDER": 2, "PARALYSIS_ATTACK": 1}],
+                "CHEST": [[1,1], {"QUICK_SHEATH":   1, "EVADE_EXTENDER":   1}],
+                "ARMS" : [[2],   {"POISON_ATTACK":  2, "EVADE_WINDOW":     1}],
+                "WAIST": [[2],   {"CONSTITUTION":   1, "QUICK_SHEATH":     1}],
+                "LEGS" : [[2],   {"CONSTITUTION":   1, "EVADE_WINDOW":     1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4],   {"EVADE_EXTENDER": 1, "PARALYSIS_ATTACK": 1}],
+                "CHEST": [[4,1], {"QUICK_SHEATH":   1                       }],
+                "ARMS" : [[4],   {"POISON_ATTACK":  1, "EVADE_WINDOW":     1}],
+                "WAIST": [[4,1], {"CONSTITUTION":   1                       }],
+                "LEGS" : [[4,1], {                     "EVADE_WINDOW":     1}]
+            }
+        },
+        {
+            "set": "High Metal",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "High Metal",
+            "naming_scheme": "COMMON_SCHEME_3",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2],     {"ICE_RESISTANCE":  2, "EARPLUGS":       2}],
+                "CHEST": [[2],     {"EARPLUGS":        2, "ICE_ATTACK":     1}],
+                "ARMS" : [[2,1],   {"DEFENSE_BOOST":   2, "ICE_ATTACK":     2}],
+                "WAIST": [[2,2],   {"CAPACITY_BOOST":  1, "DEFENSE_BOOST":  2}],
+                "LEGS" : [[2,2,1], {"HEAVY_ARTILLERY": 2, "ICE_RESISTANCE": 1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1], {"ICE_RESISTANCE":  2, "EARPLUGS":       1}],
+                "CHEST": [[4,1], {"EARPLUGS":        1, "ICE_ATTACK":     1}],
+                "ARMS" : [[4,1], {"DEFENSE_BOOST":   2, "ICE_ATTACK":     1}],
+                "WAIST": [[4,2], {"CAPACITY_BOOST":  1, "DEFENSE_BOOST":  1}],
+                "LEGS" : [[4,3], {"HEAVY_ARTILLERY": 1, "ICE_RESISTANCE": 1}]
+            }
+        },
+        {
+            "set": "Banbaro",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Banbaro",
+            "naming_scheme": "COMMON_SCHEME_1",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2], {"RESENTMENT":      2, "MUSHROOMANCER":   1}],
+                "CHEST": [[3], {"SPEED_EATING":    1, "OFFENSIVE_GUARD": 1}],
+                "ARMS" : [[2], {"OFFENSIVE_GUARD": 1, "HEALTH_BOOST":    2}],
+                "WAIST": [[3], {"MUSHROOMANCER":   1, "OFFENSIVE_GUARD": 1}],
+                "LEGS" : [[3], {"MUSHROOMANCER":   1, "SPEED_EATING":    1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1], {"RESENTMENT":      2                      }],
+                "CHEST": [[4,1], {"SPEED_EATING":    1                      }],
+                "ARMS" : [[4],   {"OFFENSIVE_GUARD": 1, "HEALTH_BOOST":    1}],
+                "WAIST": [[4,1], {"MUSHROOMANCER":   1                      }],
+                "LEGS" : [[4,1], {"MUSHROOMANCER":   1                      }]
             }
         },
         {
