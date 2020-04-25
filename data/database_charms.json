@@ -12,7 +12,7 @@
         },
         "ATTACK_CHARM": {
             "name" : "Attack Charm",
-            "max_level" : 4,
+            "max_level" : 5,
             "skills": ["ATTACK_BOOST"]
         },
         "AWAKENING_CHARM": {
@@ -77,7 +77,7 @@
         },
         "CHALLENGER_CHARM": {
             "name" : "Challenger Charm",
-            "max_level" : 4,
+            "max_level" : 5,
             "skills": ["AGITATOR"]
         },
         "CLEARMIND_CHARM": {
@@ -127,7 +127,7 @@
         },
         "EVASION_CHARM": {
             "name" : "Evasion Charm",
-            "max_level" : 4,
+            "max_level" : 5,
             "skills": ["EVADE_WINDOW"]
         },
         "EXPLOITER_CHARM": {
@@ -182,7 +182,7 @@
         },
         "FURY_CHARM": {
             "name" : "Fury Charm",
-            "max_level" : 4,
+            "max_level" : 5,
             "skills": ["RESENTMENT"]
         },
         "GALE_CHARM": {
@@ -327,7 +327,7 @@
         },
         "MIGHTY_CHARM": {
             "name" : "Mighty Charm",
-            "max_level" : 2,
+            "max_level" : 3,
             "skills": ["MAXIMUM_MIGHT"]
         },
         "MIREWALKER_CHARM": {
@@ -387,7 +387,7 @@
         },
         "POWER_CHARM": {
             "name" : "Power Charm",
-            "max_level" : 4,
+            "max_level" : 5,
             "skills": ["LATENT_POWER"]
         },
         "PROCURERS_CHARM": {
