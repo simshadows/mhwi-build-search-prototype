@@ -425,6 +425,9 @@ class Build:
         buf.append("")
         for (deco, level) in self._decos.items():
             buf.append(f"      x{level} {deco.value.name}")
+
+        buf.append("")
+
         return "\n".join(buf)
 
     def _get_armour_dict(self):

@@ -26,6 +26,8 @@ _root_logger = None
 logger = None
 _appstats_logger = None
 
+_appstats_display_again = []
+
 
 #_logger_levels = {
 #    "CRITICAL": logging.CRITICAL,
@@ -45,19 +47,45 @@ def log_appstats(name, stat):
     _appstats_logger.info(f"{name} = {stat}")
     return
 
-def log_appstats_reduction(name, pre, post):
+def log_appstats_timetaken(name, start_time_seconds, display_again=False):
+    assert isinstance(name, str)
+    assert isinstance(start_time_seconds, float)
+    assert isinstance(display_again, bool)
+    end_time_seconds = time.time()
+    time_diff_min = int((end_time_seconds - start_time_seconds) // 60)
+    time_diff_sec = int((end_time_seconds - start_time_seconds) % 60)
+    time_str = f"{time_diff_min:02}:{time_diff_sec:02} ({end_time_seconds - start_time_seconds} seconds)"
+    s = f"{name} took {time_str}"
+    _appstats_logger.info(s)
+    if display_again:
+        _appstats_display_again.append(s)
+    return
+
+def log_appstats_reduction(name, pre, post, display_again=False):
     global _appstats_logger
     assert isinstance(name, str)
     assert isinstance(pre, int)
     assert isinstance(post, int)
+    assert isinstance(display_again, bool)
     prop = round((post / pre) * 100, 2)
-    _appstats_logger.info(f"{name}: {pre} --> {post} ({prop}% kept)")
+    s = f"{name}: {pre} --> {post} ({prop}% kept)"
+    _appstats_logger.info(s)
+    if display_again:
+        _appstats_display_again.append(s)
     return
 
 def log_appstats_generic(msg):
     global _appstats_logger
     assert isinstance(msg, str)
     _appstats_logger.info(msg)
+    return
+
+def log_appstats_bufferbreak():
+    _appstats_display_again.append("")
+    return
+
+def display_appstats_again():
+    _appstats_logger.info("\n".join(["Collated application statistics:\n"] + _appstats_display_again + [""]))
     return
 
 

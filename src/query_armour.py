@@ -178,11 +178,11 @@ def prune_easyiterate_armour_db(selected_armour_tier, original_easyiterate_armou
     arms_post  = len(intermediate[ArmourSlot.ARMS])
     waist_post = len(intermediate[ArmourSlot.WAIST])
     legs_post  = len(intermediate[ArmourSlot.LEGS])
-    log_appstats_reduction("head  slot pruning", head_pre,  head_post)
-    log_appstats_reduction("chest slot pruning", chest_pre, chest_post)
-    log_appstats_reduction("arms  slot pruning", arms_pre,  arms_post)
-    log_appstats_reduction("waist slot pruning", waist_pre, waist_post)
-    log_appstats_reduction("legs  slot pruning", legs_pre,  legs_post)
+    log_appstats_reduction(" head slot pieces pruned", head_pre,  head_post , display_again=True)
+    log_appstats_reduction("chest slot pieces pruned", chest_pre, chest_post, display_again=True)
+    log_appstats_reduction(" arms slot pieces pruned", arms_pre,  arms_post , display_again=True)
+    log_appstats_reduction("waist slot pieces pruned", waist_pre, waist_post, display_again=True)
+    log_appstats_reduction(" legs slot pieces pruned", legs_pre,  legs_post , display_again=True)
 
     return intermediate
 

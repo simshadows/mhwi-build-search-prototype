@@ -19,8 +19,11 @@ from .builds       import (Build,
 from .enums        import Tier
 from .loggingutils import (ExecutionProgress,
                           log_appstats,
+                          log_appstats_timetaken,
                           log_appstats_reduction,
-                          log_appstats_generic)
+                          log_appstats_generic,
+                          log_appstats_bufferbreak,
+                          display_appstats_again)
 from .utils        import (counter_is_subset,
                           get_humanreadable_from_enum_counter,
                           get_humanreadable_from_enum_list,
@@ -62,6 +65,8 @@ def run_search(search_parameters_jsonstr):
     start_time = time.time()
 
     build = _find_highest_efr_build(search_parameters)
+
+    display_appstats_again()
 
     logger.info("")
     logger.info("FINAL BUILD")
@@ -388,7 +393,7 @@ def _generate_slot_combinations(slot_pieces, possible_decos, skill_subset, set_b
 
     # STATISTICS
     stats_post = len(piece_combos)
-    log_appstats_reduction(f"{progress_msg_slot} piece+deco combination reduction", stats_pre, stats_post)
+    log_appstats_reduction(f"{progress_msg_slot} piece+deco combination reduction", stats_pre, stats_post, display_again=True)
 
     return piece_combos
 
@@ -458,7 +463,7 @@ def _add_armour_slot(curr_collection, piece_combos, skill_subset, minimum_set_bo
     # Statistics stuff
     stage2_post = len(ret)
 
-    log_appstats_reduction(f"{progress_msg_slot} full combining reduction", stage2_pre, stage2_post)
+    log_appstats_reduction(f"{progress_msg_slot} full combining reduction", stage2_pre, stage2_post, display_again=True)
 
     #log_appstats_reduction("Set bonus filtering reduction", total_pre_deco_combos, final_pre_deco_combos)
     #log_appstats_reduction("Skill and set bonus filtering reduction", post_deco_combos_seen, len(ret))
@@ -544,40 +549,57 @@ def _find_highest_efr_build(s):
     check_combination_size(1)
 
     log_appstats("Charms", len(c))
+    start_time = time.time()
+    log_appstats_bufferbreak()
     
     kwargs = {"progress_msg_slot": "HEAD"}
     piece_combos = _generate_slot_combinations(armour[ArmourSlot.HEAD], decos, skill_subset, set_bonus_subset, **kwargs)
     c = _add_armour_slot(c, piece_combos, skill_subset, relaxed_minimum_set_bonus_combos, 5, seen_set=c_seen_set, **kwargs)
 
+    log_appstats_timetaken("Adding head pieces", start_time, display_again=True)
     check_combination_size(2)
     #c_seen_set = SeenSetBySSB() # Uncomment to force it to reset
+    start_time = time.time()
+    log_appstats_bufferbreak()
 
     kwargs = {"progress_msg_slot": "CHEST"}
     piece_combos = _generate_slot_combinations(armour[ArmourSlot.CHEST], decos, skill_subset, set_bonus_subset, **kwargs)
     c = _add_armour_slot(c, piece_combos, skill_subset, relaxed_minimum_set_bonus_combos, 4, seen_set=c_seen_set, **kwargs)
 
+    log_appstats_timetaken("Adding chest pieces", start_time, display_again=True)
     check_combination_size(3)
     #c_seen_set = SeenSetBySSB() # Uncomment to force it to reset
+    start_time = time.time()
+    log_appstats_bufferbreak()
 
     kwargs = {"progress_msg_slot": "ARM"}
     piece_combos = _generate_slot_combinations(armour[ArmourSlot.ARMS], decos, skill_subset, set_bonus_subset, **kwargs)
     c = _add_armour_slot(c, piece_combos, skill_subset, relaxed_minimum_set_bonus_combos, 3, seen_set=c_seen_set, **kwargs)
 
+    log_appstats_timetaken("Adding arm pieces", start_time, display_again=True)
     check_combination_size(4)
     #c_seen_set = SeenSetBySSB() # Uncomment to force it to reset
+    start_time = time.time()
+    log_appstats_bufferbreak()
 
     kwargs = {"progress_msg_slot": "WAIST"}
     piece_combos = _generate_slot_combinations(armour[ArmourSlot.WAIST], decos, skill_subset, set_bonus_subset, **kwargs)
     c = _add_armour_slot(c, piece_combos, skill_subset, relaxed_minimum_set_bonus_combos, 2, seen_set=c_seen_set, **kwargs)
 
+    log_appstats_timetaken("Adding waist pieces", start_time, display_again=True)
     check_combination_size(5)
     #c_seen_set = SeenSetBySSB() # Uncomment to force it to reset
+    start_time = time.time()
+    log_appstats_bufferbreak()
 
     kwargs = {"progress_msg_slot": "LEGS"}
     piece_combos = _generate_slot_combinations(armour[ArmourSlot.LEGS], decos, skill_subset, set_bonus_subset, **kwargs)
     c = _add_armour_slot(c, piece_combos, skill_subset, relaxed_minimum_set_bonus_combos, 1, seen_set=c_seen_set, **kwargs)
 
+    log_appstats_timetaken("Adding leg pieces", start_time, display_again=True)
     check_combination_size(6)
+    start_time = time.time()
+    log_appstats_bufferbreak()
 
     # We sort by number of skills within the skill subset for better pruning!
     # We assume here that the best builds tend to be the ones that fit the most skills into it.
@@ -661,6 +683,8 @@ def _find_highest_efr_build(s):
             grouped_weapon_combos = _reprune_weapon_combos(grouped_weapon_combos, minimum_efr_noninclusive=best_efr)
             new_count = sum(len(x) for (_, x) in grouped_weapon_combos)
             logger.info(f"New number of weapon configurations: {new_count} out of {num_weapon_combos}")
+
+    log_appstats_timetaken("Adding weapons", start_time, display_again=True)
 
     return associated_build
 

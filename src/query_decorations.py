@@ -59,7 +59,7 @@ def get_pruned_deco_set(skill_subset):
     ret = simple_decos | size4_decos
 
     # Statistics stuff
-    log_appstats_reduction("Decorations pruned", len(Decoration), len(ret))
+    log_appstats_reduction("Decorations pruned", len(Decoration), len(ret), display_again=True)
     for deco in sorted(ret, key=lambda x : x.value.slot_size):
         logger.info(f"Decoration kept: {deco.value.name}")
 
