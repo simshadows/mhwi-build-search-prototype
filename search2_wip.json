@@ -9,12 +9,11 @@
         "FOCUS": 3,
         "HANDICRAFT": 0,
         "NON_ELEMENTAL_BOOST": 0,
-        "PEAK_PERFORMANCE": 0,
-        "WEAKNESS_EXPLOIT": 1
+        "WEAKNESS_EXPLOIT": 1,
+        "RESENTMENT": 0
     },
     "selected_set_bonus_skills": [
-        "MASTERS_TOUCH",
-        "FREE_MEAL_SECRET"
+        "MASTERS_TOUCH"
     ],
     "selected_decorations": [
         "ELEMENTLESS",
@@ -35,7 +34,8 @@
 
     "skill_states": {
         "AGITATOR": 1,
-        "PEAK_PERFORMANCE": 1,
+        "PEAK_PERFORMANCE": 0,
+        "RESENTMENT": 1,
         "WEAKNESS_EXPLOIT": 2
     },
 

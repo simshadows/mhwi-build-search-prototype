@@ -1,0 +1,47 @@
+{
+    "selected_armour_tier": "MASTER_RANK",
+    "selected_weapon_class": "GREATSWORD",
+    "selected_skills": {
+        "AGITATOR": 0,
+        "ATTACK_BOOST": 0,
+        "CRITICAL_BOOST": 3,
+        "CRITICAL_EYE": 0,
+        "FOCUS": 3,
+        "HANDICRAFT": 0,
+        "NON_ELEMENTAL_BOOST": 0,
+        "WEAKNESS_EXPLOIT": 1,
+        "HEALTH_BOOST": 3
+    },
+    "selected_set_bonus_skills": [
+        "MASTERS_TOUCH"
+    ],
+    "selected_decorations": [
+        "ELEMENTLESS",
+        "HANDICRAFT_X2",
+        "EXPERT_X2",
+        "CHALLENGER_X2",
+        "CHALLENGER",
+        "CHARGER",
+        "ATTACK_X2",
+        "HANDICRAFT",
+        "ATTACK",
+        "TENDERIZER",
+        "EXPERT",
+        "CRITICAL"
+    ],
+
+    "min_health_regen_augment_level": 1,
+
+    "skill_states": {
+        "AGITATOR": 1,
+        "PEAK_PERFORMANCE": 0,
+        "RESENTMENT": 0,
+        "WEAKNESS_EXPLOIT": 2
+    },
+
+    "algorithm_performance_parameters": {
+        "num_worker_threads": 32,
+        "batch_size": 1,
+        "batch_shuffle_rounds": 10
+    }
+}

@@ -218,12 +218,45 @@ def calculate_skills_contribution(skills_dict, skill_states_dict, maximum_sharpn
     added_raw_affinity = 0
     weapon_base_attack_power_multiplier = 1
 
+    # Agitator
+    if skills_dict[Skill.AGITATOR] > 0:
+        assert Skill.AGITATOR in skill_states_dict
+
+        state = skill_states_dict[Skill.AGITATOR]
+        assert (state == 0) or (state == 1)
+        if state == 1:
+            added_attack_power += AGITATOR_ATTACK_POWER[skills_dict[Skill.AGITATOR]]
+            added_raw_affinity += AGITATOR_AFFINITY_PERCENTAGE[skills_dict[Skill.AGITATOR]]
+
     # Attack Boost
     added_attack_power += ATTACK_BOOST_ATTACK_POWER[skills_dict[Skill.ATTACK_BOOST]]
     added_raw_affinity += ATTACK_BOOST_AFFINITY_PERCENTAGE[skills_dict[Skill.ATTACK_BOOST]]
 
     # Critical Eye
     added_raw_affinity += CRITICAL_EYE_AFFINITY_PERCENTAGE[skills_dict[Skill.CRITICAL_EYE]]
+
+    # Non-elemental Boost
+    if (skills_dict[Skill.NON_ELEMENTAL_BOOST] == 1) and weapon_is_raw:
+        weapon_base_attack_power_multiplier = 1.05
+
+    # Peak Performance
+    if skills_dict[Skill.PEAK_PERFORMANCE] > 0:
+        assert Skill.PEAK_PERFORMANCE in skill_states_dict
+
+        state = skill_states_dict[Skill.PEAK_PERFORMANCE]
+        assert (state == 0) or (state == 1)
+        if state == 1:
+            added_attack_power += PEAK_PERFORMANCE_ATTACK_POWER[skills_dict[Skill.PEAK_PERFORMANCE]]
+
+    # Resentment
+    if skills_dict[Skill.RESENTMENT] > 0:
+        assert Skill.RESENTMENT in skill_states_dict
+        
+        state = skill_states_dict[Skill.RESENTMENT]
+        assert (state == 0) or (state == 1)
+        if state == 1:
+            assert skills_dict[Skill.RESENTMENT] <= 5
+            added_attack_power += skills_dict[Skill.RESENTMENT] * 5
 
     # Weakness Exploit
     if skills_dict[Skill.WEAKNESS_EXPLOIT] > 0:
@@ -235,29 +268,6 @@ def calculate_skills_contribution(skills_dict, skill_states_dict, maximum_sharpn
             added_raw_affinity += WEAKNESS_EXPLOIT_WEAKPOINT_AFFINITY_PERCENTAGE[skills_dict[Skill.WEAKNESS_EXPLOIT]]
             if state == 2:
                 added_raw_affinity += WEAKNESS_EXPLOIT_WOUNDED_EXTRA_AFFINITY_PERCENTAGE[skills_dict[Skill.WEAKNESS_EXPLOIT]]
-
-    # Agitator
-    if skills_dict[Skill.AGITATOR] > 0:
-        assert Skill.AGITATOR in skill_states_dict
-
-        state = skill_states_dict[Skill.AGITATOR]
-        assert (state == 0) or (state == 1)
-        if state == 1:
-            added_attack_power += AGITATOR_ATTACK_POWER[skills_dict[Skill.AGITATOR]]
-            added_raw_affinity += AGITATOR_AFFINITY_PERCENTAGE[skills_dict[Skill.AGITATOR]]
-
-    # Peak Performance
-    if skills_dict[Skill.PEAK_PERFORMANCE] > 0:
-        assert Skill.PEAK_PERFORMANCE in skill_states_dict
-
-        state = skill_states_dict[Skill.PEAK_PERFORMANCE]
-        assert (state == 0) or (state == 1)
-        if state == 1:
-            added_attack_power += PEAK_PERFORMANCE_ATTACK_POWER[skills_dict[Skill.PEAK_PERFORMANCE]]
-
-    # Non-elemental Boost
-    if (skills_dict[Skill.NON_ELEMENTAL_BOOST] == 1) and weapon_is_raw:
-        weapon_base_attack_power_multiplier = 1.05
 
     ret = SkillsContribution(
             handicraft_level                    = skills_dict[Skill.HANDICRAFT],

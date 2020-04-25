@@ -573,6 +573,7 @@ def _run_tests_lookup():
         ]
 
     check_efr(706.40)
+    check_skill("MASTERS_TOUCH", 1) # Set Bonus
 
     armour_dict[ArmourSlot.WAIST] = ("Damascus", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS)
 
@@ -589,6 +590,45 @@ def _run_tests_lookup():
 
     check_efr(688.88)
     check_skill("MASTERS_TOUCH", 1) # Set Bonus
+
+    logger.info("Testing the Resentment skill.")
+
+    weapon = weapon_db["ROYAL_VENUS_BLADE"]
+
+    charm = charms_db["CHALLENGER_CHARM"]
+
+    armour_dict = {
+            ArmourSlot.HEAD:  ("Tigrex",      ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_ALPHA_PLUS),
+            ArmourSlot.CHEST: ("Tigrex",      ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_ALPHA_PLUS),
+            ArmourSlot.ARMS:  ("Tigrex",      ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_ALPHA_PLUS),
+            ArmourSlot.WAIST: ("Tigrex",      ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_ALPHA_PLUS),
+            ArmourSlot.LEGS:  ("Yian Garuga", ArmourDiscriminator.MASTER_RANK, ArmourVariant.MR_BETA_PLUS),
+        }
+
+    weapon_augments_config = [
+            (IBWeaponAugmentType.ATTACK_INCREASE, 1),
+            (IBWeaponAugmentType.HEALTH_REGEN,    1),
+        ]
+
+    weapon_upgrades_config = None # Start with no upgrades
+
+    skill_states_dict = {
+            Skill.WEAKNESS_EXPLOIT: 1,
+            Skill.AGITATOR: 1,
+            Skill.RESENTMENT: 1,
+        }
+
+    decorations_list = [
+            Decoration.TENDERIZER,
+        ]
+
+    check_efr(478.17)
+    check_skill("MASTERS_TOUCH", 0) # Set Bonus
+    check_skill("FREE_MEAL_SECRET", 1) # Set Bonus
+
+    decorations_list.append(Decoration.FUROR)
+
+    check_efr(485.60)
 
     return True
 
@@ -756,9 +796,9 @@ def _run_tests_serializing():
 
     original_results = original_build_obj.calculate_performance(skill_states_dict)
 
-    if round(original_results.efr, 2) != round(468.14, 2):
+    if round(original_results.efr, 2) != round(476.70, 2):
         raise ValueError(f"Test failed. Got {original_results.efr} EFR.")
-    if original_results.affinity != 51:
+    if original_results.affinity != 54:
         raise ValueError(f"Test failed. Got {original_results.affinity} affinity.")
 
     serialized_data = original_build_obj.serialize()
@@ -770,9 +810,9 @@ def _run_tests_serializing():
 
     new_results = new_build_obj.calculate_performance(skill_states_dict)
 
-    if round(new_results.efr, 2) != round(468.14, 2):
+    if round(original_results.efr, 2) != round(476.70, 2):
         raise ValueError(f"Test failed. Got {original_results.efr} EFR.")
-    if new_results.affinity != 51:
+    if original_results.affinity != 54:
         raise ValueError(f"Test failed. Got {original_results.affinity} affinity.")
     
     return True

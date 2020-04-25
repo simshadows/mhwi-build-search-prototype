@@ -423,7 +423,7 @@ class Build:
         buf.append("      CHARM: " + self._charm.name)
 
         buf.append("")
-        for (deco, level) in self._decos.items():
+        for (deco, level) in sorted(self._decos.items(), key=(lambda x : (x[0].value.slot_size, x[1])), reverse=True):
             buf.append(f"      x{level} {deco.value.name}")
 
         buf.append("")

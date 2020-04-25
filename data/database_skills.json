@@ -632,6 +632,8 @@
                 "name": "Resentment",
                 "limit": 5,
 
+                "states": ["no recoverable health", "with recoverable health"],
+
                 "tooltip": "((TODO))"
         },
         "RESUSCITATE": {

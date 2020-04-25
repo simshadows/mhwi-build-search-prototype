@@ -35,6 +35,7 @@
     "skill_states": {
         "AGITATOR": 1,
         "PEAK_PERFORMANCE": 1,
+        "RESENTMENT": 0,
         "WEAKNESS_EXPLOIT": 2
     },
 
