@@ -782,6 +782,7 @@ def _run_tests_deco_list_generation():
     logger.info("")
     logger.info("Testing decoration dictionary generation.")
 
+
     decos_size1 = [
             Decoration.ATTACK,
             Decoration.VITALITY,
@@ -807,8 +808,8 @@ def _run_tests_deco_list_generation():
 
     def check_length(expected_length):
         x = _generate_deco_additions(slots, defaultdict(lambda : 0, skills), decos)
-        print("\n".join("[" + ", ".join(f"\"{y.name}\"" for y in deco_combo[0]) + "]" for deco_combo in x))
-        print()
+        #print("\n".join("[" + ", ".join(f"\"{y.name}\"" for y in deco_combo[0]) + "]" for deco_combo in x))
+        #print()
         if len(x) != expected_length:
             raise ValueError(f"Expected {expected_length} results. Instead got {len(x)}.")
 

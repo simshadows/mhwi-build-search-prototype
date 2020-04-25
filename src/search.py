@@ -326,20 +326,25 @@ class SeenSetBySSB:
                 del self._combo_map[h]
             return
         self._seen_set.add(h)
+
+        new_skills = copy(skill_counter)
         for (skill, level) in skill_counter.items():
-            new_skills = copy(skill_counter)
             if level > 1:
                 new_skills[skill] = level - 1
             else:
                 del new_skills[skill]
             self._add_power_set(new_skills, set_bonuses_counter)
+            new_skills[skill] = level
+
+        new_set_bonuses = copy(set_bonuses_counter)
         for (set_bonus, pieces) in set_bonuses_counter.items():
-            new_set_bonuses = copy(set_bonuses_counter)
             if pieces > 1:
                 new_set_bonuses[set_bonus] = pieces - 1
             else:
                 del new_set_bonuses[set_bonus]
             self._add_power_set(skill_counter, new_set_bonuses)
+            new_set_bonuses[set_bonus] = pieces
+
         return
 
 
@@ -402,7 +407,7 @@ def _add_armour_slot(curr_collection, piece_combos, skill_subset, minimum_set_bo
 
     # STATISTICS
     stage2_pre = len(curr_collection) * len(piece_combos)
-    progress = ExecutionProgress(f"COMBINING {progress_msg_slot} PIECES -", stage2_pre, granularity=10000)
+    progress = ExecutionProgress(f"COMBINING {progress_msg_slot} PIECES -", stage2_pre, granularity=50000)
 
     for (pieces, deco_counter, regular_skills, set_bonuses) in curr_collection:
 
