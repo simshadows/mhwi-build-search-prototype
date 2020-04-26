@@ -1,4 +1,4 @@
-# Sim's MHWI Build Search Tool
+# Sim's MHWI Build Search Tool (Prototype)
 
 **CURRENTLY A WORK IN PROGRESS.** I'm developing this to aid in build optimization for the game Monster Hunter World Iceborne!
 

@@ -40,6 +40,11 @@ AGITATOR_AFFINITY_PERCENTAGE = (0, 5, 5, 7,  7,  10, 15, 20)
 PEAK_PERFORMANCE_ATTACK_POWER = (0, 5, 10, 20)
 #                       level =  0  1  2   3
 
+RESENTMENT_ATTACK_POWER_PER_LEVEL = 5
+
+DRAGONVEIN_AWAKENING_AFFINITY = 20
+TRUE_DRAGONVEIN_AWAKENING_AFFINITY = 40
+
 
 skills_with_implemented_features = {
         Skill.AGITATOR,
@@ -233,6 +238,23 @@ def calculate_skills_contribution(skills_dict, skill_states_dict, maximum_sharpn
     # Critical Eye
     added_raw_affinity += CRITICAL_EYE_AFFINITY_PERCENTAGE[skills_dict[Skill.CRITICAL_EYE]]
 
+    # Dragonvein Awakening and True Dragonvein Awakening
+    if skills_dict[Skill.DRAGONVEIN_AWAKENING] > 0:
+        assert Skill.DRAGONVEIN_AWAKENING in skill_states_dict
+        assert skills_dict[Skill.DRAGONVEIN_AWAKENING] == 1
+
+        state = skill_states_dict[Skill.DRAGONVEIN_AWAKENING]
+        assert (state == 0) or (state == 1)
+        if state == 1:
+
+            if skills_dict[Skill.TRUE_DRAGONVEIN_AWAKENING] > 0:
+                assert Skill.TRUE_DRAGONVEIN_AWAKENING in skill_states_dict
+                assert skills_dict[Skill.TRUE_DRAGONVEIN_AWAKENING] == 1
+                assert skill_states_dict[Skill.DRAGONVEIN_AWAKENING] == 1
+                added_raw_affinity += TRUE_DRAGONVEIN_AWAKENING_AFFINITY
+            else:
+                added_raw_affinity += DRAGONVEIN_AWAKENING_AFFINITY
+
     # Non-elemental Boost
     if (skills_dict[Skill.NON_ELEMENTAL_BOOST] == 1) and weapon_is_raw:
         weapon_base_attack_power_multiplier = 1.05
@@ -253,8 +275,8 @@ def calculate_skills_contribution(skills_dict, skill_states_dict, maximum_sharpn
         state = skill_states_dict[Skill.RESENTMENT]
         assert (state == 0) or (state == 1)
         if state == 1:
-            assert skills_dict[Skill.RESENTMENT] <= 5
-            added_attack_power += skills_dict[Skill.RESENTMENT] * 5
+            assert skills_dict[Skill.RESENTMENT] <= Skill.RESENTMENT.value.extended_limit
+            added_attack_power += skills_dict[Skill.RESENTMENT] * RESENTMENT_ATTACK_POWER_PER_LEVEL
 
     # Weakness Exploit
     if skills_dict[Skill.WEAKNESS_EXPLOIT] > 0:

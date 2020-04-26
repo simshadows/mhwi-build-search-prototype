@@ -639,10 +639,12 @@ def _find_highest_efr_build(s):
             for (deco_additions, d_regular_skills) in deco_it:
 
                 # TODO: Do I need to filter and clip here?
-                d_regular_skills = defaultdict(lambda : 0, ((k, v) for (k, v) in d_regular_skills.items() if (k in skill_subset)))
-                d_regular_skills = clipped_skills_defaultdict(d_regular_skills)
+                d_all_skills = defaultdict(lambda : 0, ((k, v) for (k, v) in d_regular_skills.items() if (k in skill_subset)))
+                d_all_skills = clipped_skills_defaultdict(d_all_skills)
+                assert len(set(d_all_skills) & set(wg_set_bonus_skills)) == 0
+                d_all_skills.update(wg_set_bonus_skills)
 
-                if not all((d_regular_skills.get(k, 0) >= v) for (k, v) in skills_with_minimum_levels.items()):
+                if not all((d_all_skills.get(k, 0) >= v) for (k, v) in skills_with_minimum_levels.items()):
                     continue # We prune combinations that don't fulfill the required skill minimums here.
 
                 d_deco_counter = copy(c_deco_counter)
@@ -650,7 +652,7 @@ def _find_highest_efr_build(s):
 
                 for (weapon, w_augments_tracker, w_upgrades_tracker, w_combo_values, _) in weapon_combos:
 
-                    results = lookup_from_skills(weapon, d_regular_skills, skill_states, w_augments_tracker, w_upgrades_tracker)
+                    results = lookup_from_skills(weapon, d_all_skills, skill_states, w_augments_tracker, w_upgrades_tracker)
 
                     if results.efr > best_efr:
                         armour_dict = {

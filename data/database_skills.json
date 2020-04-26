@@ -210,6 +210,9 @@
                 "name": "Dragonvein Awakening",
                 "limit": 1,
 
+                "states": ["weapon sheathed", "weapon drawn"],
+                "zeroth_state_can_be_blank": true,
+
                 "tooltip": "Elem., abnormal status, & affinity up with weapon drawn. Take damage when attacking, but can be recovered by continually attacking."
         },
         "DUNGMASTER": {
@@ -785,6 +788,9 @@
         "TRUE_DRAGONVEIN_AWAKENING": {
                 "name": "True Dragonvein Awakening",
                 "limit": 1,
+
+                "states": ["weapon sheathed", "weapon drawn"],
+                "zeroth_state_can_be_blank": true,
 
                 "tooltip": "Enhances attacks even more with weapon drawn. Take damage when attacking, but can be recovered by continually attacking."
         },

@@ -9,11 +9,12 @@
         "FOCUS": 3,
         "HANDICRAFT": 0,
         "NON_ELEMENTAL_BOOST": 0,
-        "WEAKNESS_EXPLOIT": 1,
+        "WEAKNESS_EXPLOIT": 0,
         "RESENTMENT": 0
     },
     "selected_set_bonus_skills": [
-        "MASTERS_TOUCH"
+        "MASTERS_TOUCH",
+        "DRAGONVEIN_AWAKENING"
     ],
 
     "min_health_regen_augment_level": 1,
@@ -22,6 +23,8 @@
         "AGITATOR": 1,
         "PEAK_PERFORMANCE": 0,
         "RESENTMENT": 1,
-        "WEAKNESS_EXPLOIT": 2
+        "WEAKNESS_EXPLOIT": 2,
+        "DRAGONVEIN_AWAKENING": 1,
+        "TRUE_DRAGONVEIN_AWAKENING": 1
     }
 }

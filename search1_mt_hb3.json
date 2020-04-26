@@ -9,7 +9,7 @@
         "FOCUS": 3,
         "HANDICRAFT": 0,
         "NON_ELEMENTAL_BOOST": 0,
-        "WEAKNESS_EXPLOIT": 1,
+        "WEAKNESS_EXPLOIT": 0,
         "HEALTH_BOOST": 3
     },
     "selected_set_bonus_skills": [
