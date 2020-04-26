@@ -540,7 +540,7 @@ def _run_tests_lookup():
 
     weapon_augments_config = [
             (IBWeaponAugmentType.ATTACK_INCREASE, 1),
-            #(IBWeaponAugmentType.HEALTH_REGEN,    1), # TODO: Update the max slot values to allow this.
+            (IBWeaponAugmentType.HEALTH_REGEN,    1),
         ]
 
     weapon_upgrades_config = [

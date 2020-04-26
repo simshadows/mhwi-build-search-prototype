@@ -16,7 +16,14 @@
                 "name": "Agitator",
                 "limit": 5,
 
+                "extended_limit": 7,
                 "states": ["not enraged", "enraged"],
+
+                "tooltip": "((TODO))"
+        },
+        "AGITATOR_SECRET": {
+                "name": "Agitator Secret",
+                "limit": 1,
 
                 "tooltip": "((TODO))"
         },
@@ -35,6 +42,14 @@
         "ARTILLERY": {
                 "name": "Artillery",
                 "limit": 3,
+
+                "extended_limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "ARTILLERY_SECRET": {
+                "name": "Artillery Secret",
+                "limit": 1,
 
                 "tooltip": "((TODO))"
         },
@@ -829,6 +844,19 @@
         }
     },
     "set_bonuses": {
+        "BRACHYDIOS_WILL": {
+            "name": "Brachydios Will",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "AGITATOR_SECRET"
+                },
+                {
+                    "parts": 4,
+                    "skill": "ARTILLERY_SECRET"
+                }
+            ]
+        },
         "SAFI_JIIVA_SEAL": {
             "name": "Safi'jiiva Seal",
             "stages": [

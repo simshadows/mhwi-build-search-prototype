@@ -70,6 +70,13 @@
             "Coil",
             "Greaves"
         ],
+        "RAGING_BRACHY_SCHEME": [
+            "Helm",
+            "Mail",
+            "Braces",
+            "Faulds",
+            "Greaves"
+        ],
         "SAFI_SCHEME": [
             "Crown",
             "Chest",
@@ -937,6 +944,31 @@
                 "ARMS" : [[4],     {"ATTACK_BOOST": 3, "RESUSCITATE": 1}],
                 "WAIST": [[4],     {"AGITATOR":     2, "HEROICS":     3}],
                 "LEGS" : [[4],     {"ATTACK_BOOST": 3, "HEROICS":     2}]
+            }
+        },
+        {
+            "set": "Raging Brachy",
+            "discriminator": "MASTER_RANK",
+            "rarity": 12,
+            
+            "prefix": "Brachydium",
+            "naming_scheme": "RAGING_BRACHY_SCHEME",
+
+            "set_bonus": "BRACHYDIOS_WILL",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2,2,1], {"WEAKNESS_EXPLOIT": 1, "GUARD":            2}],
+                "CHEST": [[2,1,1], {"AGITATOR":         2, "BLAST_ATTACK":     3}],
+                "ARMS" : [[2,2],   {"AGITATOR":         2, "ARTILLERY":        3}],
+                "WAIST": [[3],     {"AGITATOR":         3, "ARTILLERY":        2}],
+                "LEGS" : [[3,1],   {"WEAKNESS_EXPLOIT": 2, "SPEED_SHARPENING": 3}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,4,1], {"WEAKNESS_EXPLOIT": 1}],
+                "CHEST": [[4,2,1], {"AGITATOR":         2}],
+                "ARMS" : [[4,4],   {"AGITATOR":         2}],
+                "WAIST": [[4,1],   {"AGITATOR":         3}],
+                "LEGS" : [[4,1,1], {"WEAKNESS_EXPLOIT": 2}]
             }
         }
     ]

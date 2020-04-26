@@ -87,10 +87,11 @@ def run_search(search_parameters_jsonstr):
 ###############################################################################
 
 
-def _get_grouped_and_pruned_weapon_combos(weapon_class, health_regen_minimum, skill_subset, set_bonuses_subset, skill_states):
+def _get_grouped_and_pruned_weapon_combos(weapon_class, health_regen_minimum, skill_subset, set_bonuses_subset, \
+                                                                required_set_bonus_skills, skill_states):
 
     # TODO: This doesn't actually exclude free element yet...
-    all_skills_max_except_free_elem = {skill: skill.value.extended_limit for skill in skill_subset}
+    all_skills_max_except_free_elem = {skill: skill.value.extended_limit for skill in (skill_subset | required_set_bonus_skills)}
 
     combos = get_pruned_weapon_combos(weapon_class, health_regen_minimum)
 
@@ -514,7 +515,8 @@ def _find_highest_efr_build(s):
 
     # We also generate weapon combinations.
     grouped_weapon_combos = _get_grouped_and_pruned_weapon_combos(desired_weapon_class, min_health_regen_augment_level, \
-                                                                    skill_subset, set_bonus_subset, skill_states)
+                                                                    skill_subset, set_bonus_subset, required_set_bonus_skills, \
+                                                                    skill_states)
     num_weapon_combos = sum(len(x) for (_, x) in grouped_weapon_combos)
     log_appstats("Weapon combinations", num_weapon_combos)
 
@@ -667,7 +669,10 @@ def _find_highest_efr_build(s):
                         associated_affinity = results.affinity
                         associated_build = Build(weapon, armour_dict, c_charm, w_augments_tracker, w_upgrades_tracker, \
                                                         d_deco_counter)
-                        assert results.efr == associated_build.calculate_performance(skill_states).efr
+
+                        # I don't like that we have to do this tbh, that we're accepting that we're optimizing
+                        # only on a skill subset rather than the actual EFR.
+                        assert results.efr <= associated_build.calculate_performance(skill_states).efr
 
                         regenerate_weapon_list = True
 

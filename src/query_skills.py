@@ -12,7 +12,7 @@ from itertools import product
 from collections import namedtuple, defaultdict
 from enum import Enum, unique
 
-from .utils import json_read, prune_by_superceding
+from .utils import json_read, prune_by_superceding, get_humanreadable_from_enum_counter
 
 from .database_skills import (Skill,
                              SetBonus)
@@ -225,11 +225,16 @@ def calculate_skills_contribution(skills_dict, skill_states_dict, maximum_sharpn
     if skills_dict[Skill.AGITATOR] > 0:
         assert Skill.AGITATOR in skill_states_dict
 
+        level = skills_dict[Skill.AGITATOR]
         state = skill_states_dict[Skill.AGITATOR]
         assert (state == 0) or (state == 1)
         if state == 1:
-            added_attack_power += AGITATOR_ATTACK_POWER[skills_dict[Skill.AGITATOR]]
-            added_raw_affinity += AGITATOR_AFFINITY_PERCENTAGE[skills_dict[Skill.AGITATOR]]
+            if skills_dict[Skill.AGITATOR_SECRET] != 1:
+                assert skills_dict[Skill.AGITATOR_SECRET] == 0
+                if level > Skill.AGITATOR.value.limit:
+                    level = Skill.AGITATOR.value.limit
+            added_attack_power += AGITATOR_ATTACK_POWER[level]
+            added_raw_affinity += AGITATOR_AFFINITY_PERCENTAGE[level]
 
     # Attack Boost
     added_attack_power += ATTACK_BOOST_ATTACK_POWER[skills_dict[Skill.ATTACK_BOOST]]
