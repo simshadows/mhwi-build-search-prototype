@@ -55,12 +55,10 @@ skills_with_implemented_features = {
 
 # This will take a dict like {Skill.AGITATOR: 10, ...} and clip it down to the maximum.
 # This also returns a defaultdict with default value of zero.
+# This will clip everything down to the "extended limit" (i.e. assuming all "skill secret" set bonuses are active).
 def clipped_skills_defaultdict(skills_dict):
     assert all(level >= 0 for (_, level) in skills_dict.items()) # We shouldn't be seeing negative skill levels.
-    return defaultdict(lambda : 0, {skill: min(level, skill.value.limit) for (skill, level) in skills_dict.items()})
-def clipped_skills_defaultdict_includesecret(skills_dict):
-    assert all(level >= 0 for (_, level) in skills_dict.items()) # We shouldn't be seeing negative skill levels.
-    return defaultdict(lambda : 0, {skill: min(level, (skill.value.extended_limit if (skill.value.extended_limit is not None) else skill.value.limit)) for (skill, level) in skills_dict.items()})
+    return defaultdict(lambda : 0, {skill: min(level, skill.value.extended_limit) for (skill, level) in skills_dict.items()})
 
 
 # From a set of skills attainable from set bonuses, this function calculates all possible
@@ -289,14 +287,4 @@ def convert_skills_dict_to_tuple(d):
 def convert_set_bonuses_dict_to_tuple(d):
     assert all(isinstance(k, SetBonus) and isinstance(v, int) and (v > 0) for (k, v) in d.items())
     return tuple(sorted(d.items(), key=lambda e : e[0].name))
-
-
-# TODO: Refactor so we don't need this function.
-def get_highest_skill_limit(skill):
-    extended_limit = skill.value.extended_limit
-    if extended_limit is None:
-        return skill.value.limit
-    else:
-        return extended_limit
-
 

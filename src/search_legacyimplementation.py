@@ -170,7 +170,7 @@ def _generate_deco_dicts(slots_available_counter, all_possible_decos, existing_s
                             will_overflow = True
                             break
                         new_skill_level = trial_skill_dict[skill] + levels_granted_by_deco
-                        if new_skill_level > skill.value.limit:
+                        if new_skill_level > skill.value.limit: # TODO: Let this use the extended limit.
                             will_overflow = True
                             break
                         trial_skill_dict[skill] = new_skill_level # We update the skill dictionary here

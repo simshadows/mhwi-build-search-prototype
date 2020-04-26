@@ -99,7 +99,7 @@ def _obtain_skills_enum():
                 name = skill_json_data["name"],
 
                 limit          = skill_json_data["limit"],
-                extended_limit = skill_json_data.get("extended_limit", None), # Most skills don't have extensions.
+                extended_limit = skill_json_data.get("extended_limit", skill_json_data["limit"]),
 
                 states                    = skill_json_data.get("states", None), # Most skills aren't stateful.
                 zeroth_state_can_be_blank = skill_json_data.get("zeroth_state_can_be_blank", True), # Most stateful skills
@@ -116,8 +116,8 @@ def _obtain_skills_enum():
             validation_error("Skill names must be unique.", skill=skill_id)
         elif (not isinstance(tup.limit, int)) or (tup.limit <= 0):
             validation_error("Skill level limits must be ints above zero.", skill=skill_id)
-        elif (tup.extended_limit is not None) and ((not isinstance(tup.extended_limit, int)) or (tup.extended_limit <= tup.limit)):
-            validation_error("Skill extended level limits must be ints above 'limit', or null.", skill=skill_id)
+        elif (not isinstance(tup.extended_limit, int)) or (tup.extended_limit < tup.limit):
+            validation_error("Skill extended level limits must be ints, and not under the regular limit.", skill=skill_id)
 
         elif (tup.states is not None) and ((not isinstance(tup.states, list)) or (len(tup.states) < 2)):
             validation_error("Skill states must be represented as a list, or as null.", skill=skill_id)

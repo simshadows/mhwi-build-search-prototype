@@ -46,11 +46,9 @@ from .query_decorations import (get_pruned_deco_set,
 from .query_skills      import (calculate_possible_set_bonus_combos,
                                relax_set_bonus_combos,
                                calculate_set_bonus_skills,
-                               #clipped_skills_defaultdict,
-                               clipped_skills_defaultdict_includesecret,
+                               clipped_skills_defaultdict,
                                convert_skills_dict_to_tuple,
-                               convert_set_bonuses_dict_to_tuple,
-                               get_highest_skill_limit)
+                               convert_set_bonuses_dict_to_tuple)
 from .query_weapons     import (calculate_final_weapon_values,
                                get_pruned_weapon_combos)
 
@@ -92,7 +90,7 @@ def run_search(search_parameters_jsonstr):
 def _get_grouped_and_pruned_weapon_combos(weapon_class, health_regen_minimum, skill_subset, set_bonuses_subset, skill_states):
 
     # TODO: This doesn't actually exclude free element yet...
-    all_skills_max_except_free_elem = {skill: skill.value.limit for skill in skill_subset}
+    all_skills_max_except_free_elem = {skill: skill.value.extended_limit for skill in skill_subset}
 
     combos = get_pruned_weapon_combos(weapon_class, health_regen_minimum)
 
@@ -215,7 +213,7 @@ def _armour_and_charm_combo_iter(armour_collection, charms_list):
         for (skill, level) in charm_skills.items():
             regular_skills[skill] += level
 
-        regular_skills = clipped_skills_defaultdict_includesecret(regular_skills)
+        regular_skills = clipped_skills_defaultdict(regular_skills)
         yield ((head, chest, arms, waist, legs), charm, regular_skills, total_slots, total_set_bonuses)
 
 
@@ -255,7 +253,7 @@ def _generate_deco_additions(deco_slots, regular_skills, decos):
         for (curr_decos, curr_slots, curr_skills) in incomplete_deco_combos:
 
             max_to_add = ceil(max(
-                    (get_highest_skill_limit(skill) - curr_skills.get(skill, 0)) / level
+                    (skill.value.extended_limit - curr_skills.get(skill, 0)) / level
                     for (skill, level) in deco_skills.items()
                 ))
 
@@ -381,7 +379,7 @@ def _generate_slot_combinations(slot_pieces, possible_decos, skill_subset, set_b
         deco_it = list(_generate_deco_additions(piece.decoration_slots, skills, possible_decos))
         stats_pre += len(deco_it) # STATISTICS
         for (deco_additions, new_skills) in deco_it:
-            new_skills = clipped_skills_defaultdict_includesecret(new_skills)
+            new_skills = clipped_skills_defaultdict(new_skills)
 
             # Now, we have to decide if it's worth keeping.
             new_skills = defaultdict(lambda : 0, ((k, v) for (k, v) in new_skills.items() if (k in skill_subset)))
@@ -451,7 +449,7 @@ def _add_armour_slot(curr_collection, piece_combos, skill_subset, minimum_set_bo
 
             # Now, we have to decide if it's worth keeping.
             new_regular_skills = defaultdict(lambda : 0, ((k, v) for (k, v) in new_regular_skills.items() if (k in skill_subset)))
-            new_regular_skills = clipped_skills_defaultdict_includesecret(new_regular_skills)
+            new_regular_skills = clipped_skills_defaultdict(new_regular_skills)
 
             t = (new_pieces, new_deco_counter, new_regular_skills, new_set_bonuses)
             seen_set.add(new_regular_skills, new_set_bonuses, t)
@@ -605,7 +603,7 @@ def _find_highest_efr_build(s):
     # We assume here that the best builds tend to be the ones that fit the most skills into it.
     assert all(
             all(
-                (skill in skill_subset) and (level > 0) and (level <= get_highest_skill_limit(skill))
+                (skill in skill_subset) and (level > 0) and (level <= skill.value.extended_limit)
                 for (skill, level) in x[2].items()
             )
             for x in c
@@ -642,7 +640,7 @@ def _find_highest_efr_build(s):
 
                 # TODO: Do I need to filter and clip here?
                 d_regular_skills = defaultdict(lambda : 0, ((k, v) for (k, v) in d_regular_skills.items() if (k in skill_subset)))
-                d_regular_skills = clipped_skills_defaultdict_includesecret(d_regular_skills)
+                d_regular_skills = clipped_skills_defaultdict(d_regular_skills)
 
                 if not all((d_regular_skills.get(k, 0) >= v) for (k, v) in skills_with_minimum_levels.items()):
                     continue # We prune combinations that don't fulfill the required skill minimums here.
