@@ -10,20 +10,11 @@
     "selected_set_bonus_skills": [
         "FROSTCRAFT"
     ],
-    "selected_decorations": [
-        "ELEMENTLESS"
-    ],
 
     "min_health_regen_augment_level": 1,
 
     "skill_states": {
         "AGITATOR": 1,
         "WEAKNESS_EXPLOIT": 2
-    },
-
-    "algorithm_performance_parameters": {
-        "num_worker_threads": 32,
-        "batch_size": 1,
-        "batch_shuffle_rounds": 10
     }
 }
