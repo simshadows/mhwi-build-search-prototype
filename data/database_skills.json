@@ -111,6 +111,14 @@
                 "name": "Bombardier",
                 "limit": 3,
 
+                "extended_limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "BOMBARDIER_SECRET": {
+                "name": "Bombardier Secret",
+                "limit": 1,
+
                 "tooltip": "((TODO))"
         },
         "BOTANIST": {
@@ -330,6 +338,8 @@
                 "name": "Free Meal",
                 "limit": 1,
 
+                "extended_limit": 3,
+
                 "tooltip": "((TODO))"
         },
         "FREE_MEAL_SECRET": {
@@ -498,6 +508,14 @@
                 "name": "Maximum Might",
                 "limit": 3,
 
+                "extended_limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "MAXIMUM_MIGHT_SECRET": {
+                "name": "Maximum Might Secret",
+                "limit": 1,
+
                 "tooltip": "((TODO))"
         },
         "MINDS_EYE_BALLISTICS": {
@@ -586,6 +604,12 @@
 
                 "tooltip": "((TODO))"
         },
+        "POISON_DURATION_UP": {
+                "name": "Poison Duration Up",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
         "POISON_FUNCTIONALITY": {
                 "name": "Poison Functionality",
                 "limit": 1,
@@ -618,6 +642,12 @@
         },
         "PROVOKER": {
                 "name": "Provoker",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "PUNISHING_DRAW": {
+                "name": "Punishing Draw",
                 "limit": 1,
 
                 "tooltip": "((TODO))"
@@ -712,6 +742,14 @@
                 "name": "Slugger",
                 "limit": 3,
 
+                "extended_limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "SLUGGER_SECRET": {
+                "name": "Slugger Secret",
+                "limit": 1,
+
                 "tooltip": "((TODO))"
         },
         "SPECIAL_AMMO_BOOST": {
@@ -740,6 +778,12 @@
         },
         "SPREAD_POWER_SHOTS": {
                 "name": "Spread/Power Shots",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "STAMINA_CAP_UP": {
+                "name": "Stamina Cap Up",
                 "limit": 1,
 
                 "tooltip": "((TODO))"
@@ -809,6 +853,12 @@
 
                 "tooltip": "Enhances attacks even more with weapon drawn. Take damage when attacking, but can be recovered by continually attacking."
         },
+        "TRUE_RAZOR_SHARP_SPARE_SHOT": {
+                "name": "True Razor Sharp/Spare Shot",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
         "WATER_ATTACK": {
                 "name": "Water Attack",
                 "limit": 6,
@@ -844,6 +894,42 @@
         }
     },
     "set_bonuses": {
+        "ANCIENT_DIVINITY": {
+            "name": "Ancient Divinity",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "CRITICAL_STATUS"
+                }
+            ]
+        },
+        "ANJANATH_DOMINANCE": {
+            "name": "Anjanath Dominance",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "STAMINA_CAP_UP"
+                }
+            ]
+        },
+        "BARIOTH_HIDDEN_ART": {
+            "name": "Barioth Hidden Art",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "PUNISHING_DRAW"
+                }
+            ]
+        },
+        "BRACHYDIOS_ESSENCE": {
+            "name": "Brachydios Essence",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "AGITATOR_SECRET"
+                }
+            ]
+        },
         "BRACHYDIOS_WILL": {
             "name": "Brachydios Will",
             "stages": [
@@ -854,6 +940,78 @@
                 {
                     "parts": 4,
                     "skill": "ARTILLERY_SECRET"
+                }
+            ]
+        },
+        "COMMISSION_ALCHEMY": {
+            "name": "Commission Alchemy",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "BOMBARDIER_SECRET"
+                }
+            ]
+        },
+        "DIABLOS_AMBITION": {
+            "name": "Diablos Ambition",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "SLUGGER_SECRET"
+                }
+            ]
+        },
+        "GLAVENUS_ESSENCE": {
+            "name": "Glavenus Essence",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "MAXIMUM_MIGHT_SECRET"
+                }
+            ]
+        },
+        "LEGIANA_AMBITION": {
+            "name": "Legiana Ambition",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "BOW_CHARGE_PLUS"
+                }
+            ]
+        },
+        "NARGACUGA_ESSENCE": {
+            "name": "Nargacuga Essence",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "TRUE_RAZOR_SHARP_SPARE_SHOT"
+                }
+            ]
+        },
+        "ODOGARON_ESSENCE": {
+            "name": "Odogaron Essence",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "PROTECTIVE_POLISH"
+                }
+            ]
+        },
+        "RATHALOS_ESSENCE": {
+            "name": "Rathalos Essence",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "MINDS_EYE_BALLISTICS"
+                }
+            ]
+        },
+        "RATHIAN_ESSENCE": {
+            "name": "Rathian Essence",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "POISON_DURATION_UP"
                 }
             ]
         },
@@ -898,6 +1056,15 @@
                 {
                     "parts": 3,
                     "skill": "FREE_MEAL_SECRET"
+                }
+            ]
+        },
+        "URAGAAN_AMBITION": {
+            "name": "Uragaan Ambition",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "GUARD_UP"
                 }
             ]
         },

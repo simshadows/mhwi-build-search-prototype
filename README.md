@@ -2,7 +2,7 @@
 
 This is a prototype automated build optimization program for the game Monster Hunter World Iceborne!
 
-Naturally, it's terribly written and many questionable decisions have been made. Hopefully, these will be improved on in future iterations.
+Being a prototype codebase, it's terribly written and many questionable decisions have been made. Hopefully, these will be improved on in future rewrites. I don't want to spend too much time on something that is not intended to be the final version.
 
 ## How Do I Use It?
 
