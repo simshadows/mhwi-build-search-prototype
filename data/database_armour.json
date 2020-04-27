@@ -91,6 +91,20 @@
             "Coil",
             "Greaves"
         ],
+        "GOLDEN_LUNE_SCHEME": [
+            "Lunehelm",
+            "Lunemail",
+            "Lunebraces",
+            "Lunecoil",
+            "Lunegreaves"
+        ],
+        "GUILDWORK_SCHEME": [
+            "Head",
+            "Body",
+            "Braces",
+            "Waist",
+            "Feet"
+        ],
         "KIRIN_SCHEME": [
             "Horn",
             "Jacket",
@@ -105,6 +119,13 @@
             "Cocoon",
             "Crus"
         ],
+        "LUNASTRA_SCHEME": [
+            "Crown",
+            "Mail",
+            "Vambraces",
+            "Coil",
+            "Greaves"
+        ],
         "NAMIELLE_SCHEME": [
             "Cowl",
             "Cloak",
@@ -118,6 +139,13 @@
             "Vambraces",
             "Belt",
             "Boots"
+        ],
+        "SILVER_SOL_SCHEME": [
+            "Solhelm",
+            "Solmail",
+            "Solbraces",
+            "Solcoil",
+            "Solgreaves"
         ],
         "ZORAH_SCHEME": [
             "Headgear",
@@ -1846,11 +1874,161 @@
                 "LEGS" : [[3,3], {"CRITICAL_EYE": 2, "PIERCING_SHOTS": 1}]
             },
             "MR_BETA_PLUS": {
-                "HEAD" : [[4,2],   {"CRITICAL_EYE": 1                     }],
-                "CHEST": [[4],     {"CRITICAL_EYE": 2, "EARPLUGS":       1}],
-                "ARMS" : [[4],     {"EARPLUGS":     2                     }],
-                "WAIST": [[4,3],   {"RESENTMENT":   2                     }],
-                "LEGS" : [[4,2,2], {"CRITICAL_EYE": 2                     }]
+                "HEAD" : [[4,2],   {"CRITICAL_EYE": 1               }],
+                "CHEST": [[4],     {"CRITICAL_EYE": 2, "EARPLUGS": 1}],
+                "ARMS" : [[4],     {"EARPLUGS":     2               }],
+                "WAIST": [[4,3],   {"RESENTMENT":   2               }],
+                "LEGS" : [[4,2,2], {"CRITICAL_EYE": 2               }]
+            }
+        },
+        {
+            "set": "Zinogre",
+            "discriminator": "MASTER_RANK",
+            "rarity": 11,
+            
+            "prefix": "Zinogre",
+            "naming_scheme": "COMMON_SCHEME_3",
+
+            "set_bonus": "ZINOGRE_ESSENCE",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[1],   {"POWER_PROLONGER": 2, "CRITICAL_BOOST":  1}],
+                "CHEST": [[3],   {"LATENT_POWER":    3, "NORMAL_SHOTS":    1}],
+                "ARMS" : [[2,1], {"LATENT_POWER":    2, "RECOVERY_SPEED":  2}],
+                "WAIST": [[2],   {"THUNDER_ATTACK":  2, "POWER_PROLONGER": 1}],
+                "LEGS" : [[1],   {"LATENT_POWER":    2, "THUNDER_ATTACK":  3}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4],   {"POWER_PROLONGER": 1, "CRITICAL_BOOST":  1}],
+                "CHEST": [[4],   {"LATENT_POWER":    3                      }],
+                "ARMS" : [[4,2], {"LATENT_POWER":    2, "RECOVERY_SPEED":  1}],
+                "WAIST": [[4,2], {                      "POWER_PROLONGER": 1}],
+                "LEGS" : [[4,1], {"LATENT_POWER":    2, "THUNDER_ATTACK":  1}]
+            }
+        },
+        {
+            "set": "Golden Lune",
+            "discriminator": "MASTER_RANK",
+            "rarity": 12,
+            
+            "prefix": "Golden",
+            "naming_scheme": "GOLDEN_LUNE_SCHEME",
+
+            "set_bonus": "GOLD_RATHIAN_ESSENCE",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2,2], {"HEALTH_BOOST":     2, "POISON_ATTACK":      2}],
+                "CHEST": [[3,1], {"DIVINE_BLESSING":  2, "RESENTMENT":         1}],
+                "ARMS" : [[2],   {"POISON_ATTACK":    2, "RESENTMENT":         2}],
+                "WAIST": [[2,2], {"DIVINE_BLESSING":  3, "HEALTH_BOOST":       1}],
+                "LEGS" : [[1],   {"WEAKNESS_EXPLOIT": 2, "SPREAD_POWER_SHOTS": 1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,2],   {"HEALTH_BOOST":     2                 }],
+                "CHEST": [[4,2,1], {"DIVINE_BLESSING":  2                 }],
+                "ARMS" : [[4,2],   {                       "RESENTMENT": 2}],
+                "WAIST": [[4,2],   {"DIVINE_BLESSING":  3                 }],
+                "LEGS" : [[4],     {"WEAKNESS_EXPLOIT": 2                 }]
+            }
+        },
+        {
+            "set": "Silver Sol",
+            "discriminator": "MASTER_RANK",
+            "rarity": 12,
+            
+            "prefix": "Silver",
+            "naming_scheme": "SILVER_SOL_SCHEME",
+
+            "set_bonus": "SILVER_RATHALOS_ESSENCE",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2,2], {"FIRE_ATTACK":    2, "WINDPROOF":        2}],
+                "CHEST": [[1],   {"CRITICAL_BOOST": 2, "FIRE_ATTACK":      2}],
+                "ARMS" : [[2],   {"WINDPROOF":      1, "SLINGER_CAPACITY": 3}],
+                "WAIST": [[1],   {"CRITICAL_BOOST": 1, "WINDPROOF":        2}],
+                "LEGS" : [[3,2], {"FIRE_ATTACK":    2, "SLINGER_CAPACITY": 2}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,3],   {                     "WINDPROOF":        2}],
+                "CHEST": [[4],     {"CRITICAL_BOOST": 2                       }],
+                "ARMS" : [[4,2],   {                     "SLINGER_CAPACITY": 3}],
+                "WAIST": [[4,1],   {"CRITICAL_BOOST": 1, "WINDPROOF":        1}],
+                "LEGS" : [[4,2,1], {                     "SLINGER_CAPACITY": 2}]
+            }
+        },
+        {
+            "set": "Lunastra",
+            "discriminator": "MASTER_RANK",
+            "rarity": 12,
+            
+            "prefix": "Empress",
+            "naming_scheme": "LUNASTRA_SCHEME",
+
+            "set_bonus": "LUNASTRA_ESSENCE",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[3],   {"OFFENSIVE_GUARD":  2, "TOOL_SPECIALIST": 2}],
+                "CHEST": [[2],   {"PEAK_PERFORMANCE": 2, "WIDE_RANGE":      2}],
+                "ARMS" : [[2,1], {"BLAST_ATTACK":     2, "TOOL_SPECIALIST": 2}],
+                "WAIST": [[2,2], {"BLAST_ATTACK":     2, "HEALTH_BOOST":    2}],
+                "LEGS" : [[3,1], {"TOOL_SPECIALIST":  1, "WIDE_RANGE":      3}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,2], {                       "TOOL_SPECIALIST": 2}],
+                "CHEST": [[4,1], {"PEAK_PERFORMANCE": 1, "WIDE_RANGE":      2}],
+                "ARMS" : [[4,1], {"BLAST_ATTACK":     1, "TOOL_SPECIALIST": 2}],
+                "WAIST": [[4,2], {                       "HEALTH_BOOST":    2}],
+                "LEGS" : [[4,2], {"TOOL_SPECIALIST":  1, "WIDE_RANGE":      2}]
+            }
+        },
+        {
+            "set": "Ruiner Nergi",
+            "discriminator": "MASTER_RANK",
+            "rarity": 12,
+            
+            "prefix": "Ruinous",
+            "naming_scheme": "COMMON_SCHEME_1",
+
+            "set_bonus": "NERGIGANTE_AMBITION",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[3,1], {"MAXIMUM_MIGHT": 2, "STAMINA_SURGE": 1}],
+                "CHEST": [[2],   {"MAXIMUM_MIGHT": 1, "STAMINA_SURGE": 2}],
+                "ARMS" : [[3],   {"ATTACK_BOOST":  2, "AGITATOR":      2}],
+                "WAIST": [[2,1], {"ATTACK_BOOST":  3, "EARPLUGS":      1}],
+                "LEGS" : [[2],   {"AGITATOR":      1, "EARPLUGS":      2}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,2], {"MAXIMUM_MIGHT": 2                    }],
+                "CHEST": [[4,2], {                    "STAMINA_SURGE": 2}],
+                "ARMS" : [[4,1], {"ATTACK_BOOST":  1, "AGITATOR":      2}],
+                "WAIST": [[4,1], {"ATTACK_BOOST":  2, "EARPLUGS":      1}],
+                "LEGS" : [[4,1], {                    "EARPLUGS":      2}]
+            }
+        },
+        {
+            "set": "Guildwork",
+            "discriminator": "MASTER_RANK",
+            "rarity": 12,
+            
+            "prefix": "Guildwork",
+            "naming_scheme": "GUILDWORK_SCHEME",
+
+            "set_bonus": "GUILD_PRIDE",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[3,2],   {"BOTANIST":      3, "HONEY_HUNTER": 1}],
+                "CHEST": [[3,1,1], {"CLIFFHANGER":   1, "FLINCH_FREE":  1}],
+                "ARMS" : [[3,2],   {"GEOLOGIST":     2, "BOTANIST":     1}],
+                "WAIST": [[3,2],   {"FORAGERS_LUCK": 1, "DETECTOR":     1}],
+                "LEGS" : [[2,1],   {"FLINCH_FREE":   2, "GEOLOGIST":    1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,3],   {"BOTANIST":      2, "HONEY_HUNTER": 1}],
+                "CHEST": [[4,2,2], {"CLIFFHANGER":   1                   }],
+                "ARMS" : [[4,3],   {"GEOLOGIST":     1, "BOTANIST":     1}],
+                "WAIST": [[4,3],   {"FORAGERS_LUCK": 1                   }],
+                "LEGS" : [[4,1],   {"FLINCH_FREE":   2                   }]
             }
         },
         {

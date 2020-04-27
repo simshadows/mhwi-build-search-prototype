@@ -227,6 +227,14 @@
                 "name": "Divine Blessing",
                 "limit": 3,
 
+                "extended_limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "DIVINE_BLESSING_SECRET": {
+                "name": "Divine Blessing Secret",
+                "limit": 1,
+
                 "tooltip": "((TODO))"
         },
         "DRAGON_ATTACK": {
@@ -420,6 +428,12 @@
 
                 "tooltip": "((TODO))"
         },
+        "HASTEN_RECOVERY": {
+                "name": "Hasten Recovery",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
         "HEALTH_BOOST": {
                 "name": "Health Boost",
                 "limit": 3,
@@ -501,6 +515,14 @@
         "LATENT_POWER": {
                 "name": "Latent Power",
                 "limit": 5,
+
+                "extended_limit": 7,
+
+                "tooltip": "((TODO))"
+        },
+        "LATENT_POWER_SECRET": {
+                "name": "Latent Power Secret",
+                "limit": 1,
 
                 "tooltip": "((TODO))"
         },
@@ -774,9 +796,17 @@
 
                 "tooltip": "((TODO))"
         },
+        "SLINGER_AMMO_SECRET": {
+                "name": "Slinger Ammo Secret",
+                "limit": 1,
+
+                "tooltip": "Raises the maximum level of the Slinger Capacity skill."
+        },
         "SLINGER_CAPACITY": {
                 "name": "Slinger Capacity",
                 "limit": 3,
+
+                "extended_limit": 5,
 
                 "tooltip": "((TODO))"
         },
@@ -892,11 +922,31 @@
                 "name": "Tool Specialist",
                 "limit": 3,
 
+                "extended_limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "TOOL_SPECIALIST_SECRET": {
+                "name": "Tool Specialist Secret",
+                "limit": 1,
+
                 "tooltip": "((TODO))"
         },
         "TREMOR_RESISTANCE": {
                 "name": "Tremor Resistance",
                 "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "TRUE_CRITICAL_ELEMENT": {
+                "name": "True Critical Element",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "TRUE_CRITICAL_STATUS": {
+                "name": "True Critical Status",
+                "limit": 1,
 
                 "tooltip": "((TODO))"
         },
@@ -1056,6 +1106,19 @@
                 }
             ]
         },
+        "GOLD_RATHIAN_ESSENCE": {
+            "name": "Gold Rathian Essence",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "DIVINE_BLESSING_SECRET"
+                },
+                {
+                    "parts": 4,
+                    "skill": "TRUE_CRITICAL_STATUS"
+                }
+            ]
+        },
         "GUILD_PRIDE": {
             "name": "Guild Pride",
             "stages": [
@@ -1105,6 +1168,15 @@
                 }
             ]
         },
+        "LUNASTRA_ESSENCE": {
+            "name": "Lunastra Essence",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "TOOL_SPECIALIST_SECRET"
+                }
+            ]
+        },
         "NAMIELLE_DIVINITY": {
             "name": "Namielle Divinity",
             "stages": [
@@ -1124,6 +1196,15 @@
                 {
                     "parts": 3,
                     "skill": "TRUE_RAZOR_SHARP_SPARE_SHOT"
+                }
+            ]
+        },
+        "NERGIGANTE_AMBITION": {
+            "name": "Nergigante Ambition",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "HASTEN_RECOVERY"
                 }
             ]
         },
@@ -1177,6 +1258,19 @@
                 {
                     "parts": 5,
                     "skill": "TRUE_GAIAS_VEIL"
+                }
+            ]
+        },
+        "SILVER_RATHALOS_ESSENCE": {
+            "name": "Silver Rathalos Essence",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "SLINGER_AMMO_SECRET"
+                },
+                {
+                    "parts": 4,
+                    "skill": "TRUE_CRITICAL_ELEMENT"
                 }
             ]
         },
@@ -1239,6 +1333,15 @@
                 {
                     "parts": 4,
                     "skill": "FROSTCRAFT"
+                }
+            ]
+        },
+        "ZINOGRE_ESSENCE": {
+            "name": "Zinogre Essence",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "LATENT_POWER_SECRET"
                 }
             ]
         },
