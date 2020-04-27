@@ -52,7 +52,7 @@ def print_debugging_statistics():
 def legacy_command(search_parameters_filename):
     assert isinstance(search_parameters_filename, str)
 
-    logger.info("Carrying out a pre-defined search.")
+    logger.info("Carrying out a pre-defined search (legacy).")
 
     with open(search_parameters_filename, encoding=ENCODING, mode="r") as f:
         search_parameters_jsonstr = f.read()
@@ -64,7 +64,7 @@ def legacy_command(search_parameters_filename):
 def search_command(search_parameters_filename):
     assert isinstance(search_parameters_filename, str)
 
-    logger.info("Carrying out some experimental stuff.")
+    logger.info("Carrying out a pre-defined search.")
 
     with open(search_parameters_filename, encoding=ENCODING, mode="r") as f:
         search_parameters_jsonstr = f.read()

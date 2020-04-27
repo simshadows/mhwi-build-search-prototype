@@ -77,7 +77,7 @@
             "Faulds",
             "Greaves"
         ],
-        "BARIOTH_SCHEME": [
+        "COMMON_SCHEME_11": [
             "Helm",
             "Mail",
             "Vambraces",
@@ -91,12 +91,40 @@
             "Coil",
             "Greaves"
         ],
+        "KIRIN_SCHEME": [
+            "Horn",
+            "Jacket",
+            "Longarms",
+            "Hoop",
+            "Leg Guards"
+        ],
+        "KUSHALA_SCHEME": [
+            "Glare",
+            "Cista",
+            "Grip",
+            "Cocoon",
+            "Crus"
+        ],
+        "NAMIELLE_SCHEME": [
+            "Cowl",
+            "Cloak",
+            "Gloves",
+            "Coil",
+            "Greaves"
+        ],
         "SAFI_SCHEME": [
             "Crown",
             "Chest",
             "Vambraces",
             "Belt",
             "Boots"
+        ],
+        "ZORAH_SCHEME": [
+            "Headgear",
+            "Hide",
+            "Claws",
+            "Spine",
+            "Spurs"
         ],
         "BARNOS_SCHEME": [
             "(INVALID HEAD)",
@@ -1024,7 +1052,7 @@
             "rarity": 10,
             
             "prefix": "Barioth",
-            "naming_scheme": "BARIOTH_SCHEME",
+            "naming_scheme": "COMMON_SCHEME_11",
 
             "set_bonus": "BARIOTH_HIDDEN_ART",
 
@@ -1444,6 +1472,56 @@
             }
         },
         {
+            "set": "Black Belt",
+            "discriminator": "MASTER_RANK",
+            "rarity": 11,
+            
+            "prefix": "Black Belt",
+            "naming_scheme": "COMMON_SCHEME_4",
+
+            "set_bonus": "INSTRUCTORS_GUIDANCE",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[3],     {"MARATHON_RUNNER": 2, "MUSHROOMANCER":   1}],
+                "CHEST": [[1,1,1], {"MUSHROOMANCER":   2, "WIDE_RANGE":      1}],
+                "ARMS" : [[3],     {"WIDE_RANGE":      2, "HORN_MAESTRO":    2}],
+                "WAIST": [[3],     {"RECOVERY_UP":     2, "MARATHON_RUNNER": 1}],
+                "LEGS" : [[2,2],   {"WIDE_RANGE":      2, "RECOVERY_UP":     1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[3,2],   {"MARATHON_RUNNER": 2}],
+                "CHEST": [[4,1,1], {"MUSHROOMANCER":   2}],
+                "ARMS" : [[4,1],   {"WIDE_RANGE":      2}],
+                "WAIST": [[4,1],   {"RECOVERY_UP":     2}],
+                "LEGS" : [[4,2],   {"WIDE_RANGE":      2}]
+            }
+        },
+        {
+            "set": "Dober",
+            "discriminator": "MASTER_RANK",
+            "rarity": 11,
+            
+            "prefix": "Dober",
+            "naming_scheme": "COMMON_SCHEME_1",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[1],     {"FREE_ELEM_AMMO_UP": 2, "STAMINA_SURGE":       1}],
+                "CHEST": [[1,1,1], {"ATTACK_BOOST":      2, "EFFLUVIA_RESISTANCE": 1}],
+                "ARMS" : [[2,1],   {"STAMINA_SURGE":     2, "MUSHROOMANCER":       1}],
+                "WAIST": [[2,1],   {"ATTACK_BOOST":      2, "STUN_RESISTANCE":     2}],
+                "LEGS" : [[2],     {"ATTACK_BOOST":      2, "MUSHROOMANCER":       2}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4],     {"FREE_ELEM_AMMO_UP": 2                          }],
+                "CHEST": [[4,1,1], {"ATTACK_BOOST":      1, "EFFLUVIA_RESISTANCE": 1}],
+                "ARMS" : [[4,1],   {"STAMINA_SURGE":     1, "MUSHROOMANCER":       1}],
+                "WAIST": [[4,2],   {"ATTACK_BOOST":      1, "STUN_RESISTANCE":     1}],
+                "LEGS" : [[4,2],   {"ATTACK_BOOST":      1, "MUSHROOMANCER":       1}]
+            }
+        },
+        {
             "set": "Damascus",
             "discriminator": "MASTER_RANK",
             "rarity": 11,
@@ -1466,6 +1544,56 @@
                 "ARMS" : [[4,1],   {"HANDICRAFT":    2            }],
                 "WAIST": [[4,3,1], {"FOCUS":         1            }],
                 "LEGS" : [[4,2],   {"DEFENSE_BOOST": 2, "GUARD": 1}]
+            }
+        },
+        {
+            "set": "Seething Bazel",
+            "discriminator": "MASTER_RANK",
+            "rarity": 11,
+            
+            "prefix": "Pride",
+            "naming_scheme": "COMMON_SCHEME_1",
+
+            "set_bonus": "BAZELGEUSE_AMBITION",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2,1], {"EARPLUGS":      2, "BLAST_ATTACK":     2}],
+                "CHEST": [[1,1], {"GUARD":         2, "BLAST_RESISTANCE": 2}],
+                "ARMS" : [[3],   {"CRITICAL_DRAW": 2, "EARPLUGS":         1}],
+                "WAIST": [[3],   {"BOMBARDIER":    2, "CRITICAL_DRAW":    1}],
+                "LEGS" : [[3],   {"EARPLUGS":      2, "JUMP_MASTER":      1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1],   {"EARPLUGS":      2, "BLAST_ATTACK": 2}],
+                "CHEST": [[4,1,1], {"GUARD":         2                   }],
+                "ARMS" : [[4,3],   {"CRITICAL_DRAW": 2                   }],
+                "WAIST": [[4,2],   {"BOMBARDIER":    2                   }],
+                "LEGS" : [[4,2],   {"EARPLUGS":      1, "JUMP_MASTER":  1}]
+            }
+        },
+        {
+            "set": "Savage Jho",
+            "discriminator": "MASTER_RANK",
+            "rarity": 11,
+            
+            "prefix": "Esurient",
+            "naming_scheme": "COMMON_SCHEME_11",
+
+            "set_bonus": "DEVILJHO_ESSENCE",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[1],   {"PARTBREAKER":   1, "HANDICRAFT":    2}],
+                "CHEST": [[2],   {"SPEED_EATING":  1, "HANDICRAFT":    2}],
+                "ARMS" : [[2],   {"STAMINA_THIEF": 2, "PARTBREAKER":   1}],
+                "WAIST": [[1],   {"STAMINA_THIEF": 2, "HANDICRAFT":    1}],
+                "LEGS" : [[2,2], {"SPEED_EATING":  2, "STAMINA_THIEF": 1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,3],   {"PARTBREAKER":   1                    }],
+                "CHEST": [[4,2,2], {"SPEED_EATING":  1                    }],
+                "ARMS" : [[4],     {"STAMINA_THIEF": 2                    }],
+                "WAIST": [[4,1],   {"STAMINA_THIEF": 2                    }],
+                "LEGS" : [[4,2],   {"SPEED_EATING":  1, "STAMINA_THIEF": 1}]
             }
         },
         {
@@ -1494,6 +1622,31 @@
             }
         },
         {
+            "set": "Blackveil Hazak",
+            "discriminator": "MASTER_RANK",
+            "rarity": 12,
+            
+            "prefix": "Fellshroud",
+            "naming_scheme": "COMMON_SCHEME_3",
+
+            "set_bonus": "VAAL_SOULVEIN",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[1],     {"PEAK_PERFORMANCE":    2, "DRAGON_ATTACK":    2}],
+                "CHEST": [[3,1],   {"RECOVERY_SPEED":      2, "DRAGON_ATTACK":    2}],
+                "ARMS" : [[2,1,1], {"RECOVERY_UP":         2, "SPEED_EATING":     1}],
+                "WAIST": [[2,1],   {"SPEED_EATING":        2, "PEAK_PERFORMANCE": 1}],
+                "LEGS" : [[3,2],   {"EFFLUVIA_RESISTANCE": 2, "DRAGON_ATTACK":    2}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1],   {"PEAK_PERFORMANCE":    2                    }],
+                "CHEST": [[4,2],   {"RECOVERY_SPEED":      2, "DRAGON_ATTACK": 1}],
+                "ARMS" : [[4,1,1], {"RECOVERY_UP":         2                    }],
+                "WAIST": [[4,1],   {"SPEED_EATING":        2                    }],
+                "LEGS" : [[4,3],   {"EFFLUVIA_RESISTANCE": 2                    }]
+            }
+        },
+        {
             "set": "Teostra",
             "discriminator": "MASTER_RANK",
             "rarity": 12,
@@ -1516,6 +1669,163 @@
                 "ARMS" : [[4,3],   {"WEAKNESS_EXPLOIT": 1, "HEAT_GUARD":   1}],
                 "WAIST": [[4,2,1], {"BLAST_ATTACK":     2                   }],
                 "LEGS" : [[4],     {"LATENT_POWER":     2, "BLAST_ATTACK": 1}]
+            }
+        },
+        {
+            "set": "Kushala",
+            "discriminator": "MASTER_RANK",
+            "rarity": 12,
+            
+            "prefix": "Kushala",
+            "naming_scheme": "KUSHALA_SCHEME",
+
+            "set_bonus": "KUSHALA_DAORA_FLIGHT",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2], {"ICE_ATTACK":     2, "EVADE_WINDOW":   2}],
+                "CHEST": [[1], {"HANDICRAFT":     3                     }],
+                "ARMS" : [[1], {"EVADE_WINDOW":   3                     }],
+                "WAIST": [[2], {"ICE_ATTACK":     3, "EVADE_EXTENDER": 1}],
+                "LEGS" : [[1], {"EVADE_EXTENDER": 2, "HANDICRAFT":     2}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1], {"ICE_ATTACK":     2, "EVADE_WINDOW": 1}],
+                "CHEST": [[4,2], {"HANDICRAFT":     2                   }],
+                "ARMS" : [[4,2], {"EVADE_WINDOW":   2                   }],
+                "WAIST": [[4,1], {"ICE_ATTACK":     3                   }],
+                "LEGS" : [[4,3], {"EVADE_EXTENDER": 2                   }]
+            }
+        },
+        {
+            "set": "Kirin",
+            "discriminator": "MASTER_RANK",
+            "rarity": 12,
+            
+            "prefix": "Kirin",
+            "naming_scheme": "KIRIN_SCHEME",
+
+            "set_bonus": "KIRIN_DIVINITY",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[3,1], {"MARATHON_RUNNER":   2, "DIVINE_BLESSING":   2}],
+                "CHEST": [[3,2], {"CRITICAL_EYE":      3, "DIVINE_BLESSING":   1}],
+                "ARMS" : [[3,2], {"THUNDER_ATTACK":    3, "MARATHON_RUNNER":   1}],
+                "WAIST": [[2],   {"BLIGHT_RESISTANCE": 2, "FREE_ELEM_AMMO_UP": 1}],
+                "LEGS" : [[1],   {"FREE_ELEM_AMMO_UP": 2, "CRITICAL_EYE":      2}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1,1], {"MARATHON_RUNNER":   2                      }],
+                "CHEST": [[4,2],   {"CRITICAL_EYE":      2, "DIVINE_BLESSING": 1}],
+                "ARMS" : [[4,2,2], {"THUNDER_ATTACK":    3                      }],
+                "WAIST": [[4,1,1], {"BLIGHT_RESISTANCE": 2                      }],
+                "LEGS" : [[4],     {"FREE_ELEM_AMMO_UP": 2                      }]
+            }
+        },
+        {
+            "set": "Namielle",
+            "discriminator": "MASTER_RANK",
+            "rarity": 12,
+            
+            "prefix": "Tentacle",
+            "naming_scheme": "NAMIELLE_SCHEME",
+
+            "set_bonus": "NAMIELLE_DIVINITY",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[1],     {"CONSTITUTION":      3, "MAXIMUM_MIGHT":     1}],
+                "CHEST": [[2,2],   {"BLIGHT_RESISTANCE": 2, "TOOL_SPECIALIST":   1}],
+                "ARMS" : [[1],     {"TOOL_SPECIALIST":   2, "MAXIMUM_MIGHT":     1}],
+                "WAIST": [[1,1,1], {"CONSTITUTION":      2, "STAMINA_SURGE":     1}],
+                "LEGS" : [[2,1],   {"STAMINA_SURGE":     2, "BLIGHT_RESISTANCE": 1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4],     {"CONSTITUTION":      2, "MAXIMUM_MIGHT":     1}],
+                "CHEST": [[4,2],   {"BLIGHT_RESISTANCE": 1, "TOOL_SPECIALIST":   1}],
+                "ARMS" : [[4],     {"TOOL_SPECIALIST":   2                        }],
+                "WAIST": [[4,1,1], {"CONSTITUTION":      1, "STAMINA_SURGE":     1}],
+                "LEGS" : [[4,2],   {"STAMINA_SURGE":     2                        }]
+            },
+            "MR_GAMMA_PLUS": {
+                "HEAD" : [[4,2], {"STAMINA_SURGE":   3, "TOOL_SPECIALIST":   1}],
+                "CHEST": [[4],   {"EVADE_WINDOW":    4, "WATER_ATTACK":      2}],
+                "ARMS" : [[4,2], {"MARATHON_RUNNER": 3, "BLIGHT_RESISTANCE": 1}],
+                "WAIST": [[4,2], {"EVADE_EXTENDER":  3, "RECOVERY_SPEED":    2}],
+                "LEGS" : [[4],   {"CONSTITUTION":    4, "THUNDER_ATTACK":    2}]
+            }
+        },
+        {
+            "set": "Guild Palace",
+            "discriminator": "MASTER_RANK",
+            "rarity": 11,
+            
+            "prefix": "Guild Palace",
+            "naming_scheme": "COMMON_SCHEME_3",
+
+            "set_bonus": "GUILD_PRIDE",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[3],   {"HEALTH_BOOST":    2, "OFFENSIVE_GUARD": 1}],
+                "CHEST": [[1,1], {"AGITATOR":        2, "HEROICS":         1}],
+                "ARMS" : [[3],   {"OFFENSIVE_GUARD": 2, "HEROICS":         1}],
+                "WAIST": [[1,1], {"AGITATOR":        3, "RESUSCITATE":     1}],
+                "LEGS" : [[2],   {"HEROICS":         3, "HEALTH_BOOST":    1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,2], {"HEALTH_BOOST":    2                   }], 
+                "CHEST": [[4,2], {"AGITATOR":        1, "HEROICS":      1}], 
+                "ARMS" : [[4,1], {"OFFENSIVE_GUARD": 2                   }], 
+                "WAIST": [[4,1], {"AGITATOR":        2, "RESUSCITATE":  1}], 
+                "LEGS" : [[4,1], {"HEROICS":         2, "HEALTH_BOOST": 1}]  
+            }
+        },
+        {
+            "set": "Shara Ishvalda",
+            "discriminator": "MASTER_RANK",
+            "rarity": 12,
+            
+            "prefix": "Shara Ishvalda",
+            "naming_scheme": "COMMON_SCHEME_3",
+
+            "set_bonus": "SHARA_ISHVALDA_DIVINITY",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[3,1],   {"RECOVERY_UP":    2, "PARTBREAKER":   1}],
+                "CHEST": [[3,2],   {"COALESCENCE":    2, "HEALTH_BOOST":  1}],
+                "ARMS" : [[1],     {"CRITICAL_BOOST": 2, "COALESCENCE":   1}],
+                "WAIST": [[3,2],   {"HEALTH_BOOST":   2, "RECOVERY_UP":   1}],
+                "LEGS" : [[1,1,1], {"PARTBREAKER":    2, "DEFENSE_BOOST": 2}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,2],   {"RECOVERY_UP":    2                    }],
+                "CHEST": [[4,2],   {"COALESCENCE":    2                    }],
+                "ARMS" : [[4],     {"CRITICAL_BOOST": 2                    }],
+                "WAIST": [[4,3],   {"HEALTH_BOOST":   2                    }],
+                "LEGS" : [[4,2,1], {"PARTBREAKER":    1, "DEFENSE_BOOST": 1}]
+            }
+        },
+        {
+            "set": "Zorah",
+            "discriminator": "MASTER_RANK",
+            "rarity": 12,
+            
+            "prefix": "Zorah",
+            "naming_scheme": "ZORAH_SCHEME",
+
+            "set_bonus": "ZORAH_MAGDAROS_ESSENCE",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2,2], {"FLINCH_FREE":       1, "ARTILLERY":  2}],
+                "CHEST": [[3,1], {"TREMOR_RESISTANCE": 2, "ARTILLERY":  2}],
+                "ARMS" : [[1,1], {"FLINCH_FREE":       2, "FREE_MEAL":  1}],
+                "WAIST": [[3,2], {"TREMOR_RESISTANCE": 1, "ARTILLERY":  1}],
+                "LEGS" : [[3,1], {"EARPLUGS":          1, "HANDICRAFT": 1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,2,1], {"FLINCH_FREE":       1}],
+                "CHEST": [[4,2],   {"TREMOR_RESISTANCE": 2}],
+                "ARMS" : [[4,1],   {"FLINCH_FREE":       2}],
+                "WAIST": [[4,3],   {"TREMOR_RESISTANCE": 1}],
+                "LEGS" : [[4,3],   {"EARPLUGS":          1}]
             }
         },
         {

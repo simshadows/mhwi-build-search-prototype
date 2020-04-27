@@ -139,6 +139,18 @@
 
                 "tooltip": "((TODO))"
         },
+        "CAPTURE_MASTER": {
+                "name": "Capture Master",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "CARVING_MASTER": {
+                "name": "Carving Master",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
         "CARVING_PRO": {
                 "name": "Carving Pro",
                 "limit": 1,
@@ -268,6 +280,12 @@
 
                 "tooltip": "((TODO))"
         },
+        "ELEMENT_ACCELERATION": {
+                "name": "Element Acceleration",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
         "ELEMENTAL_AIRBORNE": {
                 "name": "Elemental Airborne",
                 "limit": 1,
@@ -354,9 +372,27 @@
 
                 "tooltip": "((TODO))"
         },
+        "GAIAS_VEIL": {
+                "name": "Gaia's Veil",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
         "GEOLOGIST": {
                 "name": "Geologist",
                 "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "GOOD_LUCK": {
+                "name": "Good Luck",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "GREAT_LUCK": {
+                "name": "Great Luck",
+                "limit": 1,
 
                 "tooltip": "((TODO))"
         },
@@ -544,6 +580,12 @@
         },
         "NORMAL_SHOTS": {
                 "name": "Normal Shots",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "NULLIFY_WIND_PRESSURE": {
+                "name": "Nullify Wind Pressure",
                 "limit": 1,
 
                 "tooltip": "((TODO))"
@@ -798,6 +840,14 @@
                 "name": "Stamina Thief",
                 "limit": 3,
 
+                "extended_limit": 5,
+
+                "tooltip": "((TODO))"
+        },
+        "STAMINA_THIEF_SECRET": {
+                "name": "Stamina Thief Secret",
+                "limit": 1,
+
                 "tooltip": "((TODO))"
         },
         "STEALTH": {
@@ -809,6 +859,12 @@
         "STUN_RESISTANCE": {
                 "name": "Stun Resistance",
                 "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "SUPER_RECOVERY": {
+                "name": "Super Recovery",
+                "limit": 1,
 
                 "tooltip": "((TODO))"
         },
@@ -852,6 +908,18 @@
                 "zeroth_state_can_be_blank": true,
 
                 "tooltip": "Enhances attacks even more with weapon drawn. Take damage when attacking, but can be recovered by continually attacking."
+        },
+        "TRUE_ELEMENT_ACCELERATION": {
+                "name": "True Element Acceleration",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "TRUE_GAIAS_VEIL": {
+                "name": "True Gaia's Veil",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
         },
         "TRUE_RAZOR_SHARP_SPARE_SHOT": {
                 "name": "True Razor Sharp/Spare Shot",
@@ -921,6 +989,15 @@
                 }
             ]
         },
+        "BAZELGEUSE_AMBITION": {
+            "name": "Bazelgeuse Ambition",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "GUTS"
+                }
+            ]
+        },
         "BRACHYDIOS_ESSENCE": {
             "name": "Brachydios Essence",
             "stages": [
@@ -952,6 +1029,15 @@
                 }
             ]
         },
+        "DEVILJHO_ESSENCE": {
+            "name": "Deviljho Essence",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "STAMINA_THIEF_SECRET"
+                }
+            ]
+        },
         "DIABLOS_AMBITION": {
             "name": "Diablos Ambition",
             "stages": [
@@ -970,12 +1056,65 @@
                 }
             ]
         },
+        "GUILD_PRIDE": {
+            "name": "Guild Pride",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "GOOD_LUCK"
+                },
+                {
+                    "parts": 4,
+                    "skill": "CARVING_MASTER"
+                }
+            ]
+        },
+        "INSTRUCTORS_GUIDANCE": {
+            "name": "Instructor's Guidance",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "CAPTURE_MASTER"
+                }
+            ]
+        },
+        "KIRIN_DIVINITY": {
+            "name": "Kirin Divinity",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "GREAT_LUCK"
+                }
+            ]
+        },
+        "KUSHALA_DAORA_FLIGHT": {
+            "name": "Kushala Daora Flight",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "NULLIFY_WIND_PRESSURE"
+                }
+            ]
+        },
         "LEGIANA_AMBITION": {
             "name": "Legiana Ambition",
             "stages": [
                 {
                     "parts": 3,
                     "skill": "BOW_CHARGE_PLUS"
+                }
+            ]
+        },
+        "NAMIELLE_DIVINITY": {
+            "name": "Namielle Divinity",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "ELEMENT_ACCELERATION"
+                },
+                {
+                    "parts": 4,
+                    "skill": "TRUE_ELEMENT_ACCELERATION"
                 }
             ]
         },
@@ -1028,6 +1167,19 @@
                 }
             ]
         },
+        "SHARA_ISHVALDA_DIVINITY": {
+            "name": "Shara Ishvalda Divinity",
+            "stages": [
+                {
+                    "parts": 4,
+                    "skill": "GAIAS_VEIL"
+                },
+                {
+                    "parts": 5,
+                    "skill": "TRUE_GAIAS_VEIL"
+                }
+            ]
+        },
         "SOUL_OF_THE_DRAGOON": {
             "name": "Soul of the Dragoon",
             "stages": [
@@ -1068,6 +1220,15 @@
                 }
             ]
         },
+        "VAAL_SOULVEIN": {
+            "name": "Vaal Soulvein",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "SUPER_RECOVERY"
+                }
+            ]
+        },
         "VELKHANA_DIVINITY": {
             "name": "Velkhana Divinity",
             "stages": [
@@ -1078,6 +1239,15 @@
                 {
                     "parts": 4,
                     "skill": "FROSTCRAFT"
+                }
+            ]
+        },
+        "ZORAH_MAGDAROS_ESSENCE": {
+            "name": "Zorah Magdaros Essence",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "ARTILLERY_SECRET"
                 }
             ]
         }

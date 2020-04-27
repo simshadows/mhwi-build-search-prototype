@@ -34,6 +34,7 @@ class ArmourVariant(Enum):
     HR_GAMMA      = ArmourVariantInfo(tier=Tier.HIGH_RANK,   ascii_postfix="Gamma",  unicode_postfix="\u03b3")
     MR_ALPHA_PLUS = ArmourVariantInfo(tier=Tier.MASTER_RANK, ascii_postfix="Alpha+", unicode_postfix="\u03b1+")
     MR_BETA_PLUS  = ArmourVariantInfo(tier=Tier.MASTER_RANK, ascii_postfix="Beta+",  unicode_postfix="\u03b2+")
+    MR_GAMMA_PLUS = ArmourVariantInfo(tier=Tier.MASTER_RANK, ascii_postfix="Gamma+", unicode_postfix="\u03b3+")
 
 class ArmourSlot(Enum):
     HEAD  = auto()
