@@ -380,6 +380,18 @@
 
                 "tooltip": "((TODO))"
         },
+        "FULL_BLOOM_GRATITUDE": {
+                "name": "Full Bloom's Gratitude",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "FULL_BLOOMS_GIFT": {
+                "name": "Full Bloom's Gift",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
         "GAIAS_VEIL": {
                 "name": "Gaia's Veil",
                 "limit": 1,
@@ -394,6 +406,18 @@
         },
         "GOOD_LUCK": {
                 "name": "Good Luck",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "GRATITUDES_BLESSING": {
+                "name": "Gratitude's Blessing",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "GRATITUDES_GIFT": {
+                "name": "Gratitude's Gift",
                 "limit": 1,
 
                 "tooltip": "((TODO))"
@@ -458,6 +482,12 @@
 
                 "tooltip": "((TODO))"
         },
+        "HEROICS_SECRET": {
+                "name": "Heroics Secret",
+                "limit": 7,
+
+                "tooltip": "((TODO))"
+        },
         "HONEY_HUNTER": {
                 "name": "Honey Hunter",
                 "limit": 1,
@@ -503,6 +533,18 @@
         "ITEM_PROLONGER": {
                 "name": "Item Prolonger",
                 "limit": 3,
+
+                "tooltip": "((TODO))"
+        },
+        "JOYS_GIFT": {
+                "name": "Joy's Gift",
+                "limit": 1,
+
+                "tooltip": "((TODO))"
+        },
+        "JOYS_GRATITUDE": {
+                "name": "Joy's Gratitude",
+                "limit": 1,
 
                 "tooltip": "((TODO))"
         },
@@ -1030,6 +1072,19 @@
                 }
             ]
         },
+        "APPRECIATION_BLESSING": {
+            "name": "Appreciation Blessing",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "GRATITUDES_GIFT"
+                },
+                {
+                    "parts": 5,
+                    "skill": "GRATITUDES_BLESSING"
+                }
+            ]
+        },
         "BARIOTH_HIDDEN_ART": {
             "name": "Barioth Hidden Art",
             "stages": [
@@ -1097,6 +1152,19 @@
                 }
             ]
         },
+        "FULL_BLOOM_BLESSING": {
+            "name": "Full Bloom Blessing",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "FULL_BLOOMS_GIFT"
+                },
+                {
+                    "parts": 5,
+                    "skill": "FULL_BLOOM_GRATITUDE"
+                }
+            ]
+        },
         "GLAVENUS_ESSENCE": {
             "name": "Glavenus Essence",
             "stages": [
@@ -1141,12 +1209,38 @@
                 }
             ]
         },
+        "JOYFUL_BLESSING": {
+            "name": "Joyful Blessing",
+            "stages": [
+                {
+                    "parts": 3,
+                    "skill": "JOYS_GIFT"
+                },
+                {
+                    "parts": 5,
+                    "skill": "JOYS_GRATITUDE"
+                }
+            ]
+        },
         "KIRIN_DIVINITY": {
             "name": "Kirin Divinity",
             "stages": [
                 {
                     "parts": 3,
                     "skill": "GREAT_LUCK"
+                }
+            ]
+        },
+        "KULVE_TAROTH_ESSENCE": {
+            "name": "Kulve Taroth Essence",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "GUTS"
+                },
+                {
+                    "parts": 4,
+                    "skill": "FREE_MEAL_SECRET"
                 }
             ]
         },
@@ -1223,6 +1317,32 @@
                 {
                     "parts": 3,
                     "skill": "MINDS_EYE_BALLISTICS"
+                }
+            ]
+        },
+        "RAJANGS_RAGE": {
+            "name": "Rajang's Rage",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "MINDS_EYE_BALLISTICS"
+                },
+                {
+                    "parts": 4,
+                    "skill": "PROTECTIVE_POLISH"
+                }
+            ]
+        },
+        "RAJANG_WILL": {
+            "name": "Rajang Will",
+            "stages": [
+                {
+                    "parts": 2,
+                    "skill": "MAXIMUM_MIGHT_SECRET"
+                },
+                {
+                    "parts": 4,
+                    "skill": "HEROICS_SECRET"
                 }
             ]
         },

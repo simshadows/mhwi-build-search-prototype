@@ -1,5 +1,12 @@
 {
     "naming_schemes": {
+        "ASTRAL_SCHEME": [
+            "Veil",
+            "Cloth",
+            "Scarf",
+            "Skirt",
+            "Tights"
+        ],
         "BUFF_BODY_SCHEME": [
             "(INVALID HEAD)",
             "Chest",
@@ -91,6 +98,13 @@
             "Coil",
             "Greaves"
         ],
+        "FURIOUS_RAJANG_SCHEME": [
+            "Mask",
+            "Garb",
+            "Arms",
+            "Belt",
+            "Feet"
+        ],
         "GOLDEN_LUNE_SCHEME": [
             "Lunehelm",
             "Lunemail",
@@ -112,6 +126,13 @@
             "Hoop",
             "Leg Guards"
         ],
+        "KULVE_TAROTH_SCHEME": [
+            "Fury",
+            "Ire",
+            "Rage",
+            "Malice",
+            "Wrath"
+        ],
         "KUSHALA_SCHEME": [
             "Glare",
             "Cista",
@@ -132,6 +153,27 @@
             "Gloves",
             "Coil",
             "Greaves"
+        ],
+        "OOLONG_SCHEME": [
+            "Hair",
+            "Vest",
+            "Sleeves",
+            "Waist",
+            "Boots"
+        ],
+        "RAJANG_SCHEME": [
+            "Headdress",
+            "Haori",
+            "Kote",
+            "Obi",
+            "Hakama"
+        ],
+        "ROSE_SCHEME": [
+            "Headpiece",
+            "Jacket",
+            "Arms",
+            "Belt",
+            "Boots"
         ],
         "SAFI_SCHEME": [
             "Crown",
@@ -198,6 +240,13 @@
         ],
         "WULG_SCHEME": [
             "Scarf",
+            "(INVALID CHEST)",
+            "(INVALID ARMS)",
+            "(INVALID WAIST)",
+            "(INVALID LEGS)"
+        ],
+        "WYVERIAN_EARS_SCHEME": [
+            "Ears",
             "(INVALID CHEST)",
             "(INVALID ARMS)",
             "(INVALID WAIST)",
@@ -2032,6 +2081,56 @@
             }
         },
         {
+            "set": "Rajang",
+            "discriminator": "MASTER_RANK",
+            "rarity": 11,
+            
+            "prefix": "Golden",
+            "naming_scheme": "RAJANG_SCHEME",
+
+            "set_bonus": "RAJANGS_RAGE",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[],    {"WEAKNESS_EXPLOIT": 2, "HANDICRAFT":       2}],
+                "CHEST": [[3,1], {"RESENTMENT":       2, "SPEED_SHARPENING": 2}],
+                "ARMS" : [[2],   {"RESENTMENT":       1, "HANDICRAFT":       2}],
+                "WAIST": [[3,1], {"WEAKNESS_EXPLOIT": 1, "HANDICRAFT":       1}],
+                "LEGS" : [[2,2], {"RESENTMENT":       2, "ATTACK_BOOST":     2}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1],   {"WEAKNESS_EXPLOIT": 2                   }],
+                "CHEST": [[4,1,1], {"RESENTMENT":       2                   }],
+                "ARMS" : [[4,3],   {"RESENTMENT":       1                   }],
+                "WAIST": [[4,3],   {"WEAKNESS_EXPLOIT": 1                   }],
+                "LEGS" : [[4,2],   {"RESENTMENT":       2, "ATTACK_BOOST": 1}]
+            }
+        },
+        {
+            "set": "Stygian Zin",
+            "discriminator": "MASTER_RANK",
+            "rarity": 11,
+            
+            "prefix": "Stygian",
+            "naming_scheme": "COMMON_SCHEME_1",
+
+            "set_bonus": "ZINOGRE_ESSENCE",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[2,1],   {"LATENT_POWER": 3, "TREMOR_RESISTANCE": 2}],
+                "CHEST": [[2],     {"WINDPROOF":    3, "FLINCH_FREE":       2}],
+                "ARMS" : [[2],     {"PARTBREAKER":  2, "DRAGON_ATTACK":     3}],
+                "WAIST": [[1,1,1], {"LATENT_POWER": 3, "EARPLUGS":          2}],
+                "LEGS" : [[1,1],   {"FOCUS":        2, "ELDERSEAL_BOOST":   1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,1],   {"LATENT_POWER": 3, "TREMOR_RESISTANCE": 1}],
+                "CHEST": [[4],     {"WINDPROOF":    3, "FLINCH_FREE":       1}],
+                "ARMS" : [[4,3],   {"PARTBREAKER":  2                        }],
+                "WAIST": [[4,1,1], {"LATENT_POWER": 3, "EARPLUGS":          1}],
+                "LEGS" : [[4,1],   {"FOCUS":        2                        }]
+            }
+        },
+        {
             "set": "Safi'jiiva",
             "discriminator": "MASTER_RANK",
             "rarity": 12,
@@ -2057,23 +2156,6 @@
             }
         },
         {
-            "set": "Buff Body",
-            "discriminator": "MASTER_RANK",
-            "rarity": 11,
-            
-            "prefix": "Buff",
-            "naming_scheme": "BUFF_BODY_SCHEME",
-
-            "set_bonus": null,
-
-            "MR_ALPHA_PLUS": {
-                "CHEST": [[1,1,1], {"AGITATOR":     3, "FORTIFY":     1}],
-                "ARMS" : [[4],     {"ATTACK_BOOST": 3, "RESUSCITATE": 1}],
-                "WAIST": [[4],     {"AGITATOR":     2, "HEROICS":     3}],
-                "LEGS" : [[4],     {"ATTACK_BOOST": 3, "HEROICS":     2}]
-            }
-        },
-        {
             "set": "Raging Brachy",
             "discriminator": "MASTER_RANK",
             "rarity": 12,
@@ -2096,6 +2178,141 @@
                 "ARMS" : [[4,4],   {"AGITATOR":         2}],
                 "WAIST": [[4,1],   {"AGITATOR":         3}],
                 "LEGS" : [[4,1,1], {"WEAKNESS_EXPLOIT": 2}]
+            }
+        },
+        {
+            "set": "Furious Rajang",
+            "discriminator": "MASTER_RANK",
+            "rarity": 12,
+            
+            "prefix": "Grand God's Peer",
+            "naming_scheme": "FURIOUS_RAJANG_SCHEME",
+
+            "set_bonus": "RAJANG_WILL",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[],      {"EARPLUGS":      3, "HEROICS":       3}],
+                "CHEST": [[1],     {"MAXIMUM_MIGHT": 3, "EARPLUGS":      2}],
+                "ARMS" : [[2,2],   {"STAMINA_SURGE": 2, "DEFENSE_BOOST": 3}],
+                "WAIST": [[1,1,1], {"MAXIMUM_MIGHT": 2, "HEROICS":       2}],
+                "LEGS" : [[2,2],   {"HEALTH_BOOST":  3, "HEROICS":       2}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4],     {"EARPLUGS":      3, "HEROICS": 1}],
+                "CHEST": [[4,2],   {"MAXIMUM_MIGHT": 3              }],
+                "ARMS" : [[4,2,1], {"STAMINA_SURGE": 2              }],
+                "WAIST": [[4,2,1], {"MAXIMUM_MIGHT": 2              }],
+                "LEGS" : [[4,4],   {"HEALTH_BOOST":  3              }]
+            }
+        },
+        {
+            "set": "Kulve Taroth",
+            "discriminator": "MASTER_RANK",
+            "rarity": 12,
+            
+            "prefix": "Kulve Taroth's",
+            "naming_scheme": "KULVE_TAROTH_SCHEME",
+
+            "set_bonus": "KULVE_TAROTH_ESSENCE",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[],      {"FREE_MEAL":        1, "FREE_ELEM_AMMO_UP": 3}],
+                "CHEST": [[3,3],   {"SPEED_EATING":     3, "FREE_MEAL":         1}],
+                "ARMS" : [[3,2],   {"CRITICAL_BOOST":   1, "WIDE_RANGE":        3}],
+                "WAIST": [[2,1,1], {"PEAK_PERFORMANCE": 2, "FREE_MEAL":         1}],
+                "LEGS" : [[2,1,1], {"CRITICAL_BOOST":   2, "PEAK_PERFORMANCE":  1}]
+            },
+            "MR_BETA_PLUS": {
+                "HEAD" : [[4,4,1], {"FREE_MEAL":        1}],
+                "CHEST": [[4,3],   {"SPEED_EATING":     3}],
+                "ARMS" : [[4,4],   {"CRITICAL_BOOST":   1}],
+                "WAIST": [[4,2],   {"PEAK_PERFORMANCE": 2}],
+                "LEGS" : [[4,1,1], {"CRITICAL_BOOST":   2}]
+            }
+        },
+        {
+            "set": "Oolong",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Oolong",
+            "naming_scheme": "OOLONG_SCHEME",
+
+            "set_bonus": "JOYFUL_BLESSING",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[4],   {"CRITICAL_EYE":  3}],
+                "CHEST": [[4],   {"STAMINA_SURGE": 2}],
+                "ARMS" : [[4],   {"COALESCENCE":   2}],
+                "WAIST": [[1,1], {"CONSTITUTION":  3}],
+                "LEGS" : [[4,2], {"HEALTH_BOOST":  2}]
+            }
+        },
+        {
+            "set": "Astral",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Astral",
+            "naming_scheme": "ASTRAL_SCHEME",
+
+            "set_bonus": "APPRECIATION_BLESSING",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[4],     {"WIDE_RANGE":       3}],
+                "CHEST": [[1],     {"CRITICAL_BOOST":   2}],
+                "ARMS" : [[4,1,1], {"DIVINE_BLESSING":  2}],
+                "WAIST": [[4,1],   {"FLINCH_FREE":      2}],
+                "LEGS" : [[1],     {"WEAKNESS_EXPLOIT": 2}]
+            }
+        },
+        {
+            "set": "Rose",
+            "discriminator": "MASTER_RANK",
+            "rarity": 10,
+            
+            "prefix": "Rose",
+            "naming_scheme": "ROSE_SCHEME",
+
+            "set_bonus": "FULL_BLOOM_BLESSING",
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[3,2,1], {"FORTIFY":         1}],
+                "CHEST": [[4],     {"ATTACK_BOOST":    3}],
+                "ARMS" : [[4],     {"TOOL_SPECIALIST": 3}],
+                "WAIST": [[4,1],   {"RESENTMENT":      3}],
+                "LEGS" : [[4,1],   {"PARTBREAKER":     2}]
+            }
+        },
+        {
+            "set": "Buff Body",
+            "discriminator": "MASTER_RANK",
+            "rarity": 11,
+            
+            "prefix": "Buff",
+            "naming_scheme": "BUFF_BODY_SCHEME",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "CHEST": [[1,1,1], {"AGITATOR":     3, "FORTIFY":     1}],
+                "ARMS" : [[4],     {"ATTACK_BOOST": 3, "RESUSCITATE": 1}],
+                "WAIST": [[4],     {"AGITATOR":     2, "HEROICS":     3}],
+                "LEGS" : [[4],     {"ATTACK_BOOST": 3, "HEROICS":     2}]
+            }
+        },
+        {
+            "set": "Wyverian Ears",
+            "discriminator": "MASTER_RANK",
+            "rarity": 9,
+            
+            "prefix": "Wyverian",
+            "naming_scheme": "WYVERIAN_EARS_SCHEME",
+
+            "set_bonus": null,
+
+            "MR_ALPHA_PLUS": {
+                "HEAD" : [[4], {"MUSHROOMANCER": 2, "SURVIVAL_EXPERT": 1}]
             }
         }
     ]

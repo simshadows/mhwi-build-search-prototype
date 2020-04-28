@@ -14,6 +14,24 @@ I'm not intending to give it a good user interface yet, but if you *really* insi
 
 3) Enjoy. You literally have nothing else to do other than watch the terminal output because this program has no user interface.
 
+## Database Note
+
+All Master Rank armour up until (and including) Guildwork has been added. Anything beyond that is a bit patchy (though I do try to add all of the important pieces of armour).
+
+In the interest of simplicity, full armour sets will NOT be added to the database for now. At the time of writing, these are:
+
+- Geralt Alpha
+- Ciri Alpha
+- Leon Alpha+
+- Claire Alpha+
+
+In the interest of validity, I will only add things that appear in the PC version of Monster Hunter World. All console exclusives will be left out (at least until I can figure out a good way to allow the user to filter things out).
+
+Other notable sets that should hopefully be added in the near future:
+
+- Acrobat Earrings
+- Showman Earrings
+
 ## Planned Development Roadmap
 
 1) Make a simple EFR optimizer for GS and SnS. I want this script to automatically create entire builds with as little manual tweaking as possible (except for updating the database, or stating build constraints).
