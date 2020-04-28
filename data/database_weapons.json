@@ -1,4 +1,72 @@
 {
+    "CHROME_DEATHSCYTHE_III": {
+        "class" : "GREATSWORD",
+        "rarity": 11,
+
+        "name"    : "Chrome Deathscythe III",
+        "attack"  : 1248,
+        "affinity": 0,
+        "slots"   : [1,1],
+
+        "is_raw": true,
+
+        "maximum_sharpness" : [120, 30, 30, 60, 50, 80, 30],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "ICEBORNE_COMMON"
+    },
+    "RUINOUS_ATROCITY": {
+        "class" : "GREATSWORD",
+        "rarity": 12,
+
+        "name"    : "Ruinous Atrocity",
+        "attack"  : 1344,
+        "affinity": 0,
+        "slots"   : [1],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [80, 30, 30, 110, 40, 110, 0],
+        "constant_sharpness": true,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
+    "SEVERING_BOLT_II": {
+        "class" : "GREATSWORD",
+        "rarity": 11,
+
+        "name"    : "Severing Bolt II",
+        "attack"  : 1200,
+        "affinity": 0,
+        "slots"   : [2,1],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [130, 30, 90, 30, 30, 70, 20],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "ICEBORNE_COMMON"
+    },
+    "PALADIRE": {
+        "class" : "GREATSWORD",
+        "rarity": 11,
+
+        "name"    : "Paladire",
+        "attack"  : 1200,
+        "affinity": 35,
+        "slots"   : [],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [110, 30, 30, 110, 40, 80, 0],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
     "JAGRAS_DEATHCLAW_II": {
         "class" : "GREATSWORD",
         "rarity": 10,
@@ -7,9 +75,316 @@
         "attack"  : 1248,
         "affinity": 0,
         "slots"   : [3,3],
-        "is_raw"  : true,
 
-        "maximum_sharpness": [110, 80, 30, 30, 80, 70, 0],
+        "is_raw": true,
+
+        "maximum_sharpness" : [110, 80, 30, 30, 80, 70, 0],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "ICEBORNE_COMMON"
+    },
+    "MAMMOTH_GREATAXE_II": {
+        "class" : "GREATSWORD",
+        "rarity": 10,
+
+        "name"    : "Mammoth Greataxe II",
+        "attack"  : 1344,
+        "affinity": 0,
+        "slots"   : [4],
+
+        "is_raw": true,
+
+        "maximum_sharpness" : [90, 50, 50, 80, 130, 0, 0],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "ICEBORNE_COMMON"
+    },
+    "NAAGA_GUILLOTINE_II": {
+        "class" : "GREATSWORD",
+        "rarity": 10,
+
+        "name"    : "Naaga Guillotine II",
+        "attack"  : 1152,
+        "affinity": 25,
+        "slots"   : [],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [70, 60, 60, 100, 80, 30, 0],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "ICEBORNE_COMMON"
+    },
+    "HIDDEN_BLADE_II": {
+        "class" : "GREATSWORD",
+        "rarity": 10,
+
+        "name"    : "Hidden Blade II",
+        "attack"  : 1152,
+        "affinity": 25,
+        "slots"   : [1],
+
+        "is_raw": true,
+
+        "maximum_sharpness" : [140, 20, 20, 70, 40, 30, 80],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "ICEBORNE_COMMON"
+    },
+    "PYRE_CLEAVER_II": {
+        "class" : "GREATSWORD",
+        "rarity": 10,
+
+        "name"    : "Pyre Cleaver II",
+        "attack"  : 1200,
+        "affinity": 0,
+        "slots"   : [4,2],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [100, 100, 40, 50, 70, 40, 0],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "ICEBORNE_COMMON"
+    },
+    "GLAVENUS_BLAZE_II": {
+        "class" : "GREATSWORD",
+        "rarity": 10,
+
+        "name"    : "Glavenus Blaze II",
+        "attack"  : 1200,
+        "affinity": 0,
+        "slots"   : [1,1],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [130, 30, 30, 60, 50, 70, 30],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "ICEBORNE_COMMON"
+    },
+    "DATURA_HELLSPINE_II": {
+        "class" : "GREATSWORD",
+        "rarity": 10,
+
+        "name"    : "Datura Hellspine II",
+        "attack"  : 1152,
+        "affinity": 0,
+        "slots"   : [2,1],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [120, 30, 30, 60, 50, 60, 50],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "ICEBORNE_COMMON"
+    },
+    "NYX_RAZOR_II": {
+        "class" : "GREATSWORD",
+        "rarity": 10,
+
+        "name"    : "Nyx Razor II",
+        "attack"  : 1152,
+        "affinity": 0,
+        "slots"   : [2],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [50, 80, 30, 30, 80, 130, 0],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "ICEBORNE_COMMON"
+    },
+    "RATHALOS_GLEAMSWORD": {
+        "class" : "GREATSWORD",
+        "rarity": 12,
+
+        "name"    : "Rathalos Gleamsword",
+        "attack"  : 1296,
+        "affinity": 25,
+        "slots"   : [2],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [130, 30, 30, 60, 50, 70, 30],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
+    "OGRES_JAW_III": {
+        "class" : "GREATSWORD",
+        "rarity": 11,
+
+        "name"    : "Ogre's Jaw III",
+        "attack"  : 1344,
+        "affinity": 0,
+        "slots"   : [3],
+
+        "is_raw": true,
+
+        "maximum_sharpness" : [90, 100, 40, 50, 70, 50, 0],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "ICEBORNE_COMMON"
+    },
+    "WINGED_SERAPHYD": {
+        "class" : "GREATSWORD",
+        "rarity": 12,
+
+        "name"    : "Winged Seraphyd",
+        "attack"  : 1296,
+        "affinity": 0,
+        "slots"   : [4],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [140, 30, 30, 60, 50, 40, 50],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
+    "TIGREX_GREAT_SWORD": {
+        "class" : "GREATSWORD",
+        "rarity": 11,
+
+        "name"    : "Tigrex Great Sword",
+        "attack"  : 1344,
+        "affinity": -20,
+        "slots"   : [],
+
+        "is_raw": true,
+
+        "maximum_sharpness" : [70, 30, 30, 110, 40, 120, 0],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
+    "WILDBITE": {
+        "class" : "GREATSWORD",
+        "rarity": 12,
+
+        "name"    : "Wildbite",
+        "attack"  : 1392,
+        "affinity": -30,
+        "slots"   : [],
+
+        "is_raw": true,
+
+        "maximum_sharpness" : [90, 20, 30, 90, 90, 40, 40],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
+    "DON_MONSTRO": {
+        "class" : "GREATSWORD",
+        "rarity": 12,
+
+        "name"    : "Don Monstro",
+        "attack"  : 1200,
+        "affinity": 0,
+        "slots"   : [2,2],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [70, 80, 30, 30, 80, 110, 0],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
+    "LOHENZAHN": {
+        "class" : "GREATSWORD",
+        "rarity": 10,
+
+        "name"    : "Lohenzahn",
+        "attack"  : 1296,
+        "affinity": -30,
+        "slots"   : [],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [80, 100, 40, 50, 80, 50, 0],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
+    "FULGURATIONS_EDGE": {
+        "class" : "GREATSWORD",
+        "rarity": 11,
+
+        "name"    : "Fulguration's Edge",
+        "attack"  : 1248,
+        "affinity": 25,
+        "slots"   : [],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [80, 100, 40, 50, 80, 50, 0],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
+    "LAGUNA_GOLEM_II": {
+        "class" : "GREATSWORD",
+        "rarity": 10,
+
+        "name"    : "Laguna Golem II",
+        "attack"  : 1152,
+        "affinity": 0,
+        "slots"   : [2,1],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [120, 30, 30, 60, 50, 60, 50],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "ICEBORNE_COMMON"
+    },
+    "BEO_SLASHER_II": {
+        "class" : "GREATSWORD",
+        "rarity": 10,
+
+        "name"    : "Beo Slasher II",
+        "attack"  : 1200,
+        "affinity": 0,
+        "slots"   : [2,1],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [60, 30, 30, 110, 40, 130, 0],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "ICEBORNE_COMMON"
+    },
+    "BARROTH_GREATEDGE_II": {
+        "class" : "GREATSWORD",
+        "rarity": 10,
+
+        "name"    : "Barroth Greatedge II",
+        "attack"  : 1296,
+        "affinity": -20,
+        "slots"   : [2,2],
+
+        "is_raw": true,
+
+        "maximum_sharpness" : [70, 60, 60, 100, 80, 30, 0],
         "constant_sharpness": false,
 
         "augmentation_scheme": "ICEBORNE",
@@ -23,9 +398,10 @@
         "attack"  : 1392,
         "affinity": 0,
         "slots"   : [4],
-        "is_raw"  : true,
 
-        "maximum_sharpness": [60, 50, 110, 90, 60, 20, 10],
+        "is_raw": true,
+
+        "maximum_sharpness" : [60, 50, 110, 90, 60, 20, 10],
         "constant_sharpness": false,
 
         "augmentation_scheme": "ICEBORNE",
@@ -39,9 +415,10 @@
         "attack"  : 1344,
         "affinity": 0,
         "slots"   : [1,1],
-        "is_raw"  : true,
 
-        "maximum_sharpness": [170, 30, 30, 60, 50, 30, 30],
+        "is_raw": true,
+
+        "maximum_sharpness" : [170, 30, 30, 60, 50, 30, 30],
         "constant_sharpness": false,
 
         "augmentation_scheme": "ICEBORNE",
@@ -55,9 +432,10 @@
         "attack"  : 1488,
         "affinity": -15,
         "slots"   : [4],
-        "is_raw"  : false,
 
-        "maximum_sharpness": [100, 100, 40, 50, 60, 50, 0],
+        "is_raw": false,
+
+        "maximum_sharpness" : [100, 100, 40, 50, 60, 50, 0],
         "constant_sharpness": false,
 
         "augmentation_scheme": "ICEBORNE",
@@ -71,9 +449,10 @@
         "attack"  : 1440,
         "affinity": 0,
         "slots"   : [4,3],
-        "is_raw"  : false,
 
-        "maximum_sharpness": [150, 30, 90, 30, 30, 50, 20],
+        "is_raw": false,
+
+        "maximum_sharpness" : [150, 30, 90, 30, 30, 50, 20],
         "constant_sharpness": true,
 
         "augmentation_scheme": "ICEBORNE",
@@ -87,9 +466,10 @@
         "attack"  : 1296,
         "affinity": 15,
         "slots"   : [3],
-        "is_raw"  : true,
 
-        "maximum_sharpness": [200, 30, 30, 50, 50, 30, 50],
+        "is_raw": true,
+
+        "maximum_sharpness" : [200, 30, 30, 50, 50, 30, 50],
         "constant_sharpness": false,
 
         "augmentation_scheme": "ICEBORNE",
@@ -103,9 +483,10 @@
         "attack"  : 1296,
         "affinity": 5,
         "slots"   : [4],
-        "is_raw"  : false,
 
-        "maximum_sharpness": [100, 50, 50, 50, 50, 90, 0],
+        "is_raw": false,
+
+        "maximum_sharpness" : [100, 50, 50, 50, 50, 90, 0],
         "constant_sharpness": false,
 
         "augmentation_scheme": "ICEBORNE",
@@ -119,9 +500,10 @@
         "attack"  : 406,
         "affinity": 10,
         "slots"   : [1],
-        "is_raw"  : false,
 
-        "maximum_sharpness": [60, 80, 30, 30, 80, 120, 0],
+        "is_raw": false,
+
+        "maximum_sharpness" : [60, 80, 30, 30, 80, 120, 0],
         "constant_sharpness": false,
 
         "augmentation_scheme": "ICEBORNE",

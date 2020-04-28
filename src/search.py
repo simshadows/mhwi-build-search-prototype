@@ -107,7 +107,7 @@ def _get_grouped_and_pruned_weapon_combos(weapon_class, health_regen_minimum, sk
         # Sort deco slots from biggest to smallest.
         sorted_deco_slots = tuple(sorted(combination_values.slots, reverse=True))
         assert len(sorted_deco_slots) <= 3
-        assert sorted_deco_slots[0] >= sorted_deco_slots[-1]
+        assert (len(sorted_deco_slots) == 0) or (sorted_deco_slots[0] >= sorted_deco_slots[-1])
         assert all((x > 0) and (x <= 4) for x in sorted_deco_slots)
 
         assert None not in set_bonuses_subset
@@ -514,10 +514,13 @@ def _find_highest_efr_build(s):
     decos = [decos_maxsize1, decos_maxsize2, decos_maxsize3, decos_maxsize4]
 
     # We also generate weapon combinations.
+    start_time = time.time()
     grouped_weapon_combos = _get_grouped_and_pruned_weapon_combos(desired_weapon_class, min_health_regen_augment_level, \
                                                                     skill_subset, set_bonus_subset, required_set_bonus_skills, \
                                                                     skill_states)
     num_weapon_combos = sum(len(x) for (_, x) in grouped_weapon_combos)
+    log_appstats_bufferbreak()
+    log_appstats_timetaken("Pruning weapons", start_time, display_again=True)
     log_appstats("Weapon combinations", num_weapon_combos)
 
     ##############################################

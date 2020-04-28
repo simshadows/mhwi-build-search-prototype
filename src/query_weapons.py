@@ -8,6 +8,7 @@ This file provides the MHWI build optimizer script's weapon database queries.
 """
 
 import json
+import logging
 from abc import ABC, abstractmethod
 from collections import namedtuple
 from itertools import accumulate, product, zip_longest
@@ -15,7 +16,7 @@ from enum import Enum, auto
 from copy import copy
 
 from .utils        import prune_by_superceding
-from .loggingutils import dump_pruned_weapon_combos
+from .loggingutils import ExecutionProgress, dump_pruned_weapon_combos
 
 from .database_skills import SetBonus
 
@@ -24,6 +25,9 @@ from .database_weapons import (SHARPNESS_LEVEL_NAMES,
                               WeaponAugmentationScheme,
                               WeaponUpgradeScheme,
                               weapon_db)
+
+
+logger = logging.getLogger(__name__)
 
 
 WeaponAugmentsContribution = namedtuple(
@@ -830,8 +834,8 @@ def _weapon_combo_supercedes(w1, w2):
     # hence we cannot prune away w2.
     w1_slots = sorted(list(w1.slots), reverse=True)
     w2_slots = sorted(list(w2.slots), reverse=True)
-    assert w1_slots[0] >= w1_slots[-1] # Sanity check that it's in descending order.
-    assert w2_slots[0] >= w2_slots[-1] # Sanity check that it's in descending order.
+    assert (len(w1_slots) == 0) or (w1_slots[0] >= w1_slots[-1]) # Sanity check that it's in descending order.
+    assert (len(w2_slots) == 0) or (w2_slots[0] >= w2_slots[-1]) # Sanity check that it's in descending order.
     if any((w1_slot < w2_slot) for (w1_slot, w2_slot) in zip_longest(w1_slots, w2_slots, fillvalue=0)):
         return False
 
@@ -912,7 +916,9 @@ def get_pruned_weapon_combos(weapon_class, health_regen_minimum):
     if __debug__:
         fordump_before = weapon_combinations
 
-    weapon_combinations = prune_by_superceding(weapon_combinations, left_supercedes_right)
+    progress = ExecutionProgress(f"PRUNING WEAPONS -", len(weapon_combinations), granularity=1000)
+    weapon_combinations = prune_by_superceding(weapon_combinations, left_supercedes_right, \
+            execute_per_iteration=lambda : progress.update_and_log_progress(logger))
 
     if __debug__:
         fordump_after = weapon_combinations
