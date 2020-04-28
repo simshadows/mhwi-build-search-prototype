@@ -407,6 +407,57 @@
         "augmentation_scheme": "ICEBORNE",
         "upgrade_scheme"     : "ICEBORNE_COMMON"
     },
+    "RADOBAAN_GRINDBLADE_II": {
+        "class" : "GREATSWORD",
+        "rarity": 10,
+        
+        "name"    : "Radobaan Grindblade II",
+        "attack"  : 1200,
+        "affinity": 0,
+        "slots"   : [],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [110, 30, 30, 110, 40, 80, 0],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "ICEBORNE_COMMON"
+    },
+    "BRACH_ATTACK": {
+        "class" : "GREATSWORD",
+        "rarity": 11,
+        
+        "name"    : "Brach Attack",
+        "attack"  : 1200,
+        "affinity": 0,
+        "slots"   : [1],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [90, 30, 30, 110, 40, 100, 0],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
+    "DRAGONSEAL_SWORD_II": {
+        "class" : "GREATSWORD",
+        "rarity": 11,
+        
+        "name"    : "Dragonseal Sword II",
+        "attack"  : 1152,
+        "affinity": 0,
+        "slots"   : [1,1],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [70, 60, 60, 100, 80, 30, 0],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "ICEBORNE_COMMON"
+    },
     "IMMOVABLE_DHARMA": {
         "class" : "GREATSWORD",
         "rarity": 12,
@@ -419,6 +470,125 @@
         "is_raw": true,
 
         "maximum_sharpness" : [170, 30, 30, 60, 50, 30, 30],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
+    "EMPEROR_THUNDERSWORD": {
+        "class" : "GREATSWORD",
+        "rarity": 11,
+        
+        "name"    : "Emperor Thundersword",
+        "attack"  : 1152,
+        "affinity": 0,
+        "slots"   : [],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [60, 80, 30, 30, 80, 120, 0],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
+    "MAGDAROS_VOLCANBLADE": {
+        "class" : "GREATSWORD",
+        "rarity": 11,
+        
+        "name"    : "Magdaros Volcanblade",
+        "attack"  : 1344,
+        "affinity": -20,
+        "slots"   : [2],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [140, 40, 40, 70, 70, 20, 20],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "ICEBORNE_COMMON"
+    },
+    "DAORAS_TUGHRIL_BEG": {
+        "class" : "GREATSWORD",
+        "rarity": 11,
+        
+        "name"    : "Daora's Tughril Beg",
+        "attack"  : 1248,
+        "affinity": 15,
+        "slots"   : [2],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [140, 30, 30, 60, 50, 60, 30],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
+    "XENO_MALIQ_PLUS": {
+        "class" : "GREATSWORD",
+        "rarity": 12,
+        
+        "name"    : "Xeno Maliq+",
+        "attack"  : 1344,
+        "affinity": 20,
+        "slots"   : [4,4],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [100, 80, 30, 30, 80, 80, 0],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
+    "ULTRA_WYVERN_JAWBLADE": {
+        "class" : "GREATSWORD",
+        "rarity": 11,
+        
+        "name"    : "Ultra Wyvern Jawblade",
+        "attack"  : 1392,
+        "affinity": 0,
+        "slots"   : [4],
+
+        "is_raw": true,
+
+        "maximum_sharpness" : [70, 50, 50, 80, 150, 0, 0],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
+    "CONSUMMATE_BLADE": {
+        "class" : "GREATSWORD",
+        "rarity": 12,
+        
+        "name"    : "Consummate Blade",
+        "attack"  : 1344,
+        "affinity": -30,
+        "slots"   : [],
+
+        "is_raw": false,
+
+        "maximum_sharpness" : [160, 30, 30, 60, 50, 40, 30],
+        "constant_sharpness": false,
+
+        "augmentation_scheme": "ICEBORNE",
+        "upgrade_scheme"     : "NONE"
+    },
+    "WYVERN_IMPACT_SILVER": {
+        "class" : "GREATSWORD",
+        "rarity": 12,
+        
+        "name"    : "Wyvern Impact \"Silver\"",
+        "attack"  : 1296,
+        "affinity": -15,
+        "slots"   : [1,1],
+
+        "is_raw": true,
+
+        "maximum_sharpness" : [160, 20, 20, 70, 40, 30, 60],
         "constant_sharpness": false,
 
         "augmentation_scheme": "ICEBORNE",
