@@ -76,6 +76,7 @@ _common_fields = [
 ]
 _blademaster_unique_fields = [
     "maximum_sharpness",
+    "constant_sharpness",
 ]
 _bm_fields = _blademaster_unique_fields + _common_fields
 _g_fields = _common_fields
@@ -175,9 +176,12 @@ def _obtain_weapon_db():
 
         if kwargs["type"] in blademaster_classes:
             kwargs["maximum_sharpness"] = MaximumSharpness(*dat["maximum_sharpness"])
+            kwargs["constant_sharpness"] = dat["constant_sharpness"]
 
             if any(x < 0 for x in kwargs["maximum_sharpness"]):
                 validation_error("Weapon sharpness values must be zero or above.", weapon=weapon_id)
+            elif not isinstance(kwargs["constant_sharpness"], bool):
+                validation_error("Weapons must have a boolean constant_sharpness field..", weapon=weapon_id)
 
         tup = None
         if kwargs["type"] is WeaponClass.GREATSWORD:

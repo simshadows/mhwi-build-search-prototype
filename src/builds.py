@@ -28,7 +28,8 @@ from .database_weapons     import (RAW_SHARPNESS_MODIFIERS,
 from .query_armour      import calculate_armour_contribution
 from .query_charms      import calculate_skills_dict_from_charm
 from .query_decorations import calculate_decorations_skills_contribution
-from .query_skills      import (RAW_BLUNDER_MULTIPLIER,
+from .query_skills      import (HANDICRAFT_MAX_LEVEL,
+                               RAW_BLUNDER_MULTIPLIER,
                                clipped_skills_defaultdict,
                                calculate_set_bonus_skills,
                                calculate_skills_contribution)
@@ -167,6 +168,8 @@ def lookup_from_skills(weapon, skills_dict, skill_states_dict, weapon_augments_t
 
     handicraft_level = from_skills.handicraft_level
     maximum_sharpness_values = weapon_final_values.maximum_sharpness
+    if weapon_final_values.constant_sharpness:
+        handicraft_level = HANDICRAFT_MAX_LEVEL
     sharpness_values, highest_sharpness_level = _actual_sharpness_level_values(maximum_sharpness_values, handicraft_level)
 
     item_attack_power = POWERCHARM_ATTACK_POWER + POWERTALON_ATTACK_POWER

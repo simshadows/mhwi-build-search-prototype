@@ -18,6 +18,9 @@ from .database_skills import (Skill,
                              SetBonus)
 
 
+HANDICRAFT_MAX_LEVEL = Skill.HANDICRAFT.value.extended_limit
+
+
 ATTACK_BOOST_ATTACK_POWER        = (0, 3, 6, 9, 12, 15, 18, 21)
 ATTACK_BOOST_AFFINITY_PERCENTAGE = (0, 0, 0, 0, 5,  5,  5,  5 )
 #                          level =  0  1  2  3  4   5   6   7

@@ -769,6 +769,7 @@ WeaponFinalValues = namedtuple(
         "is_raw",
 
         "maximum_sharpness",
+        "constant_sharpness",
     ],
 )
 # Calculates a weapon's final values based on all selected augments and upgrades.
@@ -803,6 +804,7 @@ def calculate_final_weapon_values(weapon, weapon_augments_tracker, weapon_upgrad
             is_raw    = weapon.is_raw,
 
             maximum_sharpness = maximum_sharpness,
+            constant_sharpness = weapon.constant_sharpness
         )
     return tup
 
