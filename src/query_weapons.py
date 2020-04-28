@@ -461,12 +461,11 @@ class IBCWeaponUpgradeTracker(WeaponUpgradeTracker):
             "_upgrades",
         ]
 
-    _IB_ATTACK_UPGRADE_VALUES   = (1, 1, 1, 1, 1, 1   )
-    _IB_AFFINITY_UPGRADE_VALUES = (1, 1, 1, 1, 1, None)
-    #                     level =  1  2  3  4  5  6
+    _IB_ATTACK_UPGRADE_VALUES   = (1, 1, 1, 1, 1, 1   , 2)
+    _IB_AFFINITY_UPGRADE_VALUES = (1, 1, 1, 1, 1, None, 3)
+    #                     level =  1  2  3  4  5  6     7
 
-    # {rarity: [config]}
-    _MAXIMIZED_CONFIGS = [ # TODO: Consider automating this definition.
+    _m1 = [
             [IBCWeaponUpgradeType.ATTACK] * 6,
             ([IBCWeaponUpgradeType.AFFINITY] * 1) + ([IBCWeaponUpgradeType.ATTACK] * 5),
             ([IBCWeaponUpgradeType.AFFINITY] * 2) + ([IBCWeaponUpgradeType.ATTACK] * 4),
@@ -474,6 +473,13 @@ class IBCWeaponUpgradeTracker(WeaponUpgradeTracker):
             ([IBCWeaponUpgradeType.AFFINITY] * 4) + ([IBCWeaponUpgradeType.ATTACK] * 2),
             ([IBCWeaponUpgradeType.AFFINITY] * 5) + ([IBCWeaponUpgradeType.ATTACK] * 1),
         ]
+    _m2 = [
+            [IBCWeaponUpgradeType.ATTACK],
+            [IBCWeaponUpgradeType.AFFINITY],
+        ]
+
+    # TODO: Consider automating this definition better.
+    _MAXIMIZED_CONFIGS = [(x + y) for (x, y) in product(_m1, _m2)]
 
     def __init__(self):
         self._upgrades = []
