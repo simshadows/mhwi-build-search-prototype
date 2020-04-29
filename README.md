@@ -16,6 +16,14 @@ I'm not intending to give it a good user interface yet, but if you *really* insi
 
 ## Database Note
 
+### Weapons
+
+Only greatswords have been added to the database (with a few minor additions from other weapon classes, for debugging purposes).
+
+Additionally, the only Safi greatsword in the database is the blast variant (*Safi's Shattersplitter*). I'll add the other variants in later when the element actually matters.
+
+### Armour
+
 All Master Rank armour up until (and including) Guildwork has been added. Anything beyond that is a bit patchy (though I do try to add all of the important pieces of armour).
 
 In the interest of simplicity, full armour sets will NOT be added to the database for now. At the time of writing, these are:
