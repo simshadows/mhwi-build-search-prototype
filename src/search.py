@@ -657,7 +657,13 @@ def _find_highest_efr_build(s):
 
                 for (weapon, w_augments_tracker, w_upgrades_tracker, w_combo_values, _) in weapon_combos:
 
-                    results = lookup_from_skills(weapon, d_all_skills, skill_states, w_augments_tracker, w_upgrades_tracker)
+                    if w_combo_values.skill is None:
+                        w_all_skills = d_all_skills
+                    else:
+                        w_all_skills = copy(d_all_skills)
+                        w_all_skills[w_combo_values.skill] += 1
+
+                    results = lookup_from_skills(weapon, w_all_skills, skill_states, w_augments_tracker, w_upgrades_tracker)
 
                     if results.efr > best_efr:
                         armour_dict = {

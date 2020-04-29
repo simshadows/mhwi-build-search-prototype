@@ -770,6 +770,7 @@ WeaponFinalValues = namedtuple(
         "affinity",
         "slots",
         "set_bonus",
+        "skill",
         "is_raw",
 
         "maximum_sharpness",
@@ -805,6 +806,7 @@ def calculate_final_weapon_values(weapon, weapon_augments_tracker, weapon_upgrad
             affinity  = weapon.affinity + a_contrib.added_raw_affinity + u_contrib.added_raw_affinity,
             slots     = slots,
             set_bonus = u_contrib.set_bonus,
+            skill     = weapon.skill,
             is_raw    = weapon.is_raw,
 
             maximum_sharpness = maximum_sharpness,

@@ -12,6 +12,8 @@ from enum import Enum, auto
 
 from .utils import json_read
 
+from .database_skills import Skill
+
 
 WEAPONS_DATA_FILENAME = "data/database_weapons.json"
 
@@ -67,7 +69,10 @@ _common_fields = [
     "attack",
     "affinity",
     "slots",
+
     "is_raw",
+
+    "skill",
 
     # You do not change this field. Keep it at the end. It gets a default value.
     "augmentation_scheme",
@@ -143,17 +148,20 @@ def _obtain_weapon_db():
         # We first deal with common fields.
 
         kwargs = {
-            "id"       : weapon_id,
-            "name"     : dat["name"],
-            "type"     : WeaponClass[str(dat["class"])],
-            "rarity"   : dat["rarity"],
-            "attack"   : dat["attack"],
-            "affinity" : dat["affinity"],
-            "slots"    : tuple(dat["slots"]),
-            "is_raw"   : dat["is_raw"],
+            "id"      : weapon_id,
+            "name"    : dat["name"],
+            "type"    : WeaponClass[str(dat["class"])],
+            "rarity"  : dat["rarity"],
+            "attack"  : dat["attack"],
+            "affinity": dat["affinity"],
+            "slots"   : tuple(dat["slots"]),
 
-            "augmentation_scheme" : WeaponAugmentationScheme[str(dat.get("augmentation_scheme", "NONE"))],
-            "upgrade_scheme"      : WeaponUpgradeScheme[str(dat.get("upgrade_scheme", "NONE"))],
+            "is_raw": dat["is_raw"],
+
+            "skill": Skill[dat["skill"]] if (dat["skill"] is not None) else None,
+
+            "augmentation_scheme": WeaponAugmentationScheme[str(dat.get("augmentation_scheme", "NONE"))],
+            "upgrade_scheme"     : WeaponUpgradeScheme[str(dat.get("upgrade_scheme", "NONE"))],
         }
 
         if (not isinstance(kwargs["name"], str)) or (len(kwargs["name"]) == 0):
